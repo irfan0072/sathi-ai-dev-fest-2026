@@ -2,6 +2,7 @@
 """Tooling script to verify empty component structure and dependency manifests."""
 
 import json
+import re
 import sys
 import tomllib
 from pathlib import Path
@@ -84,9 +85,10 @@ def check_package_json() -> list[str]:
         return [f"Failed to parse frontend/package.json: {e}"]
 
     node_engine = data.get("engines", {}).get("node", "")
-    if ">=20" not in node_engine:
+    minimum_majors = [int(value) for value in re.findall(r"(?:\^|>=)\s*(\d+)", node_engine)]
+    if not minimum_majors or min(minimum_majors) < 20:
         errors.append(
-            f"frontend/package.json engines.node must include '>=20', got '{node_engine}'"
+            f"frontend/package.json engines.node must require Node 20 or newer, got '{node_engine}'"
         )
 
     deps = data.get("dependencies", {})

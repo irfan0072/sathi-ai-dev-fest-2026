@@ -77,3 +77,27 @@
 - Tool: Codex reviewing Antigravity.
 - Correction verified; `make check-structure test-api lint-api` passed (1 backend test), `git diff --check` passed. Full existing suite and backend/script linter run. TestClient dependency deprecation warning remains non-fatal.
 - Outcome: generic GET /health and local API/test/lint commands accepted; no business endpoints or domain logic. Ready for scoped T004 commit and authorized GitHub push.
+
+## 2026-10-02T11:59:06+06:00 — T005 delegation
+
+- Tool: Antigravity CLI headless file-only mode.
+- Prompt: “Read tasks/T005.md and implement only T005. Use file read/edit tools only. Do not run shell commands, install packages, commit, or push. Codex will generate the lockfile and run all checks. Report changed files and state tests are pending Codex verification.”
+- Brief: tasks/T005.md; generic React hello-world, server-render smoke test, Vite build and ESLint commands. No product UI or domain logic.
+- Status: implementation pending review and verification.
+
+## 2026-10-02T12:06:34+06:00 — T005 first review
+
+- Tool: Codex reviewing Antigravity. All source files and manifest/Makefile diffs read.
+- `make check-structure test-api lint-api test-console lint-console build-console`: structure/backend checks and 1 React render test passed; frontend ESLint failed on 3 JSX import-use errors; build not reached.
+- Declared npm dependencies installed and package-lock generated. npm audit found 4 advisories: esbuild moderate, Vite high, vite-node moderate, Vitest critical. Registry metadata verified fixed tooling versions and host Node compatibility.
+- Feedback: fix JSX-aware lint without disabling no-unused-vars; declare eslint-plugin-react ^7.37.5 and JSX usage rules; upgrade Vite/Vitest/plugin to ^8.3.2/^4.1.11/^6.1.1 and ESLint/@eslint-js to ^9.7.0; set Node ^20.19.0 or >=22.12.0; remove legacy ESLint env export. Keep React behavior/backend unchanged; file edits only. Codex handles lock refresh and independent full checks/build/audit.
+- Status: first correction round pending; no task completion or release claimed.
+
+## 2026-10-02T12:13:29+06:00 — T005 accepted
+
+- Tools: Antigravity correction, Codex review/testing and small tooling fix. Full feedback prompt preserved in tasks/T005-review.md.
+- Lockfile refreshed from the declared fixed versions; npm install audit reports zero vulnerabilities. ESLint 9 emits a non-fatal support/deprecation notice; no known advisories reported by this audit.
+- Full `make check-structure test-api lint-api test-console lint-console build-console` passed: 1 backend and 1 frontend test, both linters, production frontend build. `git diff --check` passed.
+- Codex corrected structure checker to accept the verified caret/OR Node engine range instead of checking for a literal >=20 substring. Verified original >=20 and new ^20.19.0 || >=22.12.0 ranges pass, >=18 fails; Ruff passes. No domain behavior changed.
+- GitHub metadata API confirms public visibility and default main branch. Browser fetch was unavailable; API verification succeeded without credentials.
+- Outcome: T005 ready for local commit and authorized push; next T006 container skeleton.
