@@ -737,8 +737,6 @@ def test_in_memory_split_aggregation_counts_and_no_collision(full_splits):
         | {s["session_id"] for s in test_data["sessions"]}
     )
     expected_session_count = (
-        len(train_data["sessions"])
-        + len(val_data["sessions"])
-        + len(test_data["sessions"])
+        len(train_data["sessions"]) + len(val_data["sessions"]) + len(test_data["sessions"])
     )
     assert len(all_sessions) == expected_session_count

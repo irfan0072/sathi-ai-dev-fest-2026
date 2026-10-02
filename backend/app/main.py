@@ -31,4 +31,3 @@ app.include_router(mandates_router)
 def health() -> dict[str, str]:
     """Health check endpoint returning generic status."""
     return {"status": "ok"}
-

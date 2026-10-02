@@ -146,7 +146,7 @@ class MandateService:
         self.daily_cash_out_limit: float = float(self.policy.get("daily_cash_out_limit", 25000.0))
         self.mandate_ttl_minutes: int = int(self.policy.get("mandate_ttl_minutes", 15))
         self.max_verification_attempts: int = int(self.policy.get("max_verification_attempts", 2))
-        
+
         cash_gap_conf = self.policy.get("cash_gap", {})
         self.cash_gap_min_bdt: float = float(cash_gap_conf.get("min_bdt", 50.0))
         self.cash_gap_rate: float = float(cash_gap_conf.get("rate", 0.02))
@@ -166,13 +166,15 @@ class MandateService:
         search_paths = []
         if config_path:
             search_paths.append(Path(config_path))
-        
+
         cwd = Path.cwd()
-        search_paths.extend([
-            cwd / "data" / "config.yaml",
-            cwd.parent / "data" / "config.yaml",
-            Path(__file__).resolve().parent.parent.parent.parent / "data" / "config.yaml",
-        ])
+        search_paths.extend(
+            [
+                cwd / "data" / "config.yaml",
+                cwd.parent / "data" / "config.yaml",
+                Path(__file__).resolve().parent.parent.parent.parent / "data" / "config.yaml",
+            ]
+        )
 
         for path in search_paths:
             if path.exists():

@@ -338,18 +338,14 @@ def test_db_schema():
     """Fixture providing dedicated test DB URL and disposable isolated schema."""
     test_db_url = os.environ.get("SATHI_TEST_DATABASE_URL")
     if not test_db_url:
-        pytest.skip(
-            "SATHI_TEST_DATABASE_URL not set; skipping integration tests"
-        )
+        pytest.skip("SATHI_TEST_DATABASE_URL not set; skipping integration tests")
 
     # Generate isolated temporary schema
     schema_name = f"sathi_test_{uuid.uuid4().hex[:10]}"
     try:
         conn = get_connection(test_db_url)
     except Exception as e:
-        pytest.skip(
-            f"Could not connect to {sanitize_database_url(test_db_url)}: {e}"
-        )
+        pytest.skip(f"Could not connect to {sanitize_database_url(test_db_url)}: {e}")
 
     try:
         with conn.cursor() as cur:
@@ -572,9 +568,7 @@ def test_naive_timestamp_and_named_id_rejected():
 
 def test_integration_migration_failure_rolls_back(test_db_schema, tmp_path):
     url, schema = test_db_schema
-    (tmp_path / "001_bad.sql").write_text(
-        "CREATE TABLE rollback_probe (id integer); SELECT 1/0;"
-    )
+    (tmp_path / "001_bad.sql").write_text("CREATE TABLE rollback_probe (id integer); SELECT 1/0;")
     with pytest.raises(Exception):
         run_migrations(url, migrations_dir=tmp_path, schema=schema)
     with get_connection(url, schema=schema) as conn:

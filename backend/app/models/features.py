@@ -179,15 +179,11 @@ def extract_user_features(
 
         # 10. Channel and fees
         assisted_txs = [t for t in user_txs if t.get("channel") == "agent_initiated"]
-        agent_assisted_tx_ratio = (
-            float(len(assisted_txs)) / len(user_txs) if user_txs else 0.0
-        )
+        agent_assisted_tx_ratio = float(len(assisted_txs)) / len(user_txs) if user_txs else 0.0
         fees = [float(t.get("fee", 0.0)) for t in user_txs]
         fee_total = float(sum(fees))
         all_amounts = [float(t["amount"]) for t in user_txs]
-        fee_to_amount_ratio = (
-            float(fee_total) / sum(all_amounts) if sum(all_amounts) > 0 else 0.0
-        )
+        fee_to_amount_ratio = float(fee_total) / sum(all_amounts) if sum(all_amounts) > 0 else 0.0
 
         row = {
             "top_agent_share": top_agent_share,
@@ -267,16 +263,17 @@ def extract_agent_features(
 
         txs = tx_by_agent.get(aid, [])
         if txs:
-            # Fee ratio over official
+            # Fee ratio over official (applicable to cash_out)
             fee_ratios: list[float] = []
             days_set: set[str] = set()
             allowance_tx_count = 0
             for t in txs:
-                amt = float(t["amount"])
-                fee = float(t.get("fee", 0.0))
-                expected_fee = amt * official_fee_rate
-                if expected_fee > 0:
-                    fee_ratios.append(fee / expected_fee)
+                if t.get("txn_type") == "cash_out":
+                    amt = float(t["amount"])
+                    fee = float(t.get("fee", 0.0))
+                    expected_fee = amt * official_fee_rate
+                    if expected_fee > 0:
+                        fee_ratios.append(fee / expected_fee)
                 dt_str = t["ts"][:10]
                 days_set.add(dt_str)
                 # Allowance day check: day 5 of monthly cycle
@@ -291,9 +288,7 @@ def extract_agent_features(
             num_days = max(1, len(days_set))
             volume_daily_mean = float(len(txs)) / float(num_days)
             non_allowance_tx = len(txs) - allowance_tx_count
-            allowance_ratio = (
-                float(allowance_tx_count) / max(1, non_allowance_tx)
-            )
+            allowance_ratio = float(allowance_tx_count) / max(1, non_allowance_tx)
         else:
             fee_ratio_over_official = 1.0
             volume_daily_mean = 0.0
@@ -310,4 +305,15 @@ def extract_agent_features(
     df_X = pd.DataFrame(records)
     assert_feature_columns(df_X)
 
-    return df_X, pd.Series(targets, name="target"), agent_ids
+    meta_df = pd.DataFrame(
+        [
+            {
+                "region": a.get("region", "dhaka"),
+                "volume_band": a.get("volume_band", "standard"),
+                "agent_type": a.get("agent_type", "normal"),
+            }
+            for a in agents_data
+        ]
+    )
+
+    return df_X, pd.Series(targets, name="target"), meta_df, agent_ids

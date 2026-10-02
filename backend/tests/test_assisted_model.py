@@ -142,7 +142,7 @@ def synthetic_training_data() -> tuple[pd.DataFrame, pd.Series, pd.DataFrame]:
 
 
 def test_fit_and_predict_calibrated(
-    synthetic_training_data: tuple[pd.DataFrame, pd.Series, pd.DataFrame]
+    synthetic_training_data: tuple[pd.DataFrame, pd.Series, pd.DataFrame],
 ) -> None:
     """Test model training and calibrated probability generation."""
     X, y, slices = synthetic_training_data
@@ -166,7 +166,7 @@ def test_fit_and_predict_calibrated(
 
 
 def test_leakage_guard_raises_error(
-    synthetic_training_data: tuple[pd.DataFrame, pd.Series, pd.DataFrame]
+    synthetic_training_data: tuple[pd.DataFrame, pd.Series, pd.DataFrame],
 ) -> None:
     """Ensure feature leakage guard stops forbidden columns."""
     X, y, _ = synthetic_training_data
@@ -179,7 +179,7 @@ def test_leakage_guard_raises_error(
 
 
 def test_shap_explanations(
-    synthetic_training_data: tuple[pd.DataFrame, pd.Series, pd.DataFrame]
+    synthetic_training_data: tuple[pd.DataFrame, pd.Series, pd.DataFrame],
 ) -> None:
     """Test SHAP TreeExplainer feature attributions for individual users."""
     X, y, _ = synthetic_training_data
@@ -198,7 +198,7 @@ def test_shap_explanations(
 
 
 def test_pr_auc_sanity_and_fairness(
-    synthetic_training_data: tuple[pd.DataFrame, pd.Series, pd.DataFrame]
+    synthetic_training_data: tuple[pd.DataFrame, pd.Series, pd.DataFrame],
 ) -> None:
     """Test PR-AUC evaluation, sanity check constraint, and fairness slice reporting."""
     X, y, slices = synthetic_training_data
@@ -227,7 +227,7 @@ def test_pr_auc_sanity_and_fairness(
 
 
 def test_model_save_and_load(
-    synthetic_training_data: tuple[pd.DataFrame, pd.Series, pd.DataFrame]
+    synthetic_training_data: tuple[pd.DataFrame, pd.Series, pd.DataFrame],
 ) -> None:
     """Test model persistence and exact prediction restoration."""
     X, y, _ = synthetic_training_data
@@ -254,6 +254,10 @@ def test_validation_split_evaluation_pr_auc_sanity() -> None:
     """
     train_path = Path("data/generated/splits/train.json")
     val_path = Path("data/generated/splits/validation.json")
+    if not train_path.exists():
+        train_path = Path("../data/generated/splits/train.json")
+    if not val_path.exists():
+        val_path = Path("../data/generated/splits/validation.json")
     if not train_path.exists() or not val_path.exists():
         pytest.skip("train.json or validation.json split not found locally")
 

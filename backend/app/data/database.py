@@ -155,9 +155,7 @@ def get_migrations_dir() -> Path:
         p = Path(env_dir)
         if p.is_dir():
             return p
-        raise FileNotFoundError(
-            f"MIGRATIONS_DIR path does not exist: {env_dir}"
-        )
+        raise FileNotFoundError(f"MIGRATIONS_DIR path does not exist: {env_dir}")
 
     candidates = [
         Path(__file__).resolve().parent.parent.parent / "migrations",
@@ -170,9 +168,7 @@ def get_migrations_dir() -> Path:
             return candidate
 
     searched = [str(c) for c in candidates]
-    raise FileNotFoundError(
-        f"Migrations directory not found. Searched locations: {searched}"
-    )
+    raise FileNotFoundError(f"Migrations directory not found. Searched locations: {searched}")
 
 
 def get_connection(db_url: str, schema: str | None = None):
@@ -180,9 +176,7 @@ def get_connection(db_url: str, schema: str | None = None):
     if not db_url:
         raise ValueError("Database URL must be provided.")
     if psycopg is None:
-        raise ImportError(
-            "psycopg is not installed. Please install psycopg[binary]>=3.2,<4."
-        )
+        raise ImportError("psycopg is not installed. Please install psycopg[binary]>=3.2,<4.")
     conn = psycopg.connect(db_url, autocommit=True)
     if schema:
         if not re.match(r"^[a-zA-Z_][a-zA-Z0-9_]*$", schema):
@@ -278,9 +272,7 @@ def run_migrations(
             # Safely release advisory lock
             try:
                 with conn.cursor() as cur:
-                    cur.execute(
-                        "SELECT pg_advisory_unlock(%s);", (MIGRATION_LOCK_ID,)
-                    )
+                    cur.execute("SELECT pg_advisory_unlock(%s);", (MIGRATION_LOCK_ID,))
                 conn.commit()
             except Exception:
                 pass
@@ -292,9 +284,7 @@ def run_migrations(
 
 def compute_dataset_checksum(data: dict[str, Any]) -> str:
     """Compute canonical SHA256 checksum of dataset for provenance tracking."""
-    canonical_json = json.dumps(
-        data, sort_keys=True, separators=(",", ":")
-    ).encode("utf-8")
+    canonical_json = json.dumps(data, sort_keys=True, separators=(",", ":")).encode("utf-8")
     return hashlib.sha256(canonical_json).hexdigest()
 
 
@@ -303,18 +293,14 @@ def _parse_iso_ts(val: Any) -> datetime:
     if isinstance(val, datetime):
         return val
     if not isinstance(val, str):
-        raise ValidationError(
-            f"Timestamp must be string or datetime, got {type(val)}"
-        )
+        raise ValidationError(f"Timestamp must be string or datetime, got {type(val)}")
     try:
         parsed = datetime.fromisoformat(val)
         if parsed.tzinfo is None or parsed.utcoffset() is None:
             raise ValidationError("Timestamp must include timezone")
         return parsed
     except Exception as exc:
-        raise ValidationError(
-            f"Invalid ISO 8601 timestamp '{val}': {exc}"
-        ) from exc
+        raise ValidationError(f"Invalid ISO 8601 timestamp '{val}': {exc}") from exc
 
 
 def _validate_decimal(val: Any, name: str, allow_zero: bool = False) -> None:
@@ -348,9 +334,7 @@ def validate_dataset(data: dict[str, Any]) -> None:
     Rejects malformed data before any database mutation.
     """
     if not isinstance(data, dict):
-        raise ValidationError(
-            f"Dataset must be a JSON object (dict), got {type(data)}"
-        )
+        raise ValidationError(f"Dataset must be a JSON object (dict), got {type(data)}")
 
     expected_keys = {
         "schema_version",
@@ -370,19 +354,13 @@ def validate_dataset(data: dict[str, Any]) -> None:
             errs.append(f"unknown keys: {sorted(unknown)}")
         if missing:
             errs.append(f"missing keys: {sorted(missing)}")
-        raise ValidationError(
-            f"Invalid dataset top-level structure: {', '.join(errs)}"
-        )
+        raise ValidationError(f"Invalid dataset top-level structure: {', '.join(errs)}")
 
     if type(data["schema_version"]) is not int or data["schema_version"] != 1:
-        raise ValidationError(
-            f"schema_version must be integer 1, got {data['schema_version']!r}"
-        )
+        raise ValidationError(f"schema_version must be integer 1, got {data['schema_version']!r}")
 
     if type(data["synthetic"]) is not bool or data["synthetic"] is not True:
-        raise ValidationError(
-            f"synthetic must be boolean True, got {data['synthetic']!r}"
-        )
+        raise ValidationError(f"synthetic must be boolean True, got {data['synthetic']!r}")
 
     if type(data["seed"]) is not int or isinstance(data["seed"], bool):
         raise ValidationError(f"seed must be an integer, got {type(data['seed'])}")
@@ -392,9 +370,7 @@ def validate_dataset(data: dict[str, Any]) -> None:
 
     for list_name in ("users", "agents", "transactions", "sessions"):
         if not isinstance(data[list_name], list):
-            raise ValidationError(
-                f"{list_name} must be a list, got {type(data[list_name])}"
-            )
+            raise ValidationError(f"{list_name} must be a list, got {type(data[list_name])}")
 
     # Validate Users
     user_ids: set[str] = set()
@@ -404,20 +380,15 @@ def validate_dataset(data: dict[str, Any]) -> None:
         u_keys = set(u.keys())
         unknown_u = u_keys - USER_ALLOWED_COLUMNS
         if unknown_u:
-            raise ValidationError(
-                f"users[{idx}] contains unknown fields: {sorted(unknown_u)}"
-            )
+            raise ValidationError(f"users[{idx}] contains unknown fields: {sorted(unknown_u)}")
         missing_u = USER_REQUIRED_COLUMNS - u_keys
         if missing_u:
-            raise ValidationError(
-                f"users[{idx}] missing required fields: {sorted(missing_u)}"
-            )
+            raise ValidationError(f"users[{idx}] missing required fields: {sorted(missing_u)}")
 
         uid = u["user_id"]
         if not isinstance(uid, str) or not USER_ID_REGEX.match(uid):
             raise ValidationError(
-                f"users[{idx}] invalid user_id '{uid}': "
-                "must be non-empty string starting with 'U_'"
+                f"users[{idx}] invalid user_id '{uid}': must be non-empty string starting with 'U_'"
             )
         if uid in user_ids:
             raise ValidationError(f"Duplicate user_id in dataset: '{uid}'")
@@ -430,18 +401,15 @@ def validate_dataset(data: dict[str, Any]) -> None:
             )
         if u["gender"] not in GENDERS:
             raise ValidationError(
-                f"users[{idx}] invalid gender '{u['gender']}': "
-                f"must be in {sorted(GENDERS)}"
+                f"users[{idx}] invalid gender '{u['gender']}': must be in {sorted(GENDERS)}"
             )
         if u["age_band"] not in AGE_BANDS:
             raise ValidationError(
-                f"users[{idx}] invalid age_band '{u['age_band']}': "
-                f"must be in {sorted(AGE_BANDS)}"
+                f"users[{idx}] invalid age_band '{u['age_band']}': must be in {sorted(AGE_BANDS)}"
             )
         if u["region"] not in REGIONS:
             raise ValidationError(
-                f"users[{idx}] invalid region '{u['region']}': "
-                f"must be in {sorted(REGIONS)}"
+                f"users[{idx}] invalid region '{u['region']}': must be in {sorted(REGIONS)}"
             )
         if u["urban_rural"] not in URBAN_RURAL:
             raise ValidationError(
@@ -459,14 +427,10 @@ def validate_dataset(data: dict[str, Any]) -> None:
         a_keys = set(a.keys())
         unknown_a = a_keys - AGENT_ALLOWED_COLUMNS
         if unknown_a:
-            raise ValidationError(
-                f"agents[{idx}] contains unknown fields: {sorted(unknown_a)}"
-            )
+            raise ValidationError(f"agents[{idx}] contains unknown fields: {sorted(unknown_a)}")
         missing_a = AGENT_REQUIRED_COLUMNS - a_keys
         if missing_a:
-            raise ValidationError(
-                f"agents[{idx}] missing required fields: {sorted(missing_a)}"
-            )
+            raise ValidationError(f"agents[{idx}] missing required fields: {sorted(missing_a)}")
 
         aid = a["agent_id"]
         if not isinstance(aid, str) or not AGENT_ID_REGEX.match(aid):
@@ -480,8 +444,7 @@ def validate_dataset(data: dict[str, Any]) -> None:
 
         if a["region"] not in REGIONS:
             raise ValidationError(
-                f"agents[{idx}] invalid region '{a['region']}': "
-                f"must be in {sorted(REGIONS)}"
+                f"agents[{idx}] invalid region '{a['region']}': must be in {sorted(REGIONS)}"
             )
         if a["volume_band"] not in VOLUME_BANDS:
             raise ValidationError(
@@ -517,8 +480,7 @@ def validate_dataset(data: dict[str, Any]) -> None:
         tid = t["txn_id"]
         if type(tid) is not int or isinstance(tid, bool) or not 0 < tid < 2**63:
             raise ValidationError(
-                f"transactions[{idx}] invalid txn_id '{tid}': "
-                "must be positive integer"
+                f"transactions[{idx}] invalid txn_id '{tid}': must be positive integer"
             )
         if tid in txn_ids:
             raise ValidationError(f"Duplicate txn_id in dataset: {tid}")
@@ -543,8 +505,7 @@ def validate_dataset(data: dict[str, Any]) -> None:
         ttype = t["txn_type"]
         if ttype not in TXN_TYPES:
             raise ValidationError(
-                f"transactions[{idx}] invalid txn_type '{ttype}': "
-                f"must be in {sorted(TXN_TYPES)}"
+                f"transactions[{idx}] invalid txn_type '{ttype}': must be in {sorted(TXN_TYPES)}"
             )
 
         csource = t.get("credit_source")
@@ -561,13 +522,9 @@ def validate_dataset(data: dict[str, Any]) -> None:
                     f"'{csource}'; must be null"
                 )
 
-        _validate_decimal(
-            t["amount"], f"transactions[{idx}].amount", allow_zero=False
-        )
+        _validate_decimal(t["amount"], f"transactions[{idx}].amount", allow_zero=False)
         if "fee" in t and t["fee"] is not None:
-            _validate_decimal(
-                t["fee"], f"transactions[{idx}].fee", allow_zero=True
-            )
+            _validate_decimal(t["fee"], f"transactions[{idx}].fee", allow_zero=True)
         if "balance_after" in t and t["balance_after"] is not None:
             _validate_decimal(
                 t["balance_after"],
@@ -578,8 +535,7 @@ def validate_dataset(data: dict[str, Any]) -> None:
         channel = t.get("channel")
         if channel is not None and channel not in CHANNELS:
             raise ValidationError(
-                f"transactions[{idx}] invalid channel '{channel}': "
-                f"must be in {sorted(CHANNELS)}"
+                f"transactions[{idx}] invalid channel '{channel}': must be in {sorted(CHANNELS)}"
             )
 
         _parse_iso_ts(t["ts"])
@@ -592,20 +548,15 @@ def validate_dataset(data: dict[str, Any]) -> None:
         s_keys = set(s.keys())
         unknown_s = s_keys - SESSION_ALLOWED_COLUMNS
         if unknown_s:
-            raise ValidationError(
-                f"sessions[{idx}] contains unknown fields: {sorted(unknown_s)}"
-            )
+            raise ValidationError(f"sessions[{idx}] contains unknown fields: {sorted(unknown_s)}")
         missing_s = SESSION_REQUIRED_COLUMNS - s_keys
         if missing_s:
-            raise ValidationError(
-                f"sessions[{idx}] missing required fields: {sorted(missing_s)}"
-            )
+            raise ValidationError(f"sessions[{idx}] missing required fields: {sorted(missing_s)}")
 
         sid = s["session_id"]
         if type(sid) is not int or isinstance(sid, bool) or not 0 < sid < 2**63:
             raise ValidationError(
-                f"sessions[{idx}] invalid session_id '{sid}': "
-                "must be positive integer"
+                f"sessions[{idx}] invalid session_id '{sid}': must be positive integer"
             )
         if sid in session_ids:
             raise ValidationError(f"Duplicate session_id in dataset: {sid}")
@@ -640,25 +591,20 @@ def validate_dataset(data: dict[str, Any]) -> None:
             pr = s["pin_retries"]
             if type(pr) is not int or isinstance(pr, bool) or pr < 0:
                 raise ValidationError(
-                    f"sessions[{idx}] pin_retries must be non-negative int, "
-                    f"got {pr!r}"
+                    f"sessions[{idx}] pin_retries must be non-negative int, got {pr!r}"
                 )
 
         if "pin_entry_ms" in s and s["pin_entry_ms"] is not None:
             pms = s["pin_entry_ms"]
             if type(pms) is not int or isinstance(pms, bool) or pms < 0:
                 raise ValidationError(
-                    f"sessions[{idx}] pin_entry_ms must be non-negative int, "
-                    f"got {pms!r}"
+                    f"sessions[{idx}] pin_entry_ms must be non-negative int, got {pms!r}"
                 )
 
         if "steps" in s and s["steps"] is not None:
             st = s["steps"]
             if type(st) is not int or isinstance(st, bool) or st < 0:
-                raise ValidationError(
-                    f"sessions[{idx}] steps must be non-negative int, "
-                    f"got {st!r}"
-                )
+                raise ValidationError(f"sessions[{idx}] steps must be non-negative int, got {st!r}")
 
         _parse_iso_ts(s["ts"])
 
@@ -741,8 +687,7 @@ def load_seed(
                         "seed": seed,
                         "checksum": checksum,
                         "message": (
-                            f"Dataset for seed {seed} already loaded "
-                            "with matching checksum. No-op."
+                            f"Dataset for seed {seed} already loaded with matching checksum. No-op."
                         ),
                         "counts": existing_counts,
                     }

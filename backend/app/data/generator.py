@@ -169,9 +169,7 @@ def generate_dataset(
     # -------------------------------------------------------------------------
     if canonical_agents is None:
         canonical_agents = build_canonical_agent_registry(raw_config)
-    canonical_agents_dict: dict[str, dict[str, Any]] = {
-        a["agent_id"]: a for a in canonical_agents
-    }
+    canonical_agents_dict: dict[str, dict[str, Any]] = {a["agent_id"]: a for a in canonical_agents}
 
     # Filter to cohort agents if explicit agent_ids provided; reject unknown IDs
     if agent_ids is not None:

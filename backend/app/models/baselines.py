@@ -35,13 +35,15 @@ def load_config_baselines(config_path: str | Path | None = None) -> dict[str, An
     search_paths = []
     if config_path:
         search_paths.append(Path(config_path))
-    
+
     cwd = Path.cwd()
-    search_paths.extend([
-        cwd / "data" / "config.yaml",
-        cwd.parent / "data" / "config.yaml",
-        Path(__file__).resolve().parent.parent.parent.parent / "data" / "config.yaml",
-    ])
+    search_paths.extend(
+        [
+            cwd / "data" / "config.yaml",
+            cwd.parent / "data" / "config.yaml",
+            Path(__file__).resolve().parent.parent.parent.parent / "data" / "config.yaml",
+        ]
+    )
 
     for path in search_paths:
         if path.exists():
@@ -195,9 +197,7 @@ class AgentAnomalyRuleBaseline:
 
         # Precision at top-K
         top_k_indices = np.argsort(scores)[::-1][:top_k]
-        p_at_k = (
-            float(y_true[top_k_indices].sum()) / float(top_k) if top_k > 0 else 0.0
-        )
+        p_at_k = float(y_true[top_k_indices].sum()) / float(top_k) if top_k > 0 else 0.0
 
         return {
             "model": "agent_rule_baseline",

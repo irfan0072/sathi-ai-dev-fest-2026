@@ -108,12 +108,8 @@ def allocate_cohorts(
 
     # Deterministically reconcile stratified allocations to global quotas, minimizing movement
     while True:
-        surplus_cohorts = [
-            c for c in cohort_names if len(cohort_agent_ids[c]) > global_quotas[c]
-        ]
-        deficit_cohorts = [
-            c for c in cohort_names if len(cohort_agent_ids[c]) < global_quotas[c]
-        ]
+        surplus_cohorts = [c for c in cohort_names if len(cohort_agent_ids[c]) > global_quotas[c]]
+        deficit_cohorts = [c for c in cohort_names if len(cohort_agent_ids[c]) < global_quotas[c]]
         if not surplus_cohorts or not deficit_cohorts:
             break
         c_from = surplus_cohorts[0]
@@ -303,14 +299,12 @@ def assert_disjoint_splits(splits: Any) -> None:
             uid = t["user_id"]
             if uid not in users:
                 raise AssertionError(
-                    f"Transaction {tid} in cohort '{c}' references user '{uid}' "
-                    f"outside its cohort"
+                    f"Transaction {tid} in cohort '{c}' references user '{uid}' outside its cohort"
                 )
             aid = t.get("agent_id")
             if aid is not None and aid not in agents:
                 raise AssertionError(
-                    f"Transaction {tid} in cohort '{c}' references agent '{aid}' "
-                    f"outside its cohort"
+                    f"Transaction {tid} in cohort '{c}' references agent '{aid}' outside its cohort"
                 )
 
         for s in data.get("sessions", []):
@@ -318,8 +312,7 @@ def assert_disjoint_splits(splits: Any) -> None:
             uid = s["user_id"]
             if uid not in users:
                 raise AssertionError(
-                    f"Session {sid} in cohort '{c}' references user '{uid}' "
-                    f"outside its cohort"
+                    f"Session {sid} in cohort '{c}' references user '{uid}' outside its cohort"
                 )
             tid = s.get("txn_id")
             if tid is not None:
@@ -682,4 +675,3 @@ def generate_shifted_test_split(
         (out_path / "test_shifted.meta.json").write_bytes(meta_bytes)
 
     return result
-
