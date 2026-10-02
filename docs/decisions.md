@@ -20,3 +20,7 @@ No architecture, schema, API, evaluation-plan or configuration changes have been
 ## Resolved implementer selection
 
 The human supplied the `agy` alias and authorized project work. `/Users/apple/.local/bin/agy` is available; read-only print mode and interactive implementation were verified. See `agent-workflow.md` for command permissions and invocation details.
+
+## 2026-10-02T11:53:35+06:00 — GitHub remote authorized
+
+The human supplied https://github.com/irfan0072/sathi-ai-dev-fest-2026.git and explicitly instructed Codex to use it and continue work. Remote inspection returned no refs. Local existing history is preserved on main; no history reset or force push is authorized or used. Regular pushes to this remote are authorized.

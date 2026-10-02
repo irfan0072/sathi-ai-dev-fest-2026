@@ -56,3 +56,24 @@
 - Dependency: Ruff 0.16.10 installed into ignored local .venv, within the already-declared pyproject dev dependency range. Initial sandbox download failed; approved registry download succeeded. No application or frontend packages installed.
 - Verification: `make check-structure` passed; `.venv/bin/ruff check --config backend/pyproject.toml backend scripts` passed. No application test suite exists yet; T004/T005 add it.
 - Next: local T003 commit, then FastAPI hello-world/test runner (T004). Docker engine remains stopped; public remote/deployment are unconfigured and require human input.
+
+## 2026-10-02T11:53:35+06:00 — GitHub setup and T004 delegation
+
+- Tool: Codex / Git and Antigravity CLI.
+- Human prompt: supplied GitHub bootstrap commands and “ok this is the github repo use it in your work and continue the working”.
+- Remote: https://github.com/irfan0072/sathi-ai-dev-fest-2026.git; initial ls-remote returned no refs. Existing project README and continuous commit history retained rather than replaced by boilerplate.
+- T004 prompt: “Read tasks/T004.md and implement only T004. Use file read/edit tools only. Do not run shell commands, install packages, commit, or push. Codex will run the exact checks in the brief. Report the changed files and state that tests are pending Codex verification.”
+- Brief: tasks/T004.md. Scope: generic health endpoint plus backend test/lint runner; implementation and verification pending.
+
+## 2026-10-02T11:57:19+06:00 — T004 first review
+
+- Tool: Codex. Full new health/test files and Makefile diff reviewed.
+- Installed the already-declared backend/dev dependencies after sandbox registry access failed; approved download succeeded. `pip check` passed.
+- `make check-structure test-api lint-api`: structure passed, 1 health test passed, lint failed on import ordering (I001). Dependency emitted an httpx TestClient deprecation warning; test succeeded. No application release claimed.
+- Feedback prompt: “T004 review feedback: make check-structure passes and the health test passes, but make lint-api fails with Ruff I001 in backend/tests/test_health.py. Sort the imports exactly as the configured Ruff expects: from app.main import app, then from fastapi.testclient import TestClient in one import group. Change only that file. Use file read/edit tools only. Do not run commands, install packages, commit, or push. Report the correction; Codex will rerun the checks.”
+
+## 2026-10-02T11:57:50+06:00 — T004 accepted
+
+- Tool: Codex reviewing Antigravity.
+- Correction verified; `make check-structure test-api lint-api` passed (1 backend test), `git diff --check` passed. Full existing suite and backend/script linter run. TestClient dependency deprecation warning remains non-fatal.
+- Outcome: generic GET /health and local API/test/lint commands accepted; no business endpoints or domain logic. Ready for scoped T004 commit and authorized GitHub push.

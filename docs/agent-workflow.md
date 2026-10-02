@@ -63,3 +63,7 @@ Host tool checks: Python 3.13.2, Node v20.20.2, npm 10.8.2, Docker Compose v5.3.
 ## Verified interactive implementation method
 
 Use `agy --mode accept-edits --prompt-interactive` with the task prompt in the project cwd. T002 and T003 were implemented in this mode. Inspect each command-permission request and authorize only task-scoped actions; conversation-local allowances were limited to Git status, check-ignore and diff. Do not use the permission-bypass flag. T003 required one review-feedback round. Codex independently ran structure checks and Ruff successfully.
+
+## Verified headless file-only implementation
+
+T004 completed through `agy --mode accept-edits --print` when explicitly limited to file read/edit tools. Codex handled package installation and command checks. This avoids headless command-permission denial while retaining review and permission enforcement. One file-only feedback prompt corrected a lint issue. Use this method for later source tasks; implementation test results are always independently verified by Codex.
