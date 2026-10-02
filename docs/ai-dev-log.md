@@ -101,3 +101,24 @@
 - Codex corrected structure checker to accept the verified caret/OR Node engine range instead of checking for a literal >=20 substring. Verified original >=20 and new ^20.19.0 || >=22.12.0 ranges pass, >=18 fails; Ruff passes. No domain behavior changed.
 - GitHub metadata API confirms public visibility and default main branch. Browser fetch was unavailable; API verification succeeded without credentials.
 - Outcome: T005 ready for local commit and authorized push; next T006 container skeleton.
+
+## 2026-10-02T12:14:31+06:00 — T006 delegation
+
+- Tool: Antigravity CLI headless file-only mode.
+- Prompt: “Read tasks/T006.md and implement only T006. Use file read/edit tools only. Do not run shell commands, install packages, commit, push or deploy. Codex will build the containers and run the exact checks. Report changed files and pending verification.”
+- Brief: tasks/T006.md; PostgreSQL/API/static frontend Compose skeleton, required placeholder env, local ports and bounded smoke check; no domain schema/migrations/data.
+- Codex supplied backend/requirements-dev.lock from the tested environment; constraints will be reviewed and committed with the container task that consumes them. Docker engine started and verified (29.6.2).
+- Status: implementation and independent container verification pending.
+
+## 2026-10-02T12:19:00+06:00 — T011 approved validation setup
+
+- Tool: Codex.
+- Human responses: “Keep these unset; I’ll provide different simulation values” for fee/caps; “Use seed 4242 and a 60/20/20 agent split” for validation.
+- Brief: tasks/T011.md. Config, assumptions and evaluation plan now record the approved validation setup; fee/cap settings remain null. No generator or model code written.
+- Exact task config assertion passed. Existing suite/linter verification and scoped commit pending.
+
+## 2026-10-02T12:21:35+06:00 — T011 accepted / T006 first review
+
+- T011: exact config assertion, structure check, existing backend/frontend suites and both linters passed. Approved config/docs changes ready for scoped commit; fees/caps remain null.
+- T006: all new files, Dockerfiles, ignore files and Compose/Makefile/env diffs reviewed. `make lint-api` and `docker compose --env-file .env.example config --quiet` passed.
+- T006 feedback: add read-only config mount so SATHI_CONFIG points to an existing file; exclude local .env files from both build contexts; require Sathi Console title and root element in frontend smoke check rather than accepting arbitrary HTML. Files limited to compose, two ignore files and smoke script; no shell/installs/Git/deployment. Container build/smoke not yet run.

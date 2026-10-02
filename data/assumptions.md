@@ -8,7 +8,7 @@ All data is synthetic. Nothing here is real upay data. Every value below is an a
 | Customers | 20,000 | Four groups below |
 | Agents | 300 | Normal, high-volume honest, skimmers |
 | Window | 90 days | Daily granularity |
-| Random seeds | train=42, test=2026 | Different seeds and different agents for test |
+| Random seeds | train=42, validation=4242, test=2026 | Different seeds and disjoint agents for each split |
 
 | Customer group | Share | Behavior |
 |---|---|---|
@@ -51,6 +51,7 @@ If an agent hands over less cash than the ledger records, the ledger shows the f
 
 ## 7. Splits
 - Train/validation/test split **by agent and by seed**, not by row.
+- Agent allocation: 60% train, 20% validation, 20% test (human-approved); use `simulation.agent_split` and `simulation.seed_validation` in config.
 - A clean test set is never used for training or threshold tuning.
 
 ## 8. Adoption scenarios for impact simulation
@@ -63,3 +64,4 @@ Sathi adoption among assisted users: 30%, 50%, 70%. Report all three.
 ## 10. Change log
 | Date | Change | Reason |
 |---|---|---|
+| 2026-10-02 | Added validation seed 4242 and 60/20/20 agent allocation | Human approved explicit validation setup; fee and caps remain unset pending separate values |

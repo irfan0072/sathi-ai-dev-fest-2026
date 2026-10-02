@@ -11,6 +11,7 @@
 
 ## 2. Splits and leakage rules
 - Split by agent and seed, not by row. Test agents are never seen in training.
+- Use configured seeds 42 / 4242 / 2026 for train / validation / test, with disjoint agent cohorts allocated 60% / 20% / 20% (human-approved on 2 October 2026). Read these values from config rather than hard-coding them in implementation.
 - Tune thresholds on validation only; touch the test set once per reported run.
 - Exclude generator ground-truth columns (group_label, agent_type) from features.
 

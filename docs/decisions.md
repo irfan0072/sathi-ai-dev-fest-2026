@@ -15,7 +15,7 @@ No architecture, schema, API, evaluation-plan or configuration changes have been
 1. Resolve evaluation-only region versus region-based agent peer groups.
 2. Clarify requested mandate code/expiry storage, authenticated agent code delivery, and lockout/daily-limit persistence.
 3. Specify missing cash-gap/lockout parameters and null fee/cap assumptions before dependent work.
-4. Specify validation seed and agent allocation before evaluation work.
+4. Validation setup resolved below; implementation must use the approved config.
 
 ## Resolved implementer selection
 
@@ -24,3 +24,12 @@ The human supplied the `agy` alias and authorized project work. `/Users/apple/.l
 ## 2026-10-02T11:53:35+06:00 — GitHub remote authorized
 
 The human supplied https://github.com/irfan0072/sathi-ai-dev-fest-2026.git and explicitly instructed Codex to use it and continue work. Remote inspection returned no refs. Local existing history is preserved on main; no history reset or force push is authorized or used. Regular pushes to this remote are authorized.
+
+## Phase 1 scenario responses
+
+- Fee/cap proposal was not adopted: human chose to keep settings unset and will supply different simulation values.
+- Official fee rate, mandate cap and daily limit remain null in config; generator/policy work needing them remains gated.
+- Human approved validation seed 4242 and disjoint 60/20/20 train/validation/test agent allocation. Existing train/test seeds 42 and 2026 remain. Config, assumptions and evaluation plan updated accordingly.
+- Human responses recorded before config/evaluation-plan edits. No fee/cap values were assumed.
+
+Confirmation recorded at 2026-10-02T12:19:00+06:00: “Keep these unset; I’ll provide different simulation values” and “Use seed 4242 and a 60/20/20 agent split”.

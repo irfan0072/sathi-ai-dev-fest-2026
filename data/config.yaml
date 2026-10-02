@@ -1,7 +1,9 @@
 # Sathi configuration. All thresholds are assumptions; edit here, not in code.
 simulation:
   seed_train: 42
+  seed_validation: 4242
   seed_test: 2026
+  agent_split: {train: 0.60, validation: 0.20, test: 0.20}
   customers: 20000
   agents: 300
   days: 90
