@@ -37,3 +37,7 @@ Confirmation recorded at 2026-10-02T12:19:00+06:00: “Keep these unset; I’ll 
 ## 2026-10-02T13:10:37+06:00 — Approved local ports
 
 Human: “Resume with API 18000 and frontend 13000”. T006 resumed using those localhost bindings; internal container ports stay 8000/80 and the existing PHP service remains running.
+
+## 2026-10-02T14:43:31+06:00 — Public runtime deployment deferred
+
+Human response to hosting-account question: “for now work in local”. Continue local work; public runtime deployment is deferred. The previously authorized GitHub remote and regular source pushes remain in use.

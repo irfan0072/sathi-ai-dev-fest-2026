@@ -1,68 +1,132 @@
 # Sathi (সাথী): Delegated Trust for Assisted MFS Users
 
-> AI DEV FEST 2026, AI Hackathon (DIU CPC x upay). Track 07: Open Innovation.
-> Team: Runtime Terrors. Status: TEMPLATE. Fill every [PLACEHOLDER] before submission.
+AI DEV FEST 2026 (DIU CPC x upay), Track 07: Open Innovation. Team: Runtime Terrors.
+
+**Current status: verified local Phase 0 skeleton.** FastAPI health endpoint, React hello-world console, PostgreSQL container, tests, linting, production frontend build and CI configuration exist. Domain features below remain planned. Official start confirmed by the human: 1 October 2026, 10:00 AM Asia/Dhaka. Public runtime deployment is deferred at the human's request; work remains local.
 
 ## 1. Project overview
-- **Problem:** [Many older and first-time users cannot operate their wallets alone, so they share their PIN with agents or relatives. This exposes them to theft and overcharging, and fraud models cannot tell who is really transacting.]
-- **Solution:** [Sathi replaces PIN sharing with scoped, one-time, auditable mandates, verifies the customer's intent in Bangla (voice or keypad), finds users likely to need help, and flags abnormal agent behavior.]
-- **Purpose:** [Safer digital finance for vulnerable users, measured by fewer PIN disclosures and less simulated loss.]
+
+Many users need help operating mobile wallets and may share their PIN with an agent or relative. Sathi proposes scoped, one-time, auditable cash-out mandates to reduce that exposure. It will check the customer's understanding of the amount in Bangla, identify users likely to need assistance, and flag abnormal agent activity for human review.
+
+All data and reported outcomes will be synthetic/simulated. Amount verification checks comprehension; it does not detect coercion or lying. Models will never make allow/deny decisions: deterministic configuration rules and human review own those outcomes.
+
+Repository: [irfan0072/sathi-ai-dev-fest-2026](https://github.com/irfan0072/sathi-ai-dev-fest-2026).
 
 ## 2. Features
-| Feature | Implemented? | How AI is used |
+
+| Feature | Status | Intended approach |
 |---|---|---|
-| Scoped one-time mandate engine | [ ] | Rules only (deterministic) |
-| Assisted-user detection | [ ] | LightGBM classifier + SHAP |
-| Agent anomaly detection | [ ] | Peer z-score + Isolation Forest |
-| Bangla voice / keypad verification | [ ] | Speech-to-text (optional), rule-based amount parsing |
-| Plain-language receipt and case narrative | [ ] | LLM wording over structured evidence only |
-| Analyst console with human review | [ ] | n/a |
+| Local API, console and database skeleton | Implemented and checked | FastAPI `/health`, React hello-world, PostgreSQL |
+| Scoped one-time mandates | Planned | Deterministic policy, hashed codes, expiry and audit |
+| Assisted-user detection | Planned | Rule baseline, LightGBM, SHAP and calibration |
+| Agent anomaly detection | Planned | Rule baseline, robust peer z-score and Isolation Forest |
+| Bangla amount verification | Planned | Keypad first, rule-based parser; optional speech interface |
+| Receipts and case narratives | Planned | Optional LLM wording with numeric validation |
+| Analyst console and review queue | Planned | Human decisions over structured evidence |
 
 ## 3. Technology stack
-- Python [version], FastAPI, PostgreSQL [version], React [version]
-- ML: scikit-learn, LightGBM, SHAP, NetworkX (optional)
-- AI services: [speech-to-text provider], [LLM provider/model]
-- Deployment: [platform]
+
+Verified on macOS with Python 3.13.2, Node 20.20.2 and npm 10.8.2. Current locked versions include FastAPI 0.142.2, React 18.3.1, Vite 8.3.2 and Vitest 4.1.11. Containers use Python 3.13, Node 20 for the frontend build, PostgreSQL 16 and Nginx. Docker Engine 29.6.2 and Compose 5.3.1 were used locally.
+
+scikit-learn, LightGBM, SHAP and optional NetworkX are planned; they are not installed for this skeleton. No runtime LLM or speech service is connected.
 
 ## 4. Requirements
-- [OS, Python, Node, Docker versions]
-- [Hardware notes, API access needed]
+
+- Python 3.13 and a virtual environment for backend checks.
+- Node `^20.19.0 || >=22.12.0`, npm, Git and Make for local development.
+- Docker with Compose for the full local container stack.
+- Free localhost ports 18000 (API), 13000 (console) and 5432 (database), or configure alternatives in your local `.env`.
+
+No API keys, real customer data or external AI accounts are needed to run the skeleton. No hardware performance claim has been measured.
 
 ## 5. Installation and setup
-1. `git clone [REPO_URL] && cd sathi`
-2. [Install backend dependencies]
-3. [Install console dependencies]
-4. [Start Postgres, e.g. docker compose up -d db]
-5. [Run migrations: docs/schema.sql]
-6. [Generate synthetic data: seed command]
-7. [Train models: train command]
 
-## 6. Environment variables (use placeholders, never real secrets)
-| Name | Purpose | Example |
+These dependency-install and check commands were verified in an isolated clone of the public repository on 2 October 2026:
+
+```sh
+git clone https://github.com/irfan0072/sathi-ai-dev-fest-2026.git
+cd sathi-ai-dev-fest-2026
+python3 -m venv .venv
+.venv/bin/pip install -c backend/requirements-dev.lock -e 'backend[dev]'
+npm --prefix frontend ci
+make test lint build-console
+```
+
+The backend constraints file records tested runtime/dev versions; `frontend/package-lock.json` pins the frontend dependencies. Migrations, synthetic generation, seeding and model training commands are not implemented yet. `docs/schema.sql` remains a design artifact and is not applied by Compose.
+
+## 6. Environment variables
+
+`.env.example` contains placeholders only. Copy it to the ignored `.env` for local overrides:
+
+```sh
+cp .env.example .env
+```
+
+| Name | Purpose | Example/default |
 |---|---|---|
-| DATABASE_URL | Postgres connection | postgresql://user:pass@localhost:5432/sathi |
-| LLM_API_KEY | LLM provider key | YOUR_KEY_HERE |
-| STT_API_KEY | Speech-to-text key | YOUR_KEY_HERE |
-| JWT_SECRET | Token signing | CHANGE_ME |
-| SATHI_CONFIG | Path to config | data/config.yaml |
+| POSTGRES_USER / POSTGRES_DB | Local database identity | `sathi` |
+| POSTGRES_PASSWORD | Required Compose database password | `CHANGE_ME` (local example only) |
+| DATABASE_URL | Future backend database connection | `postgresql://sathi:CHANGE_ME@localhost:5432/sathi` |
+| API_PORT / FRONTEND_PORT / POSTGRES_PORT | Localhost host ports | `18000` / `13000` / `5432` |
+| API_URL / FRONTEND_URL | Smoke-check URLs | `http://127.0.0.1:18000/health` / `http://127.0.0.1:13000` |
+| JWT_SECRET | Future token signing secret; currently unused | `CHANGE_ME` |
+| SATHI_CONFIG | Configuration path | `data/config.yaml` |
+| LLM_API_KEY / STT_API_KEY | Optional future services; currently unused | `YOUR_KEY_HERE` |
+
+Compose constructs its internal database URL using the POSTGRES variables and the `db` hostname. The skeleton API does not connect to the database or authenticate users. Keep real secrets out of Git and replace placeholders before any future public deployment.
 
 ## 7. Run and build commands
-- Backend: `[command]`
-- Console: `[command]`
-- Full stack: `[docker compose up --build]`
-- Production build: `[command]`
+
+Verified container startup:
+
+```sh
+docker compose --env-file .env.example config --quiet
+docker compose --env-file .env.example up --build -d
+make smoke-skeleton
+docker compose --env-file .env.example ps
+```
+
+Open the console at [localhost:13000](http://127.0.0.1:13000) and API health at [localhost:18000/health](http://127.0.0.1:18000/health). The database retains data in a named development volume. Container host bindings are localhost only. Existing services on port 8000 are unaffected.
+
+For your `.env` overrides, replace `--env-file .env.example` with `--env-file .env`. If URLs/ports differ, invoke the smoke checker explicitly:
+
+```sh
+python3 scripts/smoke_skeleton.py --api-url http://127.0.0.1:18000/health --frontend-url http://127.0.0.1:13000
+```
+
+The API image contains a snapshot of `data/config.yaml`; rebuild with `up --build -d` after config edits. No host bind mount or Docker file-sharing change is required.
+
+Local development commands in separate terminals:
+
+```sh
+make run-api       # localhost:18000; override with API_PORT=...
+make run-console   # Vite prefers localhost:5173; chooses the next free port if occupied
+```
+
+`make build-console` produces the ignored `frontend/dist` bundle. The Vite development port differs from the container console port; use the URL printed by Vite. The development commands were verified from the clean clone using API port 18001 and Vite port 5174 to avoid existing listeners. Stop this development stack without removing its database volume with `docker compose --env-file .env.example stop`.
 
 ## 8. Live deployment URL
-[https://...]  Demo logins: [role: credentials for judges]
+
+Pending. The human requested local work for now. There are no demo logins or public runtime URL; the public GitHub repository contains the source and continuous commit history.
 
 ## 9. Testing instructions
-- Unit/policy/lifecycle tests: `[command]`
-- Reproduce evaluation numbers: `[command]`
-- Manual check: follow docs/demo-script.md
+
+```sh
+make test lint build-console
+docker compose --env-file .env.example config --quiet
+make smoke-skeleton  # requires the running local containers
+```
+
+`make test` checks component structure and runs one backend health test and one React render test. `make lint` runs Ruff and ESLint. GitHub Actions runs the same tests, lint, frontend build and Compose config validation. The HTTP smoke check verifies API JSON and the console HTML; a browser check also confirmed the rendered hello-world page locally.
+
+The existing TestClient emits a nonfatal HTTPX deprecation warning. npm reports zero known vulnerabilities for the current lockfile; ESLint 9 emits a support/deprecation notice. Domain, security, model and fairness tests will be added with their features. There are no evaluation metrics or metric reproduction commands yet. The future domain demo in `docs/demo-script.md` cannot be run against this skeleton.
 
 ## 10. Other configuration
-- Thresholds live in `data/config.yaml`. All synthetic assumptions are in `data/assumptions.md`.
-- Data is 100% synthetic. No real customer data or PII is used.
+
+Thresholds and synthetic assumptions live in `data/config.yaml` and `data/assumptions.md`. The approved validation seed is 4242 and train/validation/test agents will be disjoint in a 60/20/20 split, with seeds 42/4242/2026. No dataset has been generated and no test set has been evaluated.
+
+Fee rate, mandate cap and daily limit remain unset pending human-supplied simulation values. Region is evaluation-only under the project rules, while a proposed peer-group setting includes it; that conflict awaits human resolution before model implementation. Mandate lifecycle/storage and code-delivery contract questions also remain open in `tasks/BOARD.md` and `docs/decisions.md`.
 
 ## Disclosures
-- External services/models: [list]. Pre-existing components: [list]. AI tools used for development: [list].
+
+Planning documents and the proposed schema/config were supplied before implementation; see `docs/ai-dev-log.md` for the recorded development history and `docs/decisions.md` for human approvals. Codex orchestrates and independently reviews/tests Antigravity CLI (`agy`) output. No external datasets, customer data, paid runtime APIs or model weights are used. Open-source dependency manifests, lockfiles and container definitions are included. Submission artifacts and measured results remain future work.

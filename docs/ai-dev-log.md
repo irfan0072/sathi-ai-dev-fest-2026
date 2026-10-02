@@ -153,3 +153,15 @@
 
 - Tool: Codex reviewing Antigravity. Full Makefile diff and CI YAML read. Only aggregate targets and read-only test workflow added; no product behavior.
 - `make test lint build-console`, Compose config validation, YAML trigger/permission assertion, and `git diff --check` passed. Two existing tests passed; nonfatal TestClient warning persists. Hosted Actions execution will be checked after push; no remote CI success claimed yet.
+
+## 2026-10-02T14:43:31+06:00 — T008 clean-clone verification
+
+- Tool: Codex; brief tasks/T008.md. Updated README setup placeholders to actual skeleton status/commands and explicit planned-domain limitations.
+- Isolated public clone: /private/tmp/sathi-clean-20261002-1312, updated to b1e3e4d. Created fresh Python venv; constrained dev install and npm ci succeeded (zero npm audit vulnerabilities, nonfatal ESLint support notice). `make test lint build-console` and Compose config validation passed from that clone. Existing running local stack passed smoke; no clone containers or database resets.
+- Human requested “for now work in local”; deployment deferred and no runtime account used. Local setup instructions and final diff verification pending completion.
+
+## 2026-10-02T14:52:21+06:00 — T007 hosted CI / T008 acceptance
+
+- Public GitHub Actions run 36985349452 for b1e3e4d completed successfully: https://github.com/irfan0072/sathi-ai-dev-fest-2026/actions/runs/36985349452. Read via unauthenticated public GitHub API. Initial status command had an unquoted URL glob; quoted retry succeeded.
+- Clean-clone `make run-api API_PORT=18001` and `make run-console` started. Vite selected 5174 because 5173 was occupied; README now documents its next-free-port behavior. Smoke against API 18001 and frontend 5174 passed. Only these verification servers were stopped afterward; the main Compose stack and PHP service remain running.
+- README full diff reviewed; documented implemented/planned boundaries and clean-clone setup are accurate. `git diff --check` passed. Phase 0 local infrastructure complete; runtime deployment explicitly deferred by human. Fee/cap inputs and documented design conflicts still gate dependent Phase 1 work.
