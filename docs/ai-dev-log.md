@@ -246,3 +246,32 @@
   - Authored `render.yaml` declaring PostgreSQL (`sathi-db`), FastAPI backend (`sathi-api` with environment-driven `CORS_ORIGINS`), and React console (`sathi-console`). Created `backend/requirements.txt` and `docs/deploy-guide.md` documenting free-tier limits (15-min sleep, 30-50s cold start; 30-day Postgres expiry), env var names, health checks, production seed command, and synthetic low-privilege demo logins.
   - All 131 backend tests pass, frontend vitest passes, linters pass.
 
+## 2026-10-02T19:30:00+06:00 — Phase 2 Tracks A & B completed, verified, and merged into main (T016, T017, T018)
+
+- Tool: Antigravity.
+- Scope:
+  - Track A (`feature/phase2-mandates`): Mandate Service & Deterministic Policy Engine (T017).
+  - Track B (`feature/phase2-models`): Rule Baselines (T016) and LightGBM Assisted-User Classifier with Calibration and SHAP (T018).
+- Actions:
+  - **Track A (T017)**:
+    - Implemented Pydantic v2 schemas in `backend/app/mandates/models.py`.
+    - Implemented `MandateService` in `backend/app/mandates/service.py`: enforces config-driven caps (5000 BDT default cap, 25000 BDT daily cash-out cumulative limit, 15-min TTL, 2-attempt verification limit, cash-gap tolerance `max(50 BDT, 0.02 * amount)`).
+    - Cryptographic security invariant: plain 6-digit one-time code is generated cryptographically via `secrets.randbelow` and returned ONLY at verification time for terminal display; only its SHA-256 hash `code_hash` is persisted.
+    - Redemption logic: enforces single-use (409), expiry check (410), and wrong-code tracking: 3 consecutive failed code attempts locks the mandate (423 `ACCOUNT_LOCKED`) and creates a review case in `cases` table.
+    - Post-redemption cash confirmation: computes physical cash gap and raises review case if gap exceeds tolerance. Revocation and complete audit logging on every operation.
+    - Implemented `backend/app/mandates/router.py` exposing the 5 endpoints under `/api/v1/mandates`.
+    - Added 18 unit and API integration tests in `backend/tests/test_mandates.py`. Passed 18/18.
+    - Committed to `feature/phase2-mandates` (`2523598`) and pushed to origin.
+  - **Track B (T016 & T018)**:
+    - Installed ML dependencies (`numpy`, `pandas`, `scikit-learn`, `lightgbm`, `shap`) into virtualenv and updated `pyproject.toml` and `requirements.txt`.
+    - Implemented `backend/app/models/features.py`: transforms transactions and sessions into behavioral feature representations; strictly verifies against `assert_feature_columns` from `backend/app/features/guard.py` to prevent any leakage of protected demographic slices (`gender`, `age_band`, `region`, `urban_rural`) or generator ground truth (`group_label`, `agent_type`).
+    - Implemented `backend/app/models/baselines.py` (T016): `AssistedUserRuleBaseline` (top_share >= 0.70 & delay <= 24h) and `AgentAnomalyRuleBaseline` (fee_ratio >= 1.2x). Added 7 tests in `backend/tests/test_baselines.py`. Passed 7/7.
+    - Implemented `backend/app/models/assisted_model.py` (T018): LightGBM classifier with `CalibratedClassifierCV(method='sigmoid', cv=5)` for well-calibrated probabilities, local explanations via `shap.TreeExplainer` returning top interpretable reasons, demographic slice fairness reporting (`max_tpr_gap`), and PR-AUC sanity check constraint (`PR-AUC <= 0.98`).
+    - Verified PR-AUC on out-of-fold validation split: achieved PR-AUC = 0.866, strictly satisfying the sanity constraint (`PR-AUC <= 0.98`) and confirming realistic simulation overlap. Added 6 tests in `backend/tests/test_assisted_model.py`. Passed 6/6.
+    - Re-exported clean aliases in `backend/app/ml/`.
+    - Committed to `feature/phase2-models` (`2074fbc`) and pushed to origin.
+  - **Integration & Merge**:
+    - Merged `feature/phase2-mandates` into `main` (clean, 0 conflicts).
+    - Merged `feature/phase2-models` into `main` (clean, 0 conflicts).
+    - Mounted `mandates_router` into `backend/app/main.py`.
+    - Ran full local gate on merged `main`: `make test` executed all 162 backend tests (149 previous + 13 new) + frontend test with 0 failures and 0 skips. `make lint` passed cleanly.

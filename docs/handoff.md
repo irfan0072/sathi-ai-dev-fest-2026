@@ -46,17 +46,19 @@ If falling behind schedule, feature cuts proceed in strict order:
 | T014 | Synthetic generator & feature leakage guard | VERIFIED | Deterministic full-scale generation; leakage guard verified; zero ground-truth leakage into feature layer. |
 | T015 | Disjoint split tooling & session correction | VERIFIED | Generator fixed: credit deposits get 0 sessions; sessions (108,192) reflect only user-initiated txns (`cash_out`, `send`, `bill_pay`). Total txns 190,256. Reseeded dev DB verified. |
 | T015b | Distribution-shifted test artifact | VERIFIED | `generate_shifted_test_split` creates `test_shifted.json` (39,962 txns, 22,210 sessions) with obvious skimmers, 50% assisted share, and degraded recall accuracy. `test.json` untouched. |
+| T016 | Baseline rule implementations | VERIFIED | `AssistedUserRuleBaseline` and `AgentAnomalyRuleBaseline` implemented with strict leakage guard; 7 unit tests passing. |
+| T017 | Mandate service & policy engine | VERIFIED | Scoped mandates, SHA-256 hashed codes, TTL expiry, 3-attempt lockout (423), cash gap anomaly detection, audit log, and FastAPI router mounted in `app.main`; 18 unit/API tests passing. |
+| T018 | Assisted-user classifier (LightGBM) | VERIFIED | LightGBM classifier with CalibratedClassifierCV, SHAP TreeExplainer local reasons, fairness slice breakdown, and PR-AUC sanity check (<= 0.98; observed 0.866 on validation split); 6 ML tests passing. |
 | Mock | Console Mock Contract & Mock Server | VERIFIED | `docs/console-mock-contract.md` and `scripts/mock_server.py` default port set to 18001 (isolated from live API on 18000). |
 | Deploy | Render Deployment Config & Guide | VERIFIED | Declarative `render.yaml`, `backend/requirements.txt`, and `docs/deploy-guide.md` created with sleep limits, env var names, health checks, and low-privilege demo logins. |
 
 ---
 
-## 3. Implementer CLI Status
+## 3. Test Suite Status
 
-- Path: `/Users/apple/.local/bin/agy`
-- Mode tested: `--mode accept-edits --print "<task-prompt>"` with instructions restricting actions to file read/edit tools only.
-- Test outcome: Verified on 2026-10-02 with a docstring edit on `scripts/smoke_skeleton.py`. Exited 0 headlessly without prompting for terminal permissions.
-- Protocol: Antigravity CLI can be delegated file editing tasks directly from the command line.
+- **Total Backend Tests**: 162 tests passed, 0 skipped, 0 failed.
+- **Frontend Tests**: 1 vitest test passed.
+- **Linters**: Both Ruff (backend/scripts) and ESLint (frontend) pass with 0 errors.
 
 ---
 
@@ -71,46 +73,18 @@ If falling behind schedule, feature cuts proceed in strict order:
 
 ---
 
-## 5. How to Run Tests & Verification
+## 5. Next Tasks in Priority Order
 
-```sh
-# 1. Structure, backend tests, and frontend tests
-make test
+1. **T019: Agent Anomaly Detector**:
+   - Robust peer z-score + Isolation Forest across peer groups (`region`, `volume_band`).
+   - Ranking and peer comparison reason generation.
+   - Unit tests in `backend/tests/test_agent_anomaly.py`.
+2. **T020: Comprehensive Evaluation Suite & Ablations**:
+   - Baseline vs Model comparison tables (Precision, Recall, F1, PR-AUC).
+   - Skimming intensity sweep (subtle, moderate, obvious).
+   - Feature ablations (session signals removed, cash confirmation removed).
+   - Robustness evaluation on distribution-shifted test split (`test_shifted.json`).
+3. **Public Deployment**:
+   - Ready for dashboard deployment via `render.yaml` and `docs/deploy-guide.md`.
 
-# 2. Both linters (Ruff and ESLint)
-make lint
-
-# 3. Production frontend bundle build
-make build-console
-
-# 4. Full aggregate gate
-make test lint build-console
-
-# 5. Full backend tests including PostgreSQL integration tests
-SATHI_TEST_DATABASE_URL="postgresql://sathi:CHANGE_ME@localhost:5432/sathi_phase1_test" \
-  PYTHONPATH=backend .venv/bin/python -m pytest backend/tests
-
-# 6. Container smoke check
-make smoke-skeleton
-
-# 7. Generate disjoint dataset splits (including distribution-shifted test artifact)
-make split
-```
-
----
-
-## 6. Phase 2 Parallel Execution Plan
-
-Per user directive on Parallel Safety:
-- **Track A (agy CLI)**:
-  - Branch: `feature/phase2-mandates`
-  - Ownership: `backend/app/mandates/` and `backend/tests/test_mandates.py` only.
-  - Tasks: Mandate service and deterministic policy engine per `docs/api-contracts.md` (hashed one-time codes, TTL, single use, wrong-code lockout, audit log, config-driven thresholds, full test coverage).
-- **Track B (Antigravity Orchestrator)**:
-  - Branch: `feature/phase2-models`
-  - Ownership: `backend/app/ml/` and evaluation scripts only.
-  - Tasks: Rule baselines (`backend/app/ml/baselines.py`), Assisted-user LightGBM classifier + calibration + SHAP (`backend/app/ml/assisted_model.py`), Agent anomaly detector.
-- **Orchestrator Role**:
-  - Exclusively owns `data/config.yaml`, `tasks/BOARD.md`, and `docs/`.
-  - Merges track branches into `main` after independent review and a green full suite (`make test lint`).
 

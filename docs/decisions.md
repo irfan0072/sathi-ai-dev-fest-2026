@@ -124,3 +124,22 @@ Orchestrator changed from Codex to Antigravity at 2026-10-02T18:01:37+06:00 (12:
    - Security constraints: Production never uses the local CI password `CHANGE_ME`; managed DB injects secure random credentials via `DATABASE_URL`. CORS is strictly restricted via `CORS_ORIGINS`.
    - Step-by-step instructions, low-privilege synthetic demo logins, and free-tier sleep/expiry limits documented in `docs/deploy-guide.md`.
 
+## 2026-10-02T19:30:00+06:00 — Phase 2 Tracks A & B Implementation (T016, T017, T018)
+
+1. **Deterministic Mandate Service & Policy Engine (T017)**:
+   - Implemented in `backend/app/mandates/` with full Pydantic v2 schemas conforming to `docs/api-contracts.md`.
+   - Security Invariant: Plain 6-digit one-time codes are generated cryptographically (`secrets.randbelow`) and only displayed at verification time; only SHA-256 hashes (`code_hash`) are persisted.
+   - Policy parameters loaded dynamically from `data/config.yaml`: 5000 BDT default mandate cap, 25000 BDT daily cash-out cumulative limit, 15-minute TTL, 2-attempt verification limit, and cash-gap tolerance threshold `max(50 BDT, 0.02 * amount)`.
+   - Lockout rule: 3 consecutive failed redemption code attempts locks the mandate with HTTP 423 `ACCOUNT_LOCKED` and opens a review case in `cases` table.
+   - Revocation and complete audit logging on every lifecycle transition.
+
+2. **Rule Baselines (T016)**:
+   - Implemented `AssistedUserRuleBaseline` (`top_agent_share >= 0.70` AND `credit_to_cashout_hours_mean <= 24.0`) and `AgentAnomalyRuleBaseline` (`agent_fee_ratio_over_official >= 1.2`).
+   - Strictly enforced zero feature leakage via `assert_feature_columns` from `backend/app/features/guard.py`.
+   - Complete evaluation metrics and demographic slice fairness breakdowns (`gender`, `age_band`, `region`, `urban_rural`).
+
+3. **Assisted-User Classifier with Calibration and SHAP (T018)**:
+   - Trained LightGBM gradient boosted classifier on approved numeric behavioral features.
+   - Calibrated output probabilities using `CalibratedClassifierCV(method='sigmoid', cv=5)` to guarantee well-calibrated probabilities and low Brier scores.
+   - Local explanation capability via `shap.TreeExplainer` returning top interpretable feature attributions for customer review cards.
+   - Validated PR-AUC sanity check constraint (`PR-AUC <= 0.98`) on out-of-fold validation data (`PR-AUC = 0.866`), proving realistic overlap without trivial in-sample overfit.
