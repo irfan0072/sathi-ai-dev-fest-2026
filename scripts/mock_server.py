@@ -171,7 +171,9 @@ def redeem_mandate(mandate_id: str, req: RedeemRequest) -> dict[str, Any]:
     if req.code != expected_code:
         raise HTTPException(
             status_code=401,
-            detail={"error": {"code": "INVALID_CODE", "message": "Incorrect one-time code."}},
+            detail={
+                "error": {"code": "INVALID_CODE", "message": "Incorrect one-time code."}
+            },
         )
 
     if mandate:
@@ -409,8 +411,12 @@ def get_metrics_summary() -> dict[str, Any]:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run Sathi mock server")
-    parser.add_argument("--port", type=int, default=18001, help="Port to bind (default: 18001)")
-    parser.add_argument("--host", default="127.0.0.1", help="Host to bind (default: 127.0.0.1)")
+    parser.add_argument(
+        "--port", type=int, default=18001, help="Port to bind (default: 18001)"
+    )
+    parser.add_argument(
+        "--host", default="127.0.0.1", help="Host to bind (default: 127.0.0.1)"
+    )
     args = parser.parse_args()
 
     print(f"Starting Sathi Mock Server on http://{args.host}:{args.port}")

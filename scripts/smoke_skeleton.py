@@ -43,7 +43,9 @@ def check_frontend(url: str, timeout: float = 5.0) -> bool:
                 return False
             body = response.read().decode("utf-8", errors="replace")
             has_title = "<title>Sathi Console</title>" in body or bool(
-                re.search(r"<title[^>]*>\s*Sathi Console\s*</title>", body, re.IGNORECASE)
+                re.search(
+                    r"<title[^>]*>\s*Sathi Console\s*</title>", body, re.IGNORECASE
+                )
             )
             has_root = 'id="root"' in body or "id='root'" in body
             if has_title and has_root:
@@ -57,7 +59,11 @@ def check_frontend(url: str, timeout: float = 5.0) -> bool:
 
 
 def wait_for_service(
-    name: str, check_fn: Callable[[str, float], bool], url: str, max_retries: int, delay: float
+    name: str,
+    check_fn: Callable[[str, float], bool],
+    url: str,
+    max_retries: int,
+    delay: float,
 ) -> bool:
     """Retry check_fn until it succeeds or max_retries is reached."""
     print(f"Checking {name} at {url} (max {max_retries} retries)...")
@@ -71,9 +77,7 @@ def wait_for_service(
 
 def main() -> int:
     """Parse arguments and execute smoke checks against API and frontend."""
-    parser = argparse.ArgumentParser(
-        description="Smoke test for running compose stack"
-    )
+    parser = argparse.ArgumentParser(description="Smoke test for running compose stack")
     parser.add_argument(
         "--api-url",
         default=os.getenv("API_URL", "http://127.0.0.1:18000/health"),
@@ -99,9 +103,7 @@ def main() -> int:
 
     args = parser.parse_args()
 
-    api_ok = wait_for_service(
-        "API", check_api, args.api_url, args.retries, args.delay
-    )
+    api_ok = wait_for_service("API", check_api, args.api_url, args.retries, args.delay)
     if not api_ok:
         print(f"FAIL: API failed smoke check at {args.api_url}", file=sys.stderr)
         return 1

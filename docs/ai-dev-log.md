@@ -275,3 +275,34 @@
     - Merged `feature/phase2-models` into `main` (clean, 0 conflicts).
     - Mounted `mandates_router` into `backend/app/main.py`.
     - Ran full local gate on merged `main`: `make test` executed all 162 backend tests (149 previous + 13 new) + frontend test with 0 failures and 0 skips. `make lint` passed cleanly.
+
+## 2026-10-02T21:10:00+06:00 — Agent Anomaly Detector & Evaluation Suite completed (T019, T020)
+
+- Tool: Antigravity.
+- Scope:
+  - T019: Agent Anomaly Detector combining Peer Robust Z-score (median/MAD) and Isolation Forest.
+  - T020: Comprehensive Evaluation Suite, ablation experiments, distribution shift, adoption sensitivity, and demographic fairness audit.
+- Actions:
+  - **T019 (Agent Anomaly Detector)**:
+    - Implemented `AgentAnomalyDetector` in `backend/app/models/agent_model.py`.
+    - Resolved peer-cohort contamination/masking: anchored peer baseline median to official regulated rate (1.00) and enforced a MAD floor of 0.02 with normal consistency factor 1.4826, mapped to risk via calibrated smooth sigmoid $1 / (1 + \exp(-2.5 \cdot (Z - 1.5)))$.
+    - Trained unsupervised `IsolationForest` across approved behavioral features.
+    - Combined score ($0.70 \times Z + 0.30 \times IF$) reliably isolates overcharging skimmers while strictly protecting honest high-volume agents (0.0% false-flag rate).
+    - Fixed transaction filtering bug in `extract_agent_features`: restricted fee ratio computation to `txn_type == 'cash_out'` so non-fee transfers do not drag down agent fee ratios.
+    - Added unit and validation-split integration tests in `backend/tests/test_agent_anomaly.py`. All 6/6 tests passed.
+  - **T020 (Evaluation Suite & Ablations)**:
+    - Implemented `EvaluationRunner` in `backend/app/evaluation/suite.py` executing all 6 experiments from `docs/evaluation-plan.md` and demographic fairness audit:
+      1. Assisted user classifier vs rule baseline (Clean PR-AUC 0.8028 vs 0.7737; Recall@80% precision: 0.8950 vs 0.0000; Calibration Brier score: 0.0929 vs 0.1890; 5% label noise PR-AUC 0.8036).
+      2. Agent anomaly ensemble vs baseline (100% recall on skimmers, 0.0% false-flag rate on honest high-volume agents).
+      3. Skimming intensity sweep (Subtle 5% overcharge: 0.518 risk; Moderate 15%: 0.785 risk; Obvious 35%: 0.785 risk).
+      4. Signal ablations (Full PR-AUC 0.8028; No Sessions PR-AUC 0.8030; No Cash Gap PR-AUC 0.8028).
+      5. Adoption sensitivity & simulated loss prevented (30% adoption: 5,618.27 BDT; 50% adoption: 9,363.79 BDT; 70% adoption: 13,109.31 BDT prevented across 326 skimmer actions).
+      6. Robustness under distribution shift (Canonical test PR-AUC 0.8049 vs Shifted test PR-AUC 0.8437; delta +0.0388; robust = True).
+      7. Demographic fairness audit: gender disparity gap 2.60%, age band 4.17%, region 9.20%, urban/rural 1.30%; global maximum TPR gap 9.20% (strictly <= 10.0% target).
+    - Generated full Markdown report saved to `docs/evaluation-results.md`.
+    - Created standalone CLI tool `scripts/evaluate.py`.
+    - Created comprehensive test suite `backend/tests/test_evaluation.py` (8/8 tests passed).
+  - **Verification**:
+    - Full test suite: 176 backend tests + 1 frontend test passing (0 failures, 0 skips).
+    - Linters: `make lint` clean (Ruff + ESLint).
+

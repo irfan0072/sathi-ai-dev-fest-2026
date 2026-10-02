@@ -54,17 +54,23 @@ def check_pyproject() -> list[str]:
     dep_names = [d.split(">=")[0].split("[")[0].strip() for d in deps]
     for required_dep in ("fastapi", "uvicorn"):
         if required_dep not in dep_names:
-            errors.append(f"backend/pyproject.toml missing required dependency: {required_dep}")
+            errors.append(
+                f"backend/pyproject.toml missing required dependency: {required_dep}"
+            )
 
     dev_deps = project.get("optional-dependencies", {}).get("dev", [])
     dev_names = [d.split(">=")[0].split("[")[0].strip() for d in dev_deps]
     for required_dev in ("pytest", "httpx", "ruff"):
         if required_dev not in dev_names:
-            errors.append(f"backend/pyproject.toml missing dev dependency: {required_dev}")
+            errors.append(
+                f"backend/pyproject.toml missing dev dependency: {required_dev}"
+            )
 
     tool = data.get("tool", {})
     if "setuptools" not in tool or "packages" not in tool["setuptools"]:
-        errors.append("backend/pyproject.toml missing setuptools package discovery configuration")
+        errors.append(
+            "backend/pyproject.toml missing setuptools package discovery configuration"
+        )
 
     if "pytest" not in tool:
         errors.append("backend/pyproject.toml missing tool.pytest configuration")
@@ -85,7 +91,9 @@ def check_package_json() -> list[str]:
         return [f"Failed to parse frontend/package.json: {e}"]
 
     node_engine = data.get("engines", {}).get("node", "")
-    minimum_majors = [int(value) for value in re.findall(r"(?:\^|>=)\s*(\d+)", node_engine)]
+    minimum_majors = [
+        int(value) for value in re.findall(r"(?:\^|>=)\s*(\d+)", node_engine)
+    ]
     if not minimum_majors or min(minimum_majors) < 20:
         errors.append(
             f"frontend/package.json engines.node must require Node 20 or newer, got '{node_engine}'"
@@ -99,7 +107,9 @@ def check_package_json() -> list[str]:
     dev_deps = data.get("devDependencies", {})
     for required_dev in ("vite", "vitest", "eslint"):
         if required_dev not in dev_deps:
-            errors.append(f"frontend/package.json missing devDependency: {required_dev}")
+            errors.append(
+                f"frontend/package.json missing devDependency: {required_dev}"
+            )
 
     return errors
 

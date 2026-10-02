@@ -187,6 +187,7 @@ class AgentAnomalyRuleBaseline:
         self,
         X: pd.DataFrame,
         y: pd.Series | np.ndarray,
+        agent_types: pd.Series | list[str] | None = None,
         top_k: int = 15,
     ) -> dict[str, Any]:
         """Evaluate agent detection precision, recall, and false-positive flags."""
@@ -199,13 +200,23 @@ class AgentAnomalyRuleBaseline:
         top_k_indices = np.argsort(scores)[::-1][:top_k]
         p_at_k = float(y_true[top_k_indices].sum()) / float(top_k) if top_k > 0 else 0.0
 
+        # False-flag rate on honest high volume
+        false_flag_rate_honest = 0.0
+        if agent_types is not None:
+            types_arr = np.asarray(agent_types)
+            honest_idx = types_arr == "high_volume_honest"
+            if honest_idx.sum() > 0:
+                false_flag_rate_honest = float(y_pred[honest_idx].sum()) / float(honest_idx.sum())
+
         return {
             "model": "agent_rule_baseline",
             "accuracy": float(accuracy_score(y_true, y_pred)),
             "precision": float(precision_score(y_true, y_pred, zero_division=0)),
             "recall": float(recall_score(y_true, y_pred, zero_division=0)),
+            "recall_on_skimmers": float(recall_score(y_true, y_pred, zero_division=0)),
             "f1": float(f1_score(y_true, y_pred, zero_division=0)),
             f"precision_at_{top_k}": p_at_k,
             "flagged_count": int(y_pred.sum()),
+            "false_flag_rate_honest_high_volume": false_flag_rate_honest,
             "total_agents": len(y_true),
         }

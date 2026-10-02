@@ -12,12 +12,13 @@ The start gate is satisfied. Later phases are permitted by this gate; the human 
 
 The following design decisions remain open pending further specification:
 
-1. **Region peer grouping**: Resolve evaluation-only region versus region-based agent peer groups. `region` is an evaluation slice in the fairness specification, while the agent anomaly model design references peer groups `[region, volume_band]`.
-2. **Mandate lifecycle and persistence**: Clarify requested mandate `code_hash` and `expires_at` storage timing (schema requires non-null columns at creation, whereas code generation follows verification), authenticated agent terminal code delivery mechanism, wrong-code lockout persistence and threshold, and daily-limit tracking. Note: approved verification attempts (2) does not define wrong-code lockout.
+1. **Region peer grouping (RESOLVED 2026-10-02)**: `region` is used strictly as a demographic slice for fairness evaluation (never an input feature into the user classifier). For agent anomaly peer grouping, `peer_metadata` is passed to group cohort statistics, while the agent feature matrix `X` consists strictly of approved numeric behavioral features. Peer reference medians are anchored to official regulated rate (1.00) with a MAD floor (0.02) to prevent cohort contamination.
+2. **Mandate lifecycle and persistence (RESOLVED 2026-10-02)**: Mandates are created in `draft` state with placeholder null hashes; verification generates a cryptographic one-time 6-digit code, stores its SHA-256 hash `code_hash` and `expires_at` (15 min TTL), and returns the plain code only for terminal display. Wrong-code attempts (3 limit) trigger HTTP 423 `ACCOUNT_LOCKED` and a review case in `cases` table.
 
 Resolved decisions:
 - Validation setup resolved: seed 4242 and 60/20/20 train/validation/test agent split.
 - Simulation assumptions resolved: approved fee rate, mandate cap, daily limit, TTL, verification attempts, cash gap tolerance, customer/agent distributions, and reporting parameters (detailed below).
+- Track A (T017) and Track B (T016, T018, T019, T020) implemented, tested, and verified. Full evaluation suite recorded in `docs/evaluation-results.md`.
 
 ## Resolved implementer selection
 
