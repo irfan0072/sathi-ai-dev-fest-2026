@@ -142,3 +142,14 @@
 - Prompt: “The human approved resuming T006 with API port 18000 and frontend port 13000, leaving the existing PHP service running. Read tasks/T006-port-retry.patch and apply exactly its proposed changes to .env.example, compose.yaml, Makefile, and scripts/smoke_skeleton.py using file read/edit tools only. Do not run shell commands, install packages, commit, push, or change any other file. Do not change container internal ports or business config. Codex will run container startup, all checks and smoke tests. Report changes and pending verification.”
 - Full changed files reviewed. `make check-structure test-api lint-api test-console lint-console build-console` passed (1 API test, 1 React test; nonfatal TestClient warning). Docker images built and `docker compose --env-file .env.example up --build -d` succeeded. PostgreSQL healthy; API/frontend running on localhost 18000/13000.
 - `make smoke-skeleton` passed both HTTP checks. Browser accessibility inspection confirmed rendered Hello World and Sathi Console Skeleton. PHP service was not stopped. No business features, schema, synthetic data or public runtime deployment introduced.
+
+## 2026-10-02T13:11:47+06:00 — T007 delegation
+
+- Tool: Antigravity CLI headless file-only mode.
+- Prompt: “Read tasks/T007.md and implement only T007. Use file read/edit tools only. Do not run shell commands, install packages, commit, push or deploy. backend/requirements-dev.lock now exists and must be used as pip constraints. Codex will run the exact checks. Report changed files and pending verification.”
+- Scope: aggregate Makefile checks and read-only GitHub Actions CI; no business behavior or runtime deployment. Verification pending.
+
+## 2026-10-02T14:39:55+06:00 — T007 local verification accepted
+
+- Tool: Codex reviewing Antigravity. Full Makefile diff and CI YAML read. Only aggregate targets and read-only test workflow added; no product behavior.
+- `make test lint build-console`, Compose config validation, YAML trigger/permission assertion, and `git diff --check` passed. Two existing tests passed; nonfatal TestClient warning persists. Hosted Actions execution will be checked after push; no remote CI success claimed yet.

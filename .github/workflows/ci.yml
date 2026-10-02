@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install backend dependencies
+        run: |
+          python -m venv .venv
+          echo "$GITHUB_WORKSPACE/.venv/bin" >> "$GITHUB_PATH"
+          .venv/bin/pip install --upgrade pip
+          if [ -f backend/requirements-dev.lock ]; then
+            .venv/bin/pip install -c backend/requirements-dev.lock -e "backend[dev]"
+          else
+            .venv/bin/pip install -e "backend[dev]"
+          fi
+
+      - name: Install frontend dependencies
+        run: npm --prefix frontend ci
+
+      - name: Run test suite
+        run: make test
+
+      - name: Run lint suite
+        run: make lint
+
+      - name: Build frontend console
+        run: make build-console
+
+      - name: Validate Docker Compose configuration
+        run: docker compose --env-file .env.example config --quiet

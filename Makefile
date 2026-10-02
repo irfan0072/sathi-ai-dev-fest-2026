@@ -1,7 +1,11 @@
 PYTHON ?= .venv/bin/python
 API_PORT ?= 18000
 
-.PHONY: check-structure test-api lint-api run-api test-console lint-console build-console run-console smoke-skeleton
+.PHONY: test lint check-structure test-api lint-api run-api test-console lint-console build-console run-console smoke-skeleton
+
+test: check-structure test-api test-console
+
+lint: lint-api lint-console
 
 check-structure:
 	python3 scripts/check_structure.py
