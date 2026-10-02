@@ -1,0 +1,40 @@
+# Sathi configuration. All thresholds are assumptions; edit here, not in code.
+simulation:
+  seed_train: 42
+  seed_test: 2026
+  customers: 20000
+  agents: 300
+  days: 90
+  group_shares: {independent_urban: 0.40, independent_rural: 0.25, assisted_allowance: 0.20, assisted_family: 0.15}
+  allowance_day_of_cycle: 5          # assumption
+  label_noise: 0.10
+  agent_mix: {normal: 270, high_volume_honest: 20, skimmers: 10}
+  skimming_intensity: moderate       # subtle | moderate | obvious
+  official_fee_rate: null            # ASSUMPTION: set a labelled placeholder, not a claimed real rate
+  customer_report_rate: 0.6
+  customer_report_accuracy: 0.9
+policy:
+  mandate_ttl_minutes: 15
+  user_cap_default: null             # set per scenario
+  daily_cash_out_limit: null
+  agent_risk_high: 0.8
+  assisted_outreach_threshold: 0.6
+  verification_modes: [keypad, voice]
+  max_verification_attempts: 2
+  review_on_mismatch: true
+models:
+  assisted_classifier: {type: lightgbm, features_window_days: 30, calibrate: true}
+  agent_anomaly: {methods: [peer_robust_zscore, isolation_forest], peer_groups: [region, volume_band], review_top_k: 15}
+  baselines:
+    assisted_rule: {top_agent_share_min: 0.7, hours_credit_to_cashout_max: 24}
+    agent_rule: {fee_ratio_over_official_min: 1.2}
+fairness:
+  slices: [gender, age_band, region, urban_rural]   # evaluation only, never model inputs
+  max_tpr_gap: 0.10                                   # target, report if missed
+copilot:
+  llm_may_generate_numbers: false
+  require_structured_output: true
+  injection_tests: true
+privacy:
+  store_voice_audio: false
+  store_parsed_amount_only: true
