@@ -1,0 +1,22 @@
+# Ignore everything by default (strict allowlist)
+*
+**
+
+# Allow backend source, manifests, and Dockerfile
+!backend
+!backend/Dockerfile
+!backend/pyproject.toml
+!backend/requirements-dev.lock
+!backend/app
+!backend/app/*
+!backend/app/**
+
+# Allow config snapshot
+!data
+!data/config.yaml
+
+# Exclude local .env files everywhere
+.env
+.env.*
+**/.env
+**/.env.*

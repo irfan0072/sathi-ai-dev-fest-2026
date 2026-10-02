@@ -1,0 +1,3 @@
+# T006 review prompt (first correction round)
+
+T006 review feedback: lint and Compose config pass, but please correct three scoped issues before build verification. Add a read-only bind mount of ./data/config.yaml to /app/data/config.yaml in the API service so SATHI_CONFIG points to an existing file. Exclude .env and .env.* (except .env.example if needed) from both Docker build contexts. Make check_frontend require the Sathi Console title AND the root element, so an unrelated HTML server cannot pass the smoke test. Change only compose.yaml, backend/.dockerignore, frontend/.dockerignore, and scripts/smoke_skeleton.py. Use read/edit tools only; no commands, installs, Git or deployment. Codex will run all checks and container build.

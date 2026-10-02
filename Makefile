@@ -1,6 +1,7 @@
 PYTHON ?= .venv/bin/python
+API_PORT ?= 18000
 
-.PHONY: check-structure test-api lint-api run-api test-console lint-console build-console run-console
+.PHONY: check-structure test-api lint-api run-api test-console lint-console build-console run-console smoke-skeleton
 
 check-structure:
 	python3 scripts/check_structure.py
@@ -12,7 +13,7 @@ lint-api:
 	$(PYTHON) -m ruff check --config backend/pyproject.toml backend scripts
 
 run-api:
-	PYTHONPATH=backend $(PYTHON) -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+	PYTHONPATH=backend $(PYTHON) -m uvicorn app.main:app --host 127.0.0.1 --port $(API_PORT)
 
 test-console:
 	npm --prefix frontend run test
@@ -25,3 +26,6 @@ build-console:
 
 run-console:
 	npm --prefix frontend run dev
+
+smoke-skeleton:
+	python3 scripts/smoke_skeleton.py

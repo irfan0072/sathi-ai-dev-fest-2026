@@ -33,3 +33,7 @@ The human supplied https://github.com/irfan0072/sathi-ai-dev-fest-2026.git and e
 - Human responses recorded before config/evaluation-plan edits. No fee/cap values were assumed.
 
 Confirmation recorded at 2026-10-02T12:19:00+06:00: “Keep these unset; I’ll provide different simulation values” and “Use seed 4242 and a 60/20/20 agent split”.
+
+## 2026-10-02T13:10:37+06:00 — Approved local ports
+
+Human: “Resume with API 18000 and frontend 13000”. T006 resumed using those localhost bindings; internal container ports stay 8000/80 and the existing PHP service remains running.

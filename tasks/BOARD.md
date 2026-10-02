@@ -2,7 +2,7 @@
 
 T+0: **confirmed — 1 October 2026, 10:00 AM Asia/Dhaka**. Delegation: **authorized by human on 2 October 2026**. Implementer: **`agy --print` read-only probe passed**.
 
-The start gate is satisfied; this initial board covers Phase 0. Repository hygiene and empty component scaffolding are implemented; application hello-world tasks remain planned. Commands for planned tasks are proposed acceptance commands, not passed checks; completed-task results are recorded in the development log. Write each `tasks/T###.md` brief before delegation.
+The start gate is satisfied; this initial board covers Phase 0. Repository hygiene and empty component scaffolding are implemented; application hello-world and local containers are verified. Commands for planned tasks are proposed acceptance commands, not passed checks; completed-task results are recorded in the development log. Write each `tasks/T###.md` brief before delegation.
 
 | ID | Title | Owner | Status | Dependencies | Acceptance criteria | Test command |
 |---|---|---|---|---|---|---|
@@ -12,7 +12,7 @@ The start gate is satisfied; this initial board covers Phase 0. Repository hygie
 | T003 | Set up empty component structure and dependency manifests | antigravity | Done (Codex checks passed) | T002 | Separate API, feature/model, verification, copilot and console boundaries following architecture; no business logic; record runtime/dependency versions | `make check-structure` |
 | T004 | FastAPI hello-world and test runner | antigravity | Done (Codex checks passed) | T003 | Generic hello-world route, unit test and backend lint command; no mandate, data or policy implementation | `make test-api lint-api` |
 | T005 | React hello-world and test runner | antigravity | Done (Codex checks passed) | T003 | Generic React hello-world, smoke test and lint/build commands; no product UI until T+0 confirmed | `make test-console lint-console build-console` |
-| T006 | Docker Compose skeleton | antigravity | In progress | T004, T005 | Postgres, API and console skeleton; placeholder env settings; no schema migration or synthetic seed | `docker compose config --quiet`; `make smoke-skeleton` |
+| T006 | Docker Compose skeleton | antigravity | Done (approved retry; smoke passed) | T004, T005 | Postgres, API and console skeleton; placeholder env settings; no schema migration or synthetic seed | `docker compose config --quiet`; `make smoke-skeleton` |
 | T007 | Aggregate local checks and CI | antigravity | Planned | T004, T005, T006 | `make test` and `make lint` run real component checks; CI matches local commands | `make test lint build-console`; `git diff --check` |
 | T008 | Verify Phase 0 setup instructions | codex | Planned | T007 | README skeleton setup matches commands actually run; limitations and pre-existing artifacts disclosed; no claimed metrics | `make test lint build-console smoke-skeleton` |
 | T009 | Confirm start and record time | codex | Done (human-confirmed) | Human T+0 confirmation | Exact official date, time and timezone recorded in decisions; later phases remain gated until confirmation | Manual comparison against human confirmation |

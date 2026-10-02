@@ -1,0 +1,77 @@
+--- a/.env.example
++++ b/.env.example
+@@ -5,13 +5,13 @@
+ DATABASE_URL=postgresql://sathi:CHANGE_ME@localhost:5432/sathi
+ 
+ # Service port bindings (localhost only)
+-API_PORT=8000
+-FRONTEND_PORT=3000
++API_PORT=18000
++FRONTEND_PORT=13000
+ POSTGRES_PORT=5432
+ 
+ # Service URLs for smoke verification
+-API_URL=http://127.0.0.1:8000/health
+-FRONTEND_URL=http://127.0.0.1:3000
++API_URL=http://127.0.0.1:18000/health
++FRONTEND_URL=http://127.0.0.1:13000
+ 
+ # JWT token signing secret
+ JWT_SECRET=CHANGE_ME
+--- a/compose.yaml
++++ b/compose.yaml
+@@ -27,7 +27,7 @@
+       JWT_SECRET: ${JWT_SECRET:-CHANGE_ME}
+       SATHI_CONFIG: ${SATHI_CONFIG:-data/config.yaml}
+     ports:
+-      - "127.0.0.1:${API_PORT:-8000}:8000"
++      - "127.0.0.1:${API_PORT:-18000}:8000"
+     depends_on:
+       db:
+         condition: service_healthy
+@@ -38,7 +38,7 @@
+       dockerfile: Dockerfile
+     restart: unless-stopped
+     ports:
+-      - "127.0.0.1:${FRONTEND_PORT:-3000}:80"
++      - "127.0.0.1:${FRONTEND_PORT:-13000}:80"
+     depends_on:
+       - api
+ 
+--- a/Makefile
++++ b/Makefile
+@@ -1,4 +1,5 @@
+ PYTHON ?= .venv/bin/python
++API_PORT ?= 18000
+ 
+ .PHONY: check-structure test-api lint-api run-api test-console lint-console build-console run-console smoke-skeleton
+ 
+@@ -12,7 +13,7 @@
+ 	$(PYTHON) -m ruff check --config backend/pyproject.toml backend scripts
+ 
+ run-api:
+-	PYTHONPATH=backend $(PYTHON) -m uvicorn app.main:app --host 127.0.0.1 --port 8000
++	PYTHONPATH=backend $(PYTHON) -m uvicorn app.main:app --host 127.0.0.1 --port $(API_PORT)
+ 
+ test-console:
+ 	npm --prefix frontend run test
+--- a/scripts/smoke_skeleton.py
++++ b/scripts/smoke_skeleton.py
+@@ -76,13 +76,13 @@
+     )
+     parser.add_argument(
+         "--api-url",
+-        default=os.getenv("API_URL", "http://127.0.0.1:8000/health"),
+-        help="API health check URL (default: http://127.0.0.1:8000/health)",
++        default=os.getenv("API_URL", "http://127.0.0.1:18000/health"),
++        help="API health check URL (default: http://127.0.0.1:18000/health)",
+     )
+     parser.add_argument(
+         "--frontend-url",
+-        default=os.getenv("FRONTEND_URL", "http://127.0.0.1:3000/"),
+-        help="Frontend URL (default: http://127.0.0.1:3000/)",
++        default=os.getenv("FRONTEND_URL", "http://127.0.0.1:13000/"),
++        help="Frontend URL (default: http://127.0.0.1:13000/)",
+     )
+     parser.add_argument(
+         "--retries",

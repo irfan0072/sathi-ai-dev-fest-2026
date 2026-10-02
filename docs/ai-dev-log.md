@@ -122,3 +122,23 @@
 - T011: exact config assertion, structure check, existing backend/frontend suites and both linters passed. Approved config/docs changes ready for scoped commit; fees/caps remain null.
 - T006: all new files, Dockerfiles, ignore files and Compose/Makefile/env diffs reviewed. `make lint-api` and `docker compose --env-file .env.example config --quiet` passed.
 - T006 feedback: add read-only config mount so SATHI_CONFIG points to an existing file; exclude local .env files from both build contexts; require Sathi Console title and root element in frontend smoke check rather than accepting arbitrary HTML. Files limited to compose, two ignore files and smoke script; no shell/installs/Git/deployment. Container build/smoke not yet run.
+
+## 2026-10-02T12:32:06+06:00 — T006 first container startup failure
+
+- Tool: Codex / Docker. Full suite, both linters, frontend build and Compose config passed after first feedback. API and frontend images built successfully; PostgreSQL started healthy.
+- API startup failed: project config bind path under /Applications is not shared by Docker Desktop. Frontend did not start because API dependency was not running. No application smoke success claimed.
+- Second feedback prompt preserved exactly in tasks/T006-review-2.md: use a whitelisted root build context and baked config snapshot instead of the blocked bind mount. No Docker global settings changes, business config edits or DB destruction. This is the first failed verification following feedback; second correction is pending.
+
+## 2026-10-02T12:41:10+06:00 — T006 second startup failure; human go-ahead requested
+
+- Tool: Codex / Docker. Second corrected API/frontend images built successfully; full existing suite, both linters, frontend build and Compose config passed.
+- Startup failed because localhost:8000 is occupied. Targeted listener check identifies existing php84 PID 92112; no listener found on 18000 or 13000. No existing process stopped.
+- Current project containers: Postgres running healthy; API and frontend Created, not running. No smoke success or T006 completion claimed.
+- The human brief says to stop and ask when a task fails twice after feedback. T006 is now waiting for explicit go-ahead. Proposed concrete retry: API 18000, frontend 13000, update local defaults/smoke URLs, preserve existing PHP service. Human question sent; dependent edits/retry paused.
+
+## 2026-10-02T13:10:37+06:00 — T006 approved retry accepted
+
+- Tool: Antigravity CLI, then Codex independent review/testing. Human approved API 18000 and frontend 13000.
+- Prompt: “The human approved resuming T006 with API port 18000 and frontend port 13000, leaving the existing PHP service running. Read tasks/T006-port-retry.patch and apply exactly its proposed changes to .env.example, compose.yaml, Makefile, and scripts/smoke_skeleton.py using file read/edit tools only. Do not run shell commands, install packages, commit, push, or change any other file. Do not change container internal ports or business config. Codex will run container startup, all checks and smoke tests. Report changes and pending verification.”
+- Full changed files reviewed. `make check-structure test-api lint-api test-console lint-console build-console` passed (1 API test, 1 React test; nonfatal TestClient warning). Docker images built and `docker compose --env-file .env.example up --build -d` succeeded. PostgreSQL healthy; API/frontend running on localhost 18000/13000.
+- `make smoke-skeleton` passed both HTTP checks. Browser accessibility inspection confirmed rendered Hello World and Sathi Console Skeleton. PHP service was not stopped. No business features, schema, synthetic data or public runtime deployment introduced.
