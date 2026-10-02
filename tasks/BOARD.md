@@ -24,7 +24,16 @@ The start gate is satisfied; this initial board covers Phase 0. Repository hygie
 - `region` is evaluation-only under the user rules and assumptions, but the configured agent model uses it in peer groups. Human resolution required before feature/model implementation.
 - Requested mandates require non-null `code_hash` and `expires_at` in the schema, while code issuance follows verification. Clarify lifecycle storage without changing the schema yet.
 - Verification is restricted to `customer_channel`, yet its response says `code_delivery: agent_terminal`; no authenticated agent delivery mechanism is defined.
-- Wrong-code lockout and daily limits lack explicit persistence/contract details. Cash-gap tolerance and lockout threshold are absent from config; fee rate and caps remain null.
-- Validation seed 4242 and 60/20/20 agent split are human-approved; source config and evaluation plan updated. Fee/cap values remain pending human input.
+- Wrong-code lockout and daily limits lack explicit persistence/contract details. Cash-gap tolerance, fee rate and caps are now approved; redemption lockout threshold remains unspecified.
+- Validation seed 4242 and 60/20/20 agent split are human-approved; source config and evaluation plan updated. Fee/cap values are now approved in T012.
 
 These are unresolved questions, not adopted design changes. Phase 0 is authorized and underway with Antigravity via agy; design questions gate dependent later work.
+
+## Phase 1
+
+| ID | Title | Owner | Status | Dependencies | Acceptance criteria | Test command |
+|---|---|---|---|---|---|---|
+| T012 | Record approved simulation assumptions | antigravity | Done (config assertions/full checks passed) | Human Phase 1 go-ahead | Approved defaults and auxiliary assumptions documented; uncovered decisions remain explicit | Config assertions; make test lint build-console |
+| T013 | Schema migration and seed loader | antigravity | Planned | T012 | Exact domain schema; transactional, repeatable migration/seed; no destructive reset | Database integration tests; make test lint build-console |
+| T014 | Synthetic generator and leakage guard | antigravity | Planned | T013 | Deterministic users/agents/transactions/sessions; configured noise/overlap and leakage enforcement before modeling | Generator determinism and leakage tests; full checks |
+| T015 | Agent/seed split tooling | antigravity | Planned | T014 | Disjoint cohorts and seeds; shared-agent users cannot cross cohorts | Disjointness tests; full generation/seed checks |

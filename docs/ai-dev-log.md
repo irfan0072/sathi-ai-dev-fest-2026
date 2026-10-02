@@ -165,3 +165,15 @@
 - Public GitHub Actions run 36985349452 for b1e3e4d completed successfully: https://github.com/irfan0072/sathi-ai-dev-fest-2026/actions/runs/36985349452. Read via unauthenticated public GitHub API. Initial status command had an unquoted URL glob; quoted retry succeeded.
 - Clean-clone `make run-api API_PORT=18001` and `make run-console` started. Vite selected 5174 because 5173 was occupied; README now documents its next-free-port behavior. Smoke against API 18001 and frontend 5174 passed. Only these verification servers were stopped afterward; the main Compose stack and PHP service remain running.
 - README full diff reviewed; documented implemented/planned boundaries and clean-clone setup are accurate. `git diff --check` passed. Phase 0 local infrastructure complete; runtime deployment explicitly deferred by human. Fee/cap inputs and documented design conflicts still gate dependent Phase 1 work.
+
+## 2026-10-02T14:58:07+06:00 — Phase 1 / T012 delegation
+
+- Human supplied simulation defaults and ordered separate config, migration/seed, generator, split commits. Tools: Codex orchestration; Antigravity file-only implementation.
+- Prompt: “Read tasks/T012.md and implement only T012 using file read/edit tools. Do not run commands, install, commit, push or change other files. Report changes and pending verification.”
+- Full brief retained in tasks/T012.md, including explicit auxiliary distribution assumptions required for runnable reproducibility. Modeling and mandate APIs are outside Phase 1 scope.
+
+## 2026-10-02T15:03:05+06:00 — T012 reviewed and accepted
+
+- Full config/assumptions/decisions changes reviewed. Codex removed duplicate aliases for rates, variance, credits, cash-gap formula, sanity ceiling and slice categories so each parameter has one authoritative config source. Synthetic timestamp clarified as timeline anchor, not official start time.
+- Exact approved value assertions and `make test lint build-console` passed; `git diff --check` passed. No domain schema/API change. Auxiliary assumptions documented distinctly; unresolved region/lifecycle/delivery/lockout persistence remain listed.
+- Dedicated sathi_phase1_test database created in the existing development PostgreSQL container for non-production integration tests. No existing tables or data removed.

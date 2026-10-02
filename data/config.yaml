@@ -1,5 +1,7 @@
 # Sathi configuration. All thresholds are assumptions; edit here, not in code.
+# All values are synthetic simulation ASSUMPTIONS, never real upay figures.
 simulation:
+  start_timestamp: "2026-10-01T00:00:00Z" # ASSUMPTION: synthetic timeline anchor, not official T+0
   seed_train: 42
   seed_validation: 4242
   seed_test: 2026
@@ -12,31 +14,130 @@ simulation:
   label_noise: 0.10
   agent_mix: {normal: 270, high_volume_honest: 20, skimmers: 10}
   skimming_intensity: moderate       # subtle | moderate | obvious
-  official_fee_rate: null            # ASSUMPTION: set a labelled placeholder, not a claimed real rate
+  official_fee_rate: 0.015           # ASSUMPTION: approved simulation fee rate (0.015 = 1.5%), never real upay figure
   customer_report_rate: 0.6
   customer_report_accuracy: 0.9
+
+  # Approved customer behavior distributions (nested, not hardcoded in generator)
+  distributions:
+    top_agent_share:
+      independent_urban: {dist: beta, alpha: 2, beta: 5}
+      independent_rural: {dist: beta, alpha: 3, beta: 4}
+      assisted: {dist: beta, alpha: 6, beta: 2}
+    credit_to_cashout_delay_hours:
+      independent: {dist: exponential, mean: 72.0}
+      assisted: {dist: exponential, mean: 8.0}
+    withdrawn_fraction:
+      independent: {dist: beta, alpha: 2, beta: 3}
+      assisted: {dist: beta, alpha: 8, beta: 2}
+    pin_retries:
+      independent: {dist: poisson, lambda: 0.1}
+      assisted: {dist: poisson, lambda: 0.5}
+    pin_entry_seconds:
+      independent: {dist: lognormal, median: 6.0, sigma: 0.45}
+      assisted: {dist: lognormal, median: 14.0, sigma: 0.75}
+    service_count:
+      independent: {base: 1, dist: poisson, lambda: 3.0}
+      assisted: {base: 1, dist: poisson, lambda: 0.7}
+
+  # Credit cycles and disbursement rules
+  credits:
+    allowance:
+      cycle_days: 30
+      disbursement_day: 5
+      amount_min: 1500
+      amount_max: 5000
+    family:
+      timing: irregular
+      daily_probability: 0.08
+      amount_min: 1500
+      amount_max: 5000
+    independent:
+      cycle_days: 30
+      amount_min: 1500
+      amount_max: 5000
+
+  # Agent behavior profiles
+  agent_behavior:
+    normal:
+      assisted_share: 0.2
+      fee_multiplier: 1.0
+      payout_reduction: 0.0
+    high_volume_honest:
+      customer_weight: 3.0
+      allowance_day_volume_multiplier: 2.0
+      assisted_share: 0.2
+      fee_multiplier: 1.0
+      payout_reduction: 0.0
+    skimmers:
+      assisted_share: 0.6
+      intensity_profiles:
+        subtle:
+          fee_multiplier: 1.1
+          fee_multiplier_probability: 0.10
+          payout_reduction_probability: 0.02
+          payout_reduction_range: [0.01, 0.03]
+        moderate:
+          fee_multiplier: 1.25
+          fee_multiplier_probability: 0.30
+          payout_reduction_probability: 0.20
+          payout_reduction_range: [0.03, 0.05]
+        obvious:
+          fee_multiplier: 1.5
+          fee_multiplier_probability: 0.60
+          payout_reduction_probability: 0.40
+          payout_reduction_range: [0.05, 0.10]
+
+  # Auxiliary implementation assumptions (chosen for generator reproducibility; no claim human specified them)
+  auxiliary_assumptions:
+    initial_balance: 5000
+    min_cashout: 100
+    independent_loyal_fraction: 0.15 # independent users adopting assisted top-share Beta(6, 2)
+    customer_report_noise_sigma_bdt: 50
+    extra_service:
+      probability_per_cycle: 0.15
+      amount_min: 100
+      amount_max: 500
+    session_steps:
+      independent: 4
+      assisted: 7
+
 policy:
   mandate_ttl_minutes: 15
-  user_cap_default: null             # set per scenario
-  daily_cash_out_limit: null
+  user_cap_default: 5000             # BDT mandate cap assumption (approved 2026-10-02)
+  daily_cash_out_limit: 25000        # BDT daily cash-out limit assumption (approved 2026-10-02)
   agent_risk_high: 0.8
   assisted_outreach_threshold: 0.6
   verification_modes: [keypad, voice]
-  max_verification_attempts: 2
+  max_verification_attempts: 2       # does not define wrong-code lockout
   review_on_mismatch: true
+  cash_gap:
+    min_bdt: 50
+    rate: 0.02
+
 models:
   assisted_classifier: {type: lightgbm, features_window_days: 30, calibrate: true}
   agent_anomaly: {methods: [peer_robust_zscore, isolation_forest], peer_groups: [region, volume_band], review_top_k: 15}
   baselines:
     assisted_rule: {top_agent_share_min: 0.7, hours_credit_to_cashout_max: 24}
     agent_rule: {fee_ratio_over_official_min: 1.2}
+  sanity:
+    max_pr_auc: 0.98                 # future validation-only diagnosis; report widening overlap; never tune generator to score or inspect test set
+
 fairness:
   slices: [gender, age_band, region, urban_rural]   # evaluation only, never model inputs
   max_tpr_gap: 0.10                                   # target, report if missed
+  slice_categories:
+    gender: [female, male, other]
+    age_band: ["18-25", "26-40", "41-60", "60+"]
+    region: [dhaka, chittagong, rajshahi, khulna, barishal, sylhet, rangpur, mymensingh]
+    urban_rural: [urban, rural]
+
 copilot:
   llm_may_generate_numbers: false
   require_structured_output: true
   injection_tests: true
+
 privacy:
   store_voice_audio: false
   store_parsed_amount_only: true
