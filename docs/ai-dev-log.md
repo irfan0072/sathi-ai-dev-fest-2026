@@ -231,3 +231,18 @@
   - Seeded main dev database `sathi` with disjoint splits (`train.json`, `validation.json`, `test.json`); verified SQL row counts (users: 20000, agents: 300, transactions: 190269, sessions: 190269, mandates: 0). Verified seed idempotency (no-op on repeated load).
   - Authored `docs/console-mock-contract.md` and `scripts/mock_server.py` for parallel frontend console development.
 - Outcome: T015 Done; all 130 backend tests and frontend tests pass; zero lint errors.
+
+## 2026-10-02T18:52:00+06:00 — Session modeling fix, shifted test benchmark, Render deploy guide & parallel kickoff
+
+- Tool: Antigravity.
+- Human review: Report accepted. Approved: fix sessions (credits get no PIN sessions), move mock server to port 18001, add distribution-shifted test artifact (`test_shifted.json`), prepare Render deployment blueprint and `docs/deploy-guide.md` without requesting credentials, enforce Track A / Track B parallel safety on separate Git branches, confirm GitHub Actions CI run #37006945421.
+- Actions:
+  - Confirmed via GitHub API that GitHub Actions run `#37006945421` for commit `d24d32a` completed with status `success`.
+  - Moved mock server default port to 18001 in `scripts/mock_server.py` and `docs/console-mock-contract.md` to prevent conflict with live API server on 18000.
+  - Resolved session modeling bug in `backend/app/data/generator.py`: removed PIN session generation from `ev_type == 'credit'`. Credits are passive incoming deposits requiring no PIN entry or USSD interaction. Only user-initiated transactions (`cash_out`, `send`, `bill_pay`) generate sessions.
+  - Added unit tests in `backend/tests/test_generator.py` asserting that credit transactions have disjoint IDs from session transactions and all user-initiated transactions have sessions.
+  - Regenerated splits (`make split`): train (64,920 sessions / 114,284 txns), validation (21,668 sessions / 38,065 txns), test (21,604 sessions / 37,907 txns). Total sessions: 108,192 across 190,256 transactions. Reseeded dev DB and verified SQL counts.
+  - Implemented `generate_shifted_test_split` in `backend/app/data/splits.py` producing `test_shifted.json` (39,962 txns, 22,210 sessions) with obvious skimmers (1.5x fee, 60% fee prob, 40% payout reduction prob), 50% assisted share, and degraded recall accuracy (0.75 accuracy, 100 BDT sigma). Original `test.json` remains completely untouched. Added assertions in `backend/tests/test_splits.py`.
+  - Authored `render.yaml` declaring PostgreSQL (`sathi-db`), FastAPI backend (`sathi-api` with environment-driven `CORS_ORIGINS`), and React console (`sathi-console`). Created `backend/requirements.txt` and `docs/deploy-guide.md` documenting free-tier limits (15-min sleep, 30-50s cold start; 30-day Postgres expiry), env var names, health checks, production seed command, and synthetic low-privilege demo logins.
+  - All 131 backend tests pass, frontend vitest passes, linters pass.
+

@@ -551,8 +551,6 @@ def generate_dataset(
                 balance += c_amt
                 tid = txn_counter
                 txn_counter += 1
-                sid = session_counter
-                session_counter += 1
 
                 ts_iso = ev_ts.isoformat()
                 transactions.append(
@@ -566,39 +564,6 @@ def generate_dataset(
                         "fee": 0.0,
                         "balance_after": _quantize_float(balance),
                         "channel": ev["channel"],
-                        "ts": ts_iso,
-                    }
-                )
-
-                pin_lambda = (
-                    sim_cfg["distributions"]["pin_retries"]["assisted"]["lambda"]
-                    if is_asst
-                    else sim_cfg["distributions"]["pin_retries"]["independent"]["lambda"]
-                )
-                pin_retries = sample_poisson(rng, pin_lambda)
-
-                pin_med = (
-                    sim_cfg["distributions"]["pin_entry_seconds"]["assisted"]["median"]
-                    if is_asst
-                    else sim_cfg["distributions"]["pin_entry_seconds"]["independent"]["median"]
-                )
-                pin_sig = (
-                    sim_cfg["distributions"]["pin_entry_seconds"]["assisted"]["sigma"]
-                    if is_asst
-                    else sim_cfg["distributions"]["pin_entry_seconds"]["independent"]["sigma"]
-                )
-                pin_sec = rng.lognormvariate(math.log(pin_med), pin_sig)
-                pin_ms = max(0, int(round(pin_sec * 1000)))
-                steps = assisted_steps if is_asst else independent_steps
-
-                sessions.append(
-                    {
-                        "session_id": sid,
-                        "user_id": uid,
-                        "txn_id": tid,
-                        "pin_retries": pin_retries,
-                        "pin_entry_ms": pin_ms,
-                        "steps": steps,
                         "ts": ts_iso,
                     }
                 )

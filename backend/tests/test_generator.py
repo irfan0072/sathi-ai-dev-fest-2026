@@ -115,6 +115,24 @@ def test_foreign_keys_and_session_joins(base_config):
             assert tid in txn_user_map
             assert txn_user_map[tid] == s["user_id"], "Session and txn user_id must match"
 
+    # Only user-initiated transactions get sessions; credit transactions never get PIN sessions
+    credit_txns = [t for t in res["transactions"] if t["txn_type"] == "credit"]
+    credit_txn_ids = {t["txn_id"] for t in credit_txns}
+    session_txn_ids = {s["txn_id"] for s in res["sessions"] if s.get("txn_id") is not None}
+    assert len(credit_txns) > 0, "Must have credit transactions in simulation"
+    assert credit_txn_ids.isdisjoint(session_txn_ids), (
+        "Credit transactions must not have PIN sessions"
+    )
+
+    user_initiated_txns = [
+        t for t in res["transactions"] if t["txn_type"] in ("cash_out", "send", "bill_pay")
+    ]
+    user_initiated_txn_ids = {t["txn_id"] for t in user_initiated_txns}
+    assert session_txn_ids == user_initiated_txn_ids, (
+        "All and only user-initiated transactions must have sessions"
+    )
+    assert len(res["sessions"]) < len(res["transactions"])
+
 
 def test_chronological_per_user_credit_debit_balance(base_config):
     """Verify chronological ordering, strict balance constraints, and 2-decimal money."""

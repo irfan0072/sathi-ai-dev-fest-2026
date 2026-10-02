@@ -558,3 +558,128 @@ def write_splits(
     written["manifest"] = manifest_path
 
     return written
+
+
+def generate_shifted_test_split(
+    config: dict[str, Any] | None = None,
+    output_dir: Path | str | None = None,
+    canonical_agents: list[dict[str, Any]] | None = None,
+    test_agent_ids: list[str] | None = None,
+) -> dict[str, Any]:
+    """Generate a separate distribution-shifted test artifact for robustness experiments.
+
+    Shifts applied (documented in data/assumptions.md):
+    1. Skimming mix: Set skimming_intensity to 'obvious' (higher frequency and severity).
+    2. Assisted share: Raised from 35% to 50% (independent_urban: 0.30, independent_rural: 0.20,
+       assisted_allowance: 0.30, assisted_family: 0.20).
+    3. Noise levels: label_noise 0.15 (up from 0.10),
+       customer_report_accuracy 0.75 (down from 0.90),
+       customer_report_noise_sigma_bdt 100 (up from 50).
+
+    Does NOT modify or overwrite test.json.
+    Writes test_shifted.json, test_shifted.observations.json, and test_shifted.meta.json.
+    """
+    import copy
+
+    if config is None:
+        cfg = load_config()
+    else:
+        cfg = validate_config(config)
+
+    shifted_cfg = copy.deepcopy(cfg)
+    sim_cfg = shifted_cfg["simulation"]
+
+    # 1. Shift skimming mix to obvious
+    sim_cfg["skimming_intensity"] = "obvious"
+
+    # 2. Shift assisted share from 35% to 50%
+    sim_cfg["group_shares"] = {
+        "independent_urban": 0.30,
+        "independent_rural": 0.20,
+        "assisted_allowance": 0.30,
+        "assisted_family": 0.20,
+    }
+
+    # 3. Shift noise levels
+    sim_cfg["label_noise"] = 0.15
+    sim_cfg["customer_report_accuracy"] = 0.75
+    if "auxiliary_assumptions" in sim_cfg:
+        sim_cfg["auxiliary_assumptions"]["customer_report_noise_sigma_bdt"] = 100
+
+    # Test cohort agents and seed
+    if canonical_agents is None:
+        canonical_agents = build_canonical_agent_registry(cfg)
+    if test_agent_ids is None:
+        cohort_agents = allocate_cohorts(cfg, canonical_agents=canonical_agents)
+        test_agent_ids = cohort_agents["test"]
+
+    agent_split = sim_cfg["agent_split"]
+    total_customers = sim_cfg["customers"]
+    customer_counts = allocate_largest_remainder(total_customers, agent_split)
+    test_customers = customer_counts["test"]
+    seed_test = sim_cfg["seed_test"]
+
+    ds, obs = generate_dataset(
+        config=shifted_cfg,
+        seed=seed_test,
+        agent_ids=test_agent_ids,
+        customers=test_customers,
+        return_observations=True,
+        canonical_agents=canonical_agents,
+    )
+    validate_dataset(ds)
+
+    ds_bytes = json.dumps(ds, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ds_sha256 = hashlib.sha256(ds_bytes).hexdigest()
+    obs_bytes = json.dumps(obs, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    obs_sha256 = hashlib.sha256(obs_bytes).hexdigest()
+
+    meta = {
+        "schema_version": 1,
+        "artifact_type": "distribution_shifted_test",
+        "description": "Distribution-shifted test artifact for model robustness evaluation",
+        "seed": seed_test,
+        "agent_count": len(test_agent_ids),
+        "customer_count": test_customers,
+        "agent_ids": test_agent_ids,
+        "file": "test_shifted.json",
+        "content_sha256": ds_sha256,
+        "observations_file": "test_shifted.observations.json",
+        "observations_sha256": obs_sha256,
+        "counts": {
+            "agents": len(test_agent_ids),
+            "customers": test_customers,
+            "users": len(ds["users"]),
+            "transactions": len(ds["transactions"]),
+            "sessions": len(ds["sessions"]),
+        },
+        "shifts": {
+            "skimming_mix": (
+                "shifted from moderate to obvious (1.5x fee, 60% fee prob, "
+                "40% payout reduction prob)"
+            ),
+            "assisted_share": "shifted from 35% to 50% (allowance: 30%, family: 20%)",
+            "noise_level": {
+                "label_noise": "shifted from 0.10 to 0.15",
+                "customer_report_accuracy": "shifted from 0.90 to 0.75",
+                "customer_report_noise_sigma_bdt": "shifted from 50 to 100",
+            },
+        },
+    }
+
+    result = {
+        "dataset": ds,
+        "observations": obs,
+        "metadata": meta,
+    }
+
+    if output_dir is not None:
+        out_path = Path(output_dir)
+        out_path.mkdir(parents=True, exist_ok=True)
+        (out_path / "test_shifted.json").write_bytes(ds_bytes)
+        (out_path / "test_shifted.observations.json").write_bytes(obs_bytes)
+        meta_bytes = json.dumps(meta, sort_keys=True, indent=2).encode("utf-8")
+        (out_path / "test_shifted.meta.json").write_bytes(meta_bytes)
+
+    return result
+

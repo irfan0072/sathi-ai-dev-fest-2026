@@ -3,7 +3,7 @@
 This contract defines all API endpoints, query/body payloads, success responses, error formats, and realistic mock fixtures so the frontend team can develop and test the **Sathi Console** and **Phone Simulator** immediately against a mock server without waiting for backend deployment.
 
 Base URL prefix: `/api/v1`
-Default local mock server port: `18000` (or `18001` if running against live dev server)
+Default local mock server port: `18001` (to avoid collision with live API server on `18000`)
 
 ---
 
@@ -15,12 +15,12 @@ You can run a local mock server using **FastAPI** (stdlib/pre-installed in `.ven
 A lightweight mock server is provided at `scripts/mock_server.py`:
 ```sh
 # Run from repository root
-PYTHONPATH=backend .venv/bin/python scripts/mock_server.py --port 18000
+PYTHONPATH=backend .venv/bin/python scripts/mock_server.py --port 18001
 ```
 This serves all mock endpoints below with interactive in-memory state.
 
 ### Option B: Frontend Vite Proxy / Mock
-In `frontend/vite.config.js`, API requests to `/api/v1` can be forwarded to `http://127.0.0.1:18000`.
+In `frontend/vite.config.js`, API requests to `/api/v1` can be forwarded to `http://127.0.0.1:18001`.
 
 ---
 

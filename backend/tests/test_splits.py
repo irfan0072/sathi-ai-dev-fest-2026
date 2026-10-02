@@ -14,6 +14,7 @@ from app.data.splits import (
     allocate_cohorts,
     allocate_largest_remainder,
     assert_disjoint_splits,
+    generate_shifted_test_split,
     generate_splits,
     write_splits,
 )
@@ -640,7 +641,48 @@ def test_cli_split_subcommand(tmp_path, small_config):
     assert (out_dir / "train.json").is_file()
     assert (out_dir / "validation.json").is_file()
     assert (out_dir / "test.json").is_file()
+    assert (out_dir / "test_shifted.json").is_file()
+    assert (out_dir / "test_shifted.observations.json").is_file()
+    assert (out_dir / "test_shifted.meta.json").is_file()
     assert (out_dir / "manifest.json").is_file()
+
+
+def test_generate_shifted_test_split_properties_and_untouched_original(tmp_path, small_config):
+    """Verify shifted test artifact has valid schema, matching test agents,
+    and preserves test.json.
+    """
+    # First generate standard splits into tmp_path
+    s_res = generate_splits(small_config, output_dir=tmp_path)
+    original_test_bytes = (tmp_path / "test.json").read_bytes()
+    original_test_sha = hashlib.sha256(original_test_bytes).hexdigest()
+
+    # Now generate shifted test split into same directory
+    shifted = generate_shifted_test_split(small_config, output_dir=tmp_path)
+
+    # 1. Verify schema validity of shifted test dataset
+    validate_dataset(shifted["dataset"])
+
+    # 2. Verify test cohort agents match exactly
+    standard_test_agents = {a["agent_id"] for a in s_res["splits"]["test"]["dataset"]["agents"]}
+    shifted_test_agents = {a["agent_id"] for a in shifted["dataset"]["agents"]}
+    assert shifted_test_agents == standard_test_agents
+
+    # 3. Verify shifts metadata
+    meta = shifted["metadata"]
+    assert meta["artifact_type"] == "distribution_shifted_test"
+    assert "obvious" in meta["shifts"]["skimming_mix"]
+    assert "50%" in meta["shifts"]["assisted_share"]
+    assert meta["shifts"]["noise_level"]["label_noise"] == "shifted from 0.10 to 0.15"
+
+    # 4. Verify test.json is 100% untouched
+    current_test_bytes = (tmp_path / "test.json").read_bytes()
+    assert current_test_bytes == original_test_bytes
+    assert hashlib.sha256(current_test_bytes).hexdigest() == original_test_sha
+
+    # 5. Verify test_shifted files exist
+    assert (tmp_path / "test_shifted.json").is_file()
+    assert (tmp_path / "test_shifted.observations.json").is_file()
+    assert (tmp_path / "test_shifted.meta.json").is_file()
 
 
 def test_in_memory_split_aggregation_counts_and_no_collision(full_splits):

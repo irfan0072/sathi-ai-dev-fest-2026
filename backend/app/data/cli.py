@@ -16,7 +16,7 @@ from app.data.database import (
     run_migrations,
 )
 from app.data.generator import generate_dataset
-from app.data.splits import generate_splits
+from app.data.splits import generate_shifted_test_split, generate_splits
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -168,10 +168,20 @@ def main(argv: list[str] | None = None) -> int:
                     f"{c_info['counts']['sessions']} sessions) "
                     f"[SHA-256: {c_info['content_sha256'][:16]}...]"
                 )
+
+            shifted_res = generate_shifted_test_split(config=cfg, output_dir=out_dir)
+            s_meta = shifted_res["metadata"]
+            print(
+                f"  - test_shifted (seed={s_meta['seed']}): {s_meta['customer_count']} customers, "
+                f"{s_meta['agent_count']} agents ({s_meta['counts']['transactions']} txns, "
+                f"{s_meta['counts']['sessions']} sessions) "
+                f"[SHA-256: {s_meta['content_sha256'][:16]}...]"
+            )
             print(
                 f"Split manifest (config SHA-256: {manifest['config_sha256'][:16]}...) "
                 f"written to {out_dir / 'manifest.json'}"
             )
+            print(f"Shifted test metadata written to {out_dir / 'test_shifted.meta.json'}")
             return 0
         except Exception as exc:
             print(f"Split generation error ({type(exc).__name__}): {exc}", file=sys.stderr)

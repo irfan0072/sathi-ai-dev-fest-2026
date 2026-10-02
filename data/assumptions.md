@@ -133,11 +133,19 @@ Sathi adoption among assisted users: 30%, 50%, 70%. Report all three.
 - High-volume honest allowance-day multiplier acts on requested amount and is capped by available balance including fee. Realized aggregate volume need not equal exactly2x; it is not forced to match a target.
 - Service-count draws drive activity-use opportunities, not the number of distinct service categories: the current schema offers credit/cash_out/send/bill_pay. Additional service types remain outside Phase1.
 - Actual payouts, noisy reports, effective profiles and sampled propensities live in a simulation sidecar, not the ledger seed tables. No model may consume latent simulation truth. The cash-report sidecar has no applicable domain storage table until mandate reporting is implemented.
+- **PIN Sessions vs Transactions**: PIN sessions are strictly generated for user-initiated transactions (`cash_out`, `send`, `bill_pay`) where the customer or assisting agent enters a PIN and executes interaction steps. Incoming credits (wages, allowances, family transfers) are system deposits and do NOT generate PIN authentication sessions. Consequently, total session counts reflect only user-initiated transactions (108,192 sessions across 190,256 total transactions), correcting the previous modeling artifact where session count identically equaled total transaction count.
+- **Distribution Shifted Test Artifact (`test_shifted.json`)**: A dedicated out-of-distribution test set created strictly for robustness evaluation without modifying or evaluating against the standard `test.json`. Uses the identical 60 test cohort agents and seed 2026, but with shifted parameters:
+  - Skimming mix: shifted from `moderate` to `obvious` (1.5x fee, 60% fee multiplier prob, 40% payout reduction prob, 5%–10% payout reduction range).
+  - Assisted share: raised from 35% to 50% (allowance 30%, family 20%, independent 50%).
+  - Noise levels: label noise raised to 0.15 (from 0.10), customer report recall accuracy degraded to 0.75 (from 0.90), and report noise sigma increased to 100 BDT (from 50 BDT).
 
 | Date | Change | Reason |
 |---|---|---|
 | 2026-10-02 | Added configurable rounding/time windows and clarified agent propensities, volume cap and service-count proxy | Auxiliary generator ASSUMPTIONS; preserve balances and existing schema without tuning to a model score |
+| 2026-10-02 | Fixed session generation: credits get zero PIN sessions | Credits are passive incoming deposits; only user-initiated transactions (cash-out, send, bill-pay) involve PIN entry and interaction steps. Total sessions corrected from 190,269 to 108,192. |
+| 2026-10-02 | Added distribution-shifted test artifact (`test_shifted.json`) | Provides separate shifted benchmark (obvious skimmers, 50% assisted share, higher noise) for robustness experiment without touching test.json. |
 
 Extra-service active cycle-day range1–28 is a configurable auxiliary ASSUMPTION, clamped to short cycles. Cycle days are zero-based offsets from the synthetic timeline anchor.
 
 Sidecar assisted-fraction summaries count transactions using effective behavior profiles; they are not exact assisted-customer share guarantees and must not be quoted as customer demographics.
+

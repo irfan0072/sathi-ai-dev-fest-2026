@@ -101,3 +101,26 @@ The following auxiliary assumptions are recorded distinctly as implementation ch
 ## 2026-10-02T18:01:37+06:00 — Orchestrator handover
 
 Orchestrator changed from Codex to Antigravity at 2026-10-02T18:01:37+06:00 (12:01:37 UTC); Codex reached its usage limit. Antigravity assumes lead engineer and orchestrator roles for Sathi.
+
+## 2026-10-02T18:32:00+06:00 — Phase 2 architectural and deployment decisions
+
+1. **Mock Server Port Isolation (Port 18001)**:
+   - Moved the local mock server default port from 18000 to 18001 in `scripts/mock_server.py` and `docs/console-mock-contract.md`.
+   - Prevents port collision with the live FastAPI container/service running on port 18000.
+
+2. **PIN Session Generation Modeling Invariant**:
+   - Resolved root cause of session count equaling transaction count: incoming credits (allowances, family transfers, wage deposits) are passive system deposits and must NOT generate PIN authentication sessions.
+   - Only user-initiated outgoing transactions (`cash_out`, `send`, `bill_pay`) generate PIN sessions with entry latency and interaction steps.
+   - Total sessions corrected from 190,269 to 108,192 across 190,256 transactions. Reseeded dev database verified.
+
+3. **Distribution-Shifted Robustness Test Benchmark (`test_shifted.json`)**:
+   - Added a separate out-of-distribution test artifact (`test_shifted.json`, `test_shifted.observations.json`, `test_shifted.meta.json`) for model robustness testing under domain shift.
+   - Shift parameters: skimming intensity shifted to `obvious` (1.5x fee, 60% fee prob, 40% payout reduction prob), assisted share increased to 50% (from 35%), customer report recall accuracy degraded to 0.75 (from 0.90), report noise sigma increased to 100 BDT (from 50 BDT), label noise 0.15 (from 0.10).
+   - Preserves canonical test cohort agents and test seed (2026). Standard `test.json` remains completely untouched.
+
+4. **Production Deployment Platform Selection (Render Blueprint)**:
+   - Selected Render via declarative Infrastructure-as-Code (`render.yaml`) connected to the public GitHub repository.
+   - Provisions 3 services automatically: managed PostgreSQL (`sathi-db`), FastAPI backend (`sathi-api`), and React static console (`sathi-console`).
+   - Security constraints: Production never uses the local CI password `CHANGE_ME`; managed DB injects secure random credentials via `DATABASE_URL`. CORS is strictly restricted via `CORS_ORIGINS`.
+   - Step-by-step instructions, low-privilege synthetic demo logins, and free-tier sleep/expiry limits documented in `docs/deploy-guide.md`.
+

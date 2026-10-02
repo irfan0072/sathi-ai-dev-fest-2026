@@ -409,7 +409,7 @@ def get_metrics_summary() -> dict[str, Any]:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run Sathi mock server")
-    parser.add_argument("--port", type=int, default=18000, help="Port to bind (default: 18000)")
+    parser.add_argument("--port", type=int, default=18001, help="Port to bind (default: 18001)")
     parser.add_argument("--host", default="127.0.0.1", help="Host to bind (default: 127.0.0.1)")
     args = parser.parse_args()
 

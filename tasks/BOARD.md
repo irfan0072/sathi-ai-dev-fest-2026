@@ -36,7 +36,8 @@ These are unresolved questions, not adopted design changes. Phase 0 is authorize
 | T012 | Record approved simulation assumptions | antigravity | Done (config assertions/full checks passed) | Human Phase 1 go-ahead | Approved defaults and auxiliary assumptions documented; uncovered decisions remain explicit | Config assertions; make test lint build-console |
 | T013 | Schema migration and seed loader | antigravity | Done (28 backend tests/full checks passed) | T012 | Exact domain schema; transactional, repeatable migration/seed; no destructive reset | Database integration tests; make test lint build-console |
 | T014 | Synthetic generator and leakage guard | antigravity | Done (full-scale determinism/seed checks passed) | T013 | Deterministic users/agents/transactions/sessions; configured noise/overlap and leakage enforcement before modeling | Generator determinism and leakage tests; full checks |
-| T015 | Agent/seed split tooling | antigravity | Done (34 split tests/full SQL seed passed) | T014 | Disjoint cohorts and seeds; shared-agent users cannot cross cohorts; seed dev DB | Disjointness tests; make test lint build-console; SQL counts |
+| T015 | Agent/seed split tooling & session correction | antigravity | Done (35 split tests/108,192 sessions verified) | T014 | Disjoint cohorts and seeds; credits get 0 sessions; seed dev DB verified | Disjointness tests; make test lint build-console; SQL counts |
+| T015b | Distribution-shifted test artifact & deploy guide | antigravity | Done (test_shifted.json + render.yaml + deploy guide) | T015 | Separate shifted test artifact (obvious skimmers, 50% assisted, high noise); Render blueprint and deploy guide | make split; make test lint; test_shifted.meta.json |
 
 ## Phase 2 (Parallel Tracks — Models vs Mandate Service)
 
