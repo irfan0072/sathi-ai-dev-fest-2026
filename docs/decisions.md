@@ -16,4 +16,7 @@ No architecture, schema, API, evaluation-plan or configuration changes have been
 2. Clarify requested mandate code/expiry storage, authenticated agent code delivery, and lockout/daily-limit persistence.
 3. Specify missing cash-gap/lockout parameters and null fee/cap assumptions before dependent work.
 4. Specify validation seed and agent allocation before evaluation work.
-5. Provide an Antigravity executable or choose the manual desktop/direct-Codex alternative described in `agent-workflow.md`.
+
+## Resolved implementer selection
+
+The human supplied the `agy` alias and authorized project work. `/Users/apple/.local/bin/agy` is available; read-only print mode and interactive implementation were verified. See `agent-workflow.md` for command permissions and invocation details.

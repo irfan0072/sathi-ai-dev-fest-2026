@@ -2,12 +2,12 @@
 
 T+0: **confirmed — 1 October 2026, 10:00 AM Asia/Dhaka**. Delegation: **authorized by human on 2 October 2026**. Implementer: **`agy --print` read-only probe passed**.
 
-The start gate is satisfied; this initial board covers Phase 0. Repository hygiene and empty component scaffolding are implemented; application hello-world tasks remain planned. Commands below are proposed acceptance commands to be supplied by their tasks, not existing or passed checks. Write each `tasks/T###.md` brief before delegation.
+The start gate is satisfied; this initial board covers Phase 0. Repository hygiene and empty component scaffolding are implemented; application hello-world tasks remain planned. Commands for planned tasks are proposed acceptance commands, not passed checks; completed-task results are recorded in the development log. Write each `tasks/T###.md` brief before delegation.
 
 | ID | Title | Owner | Status | Dependencies | Acceptance criteria | Test command |
 |---|---|---|---|---|---|---|
 | T000 | Read source docs and inspect implementer | codex | Done (inspection only) | None | Read all 12 source files; document OS, CLI result and blockers | `uname -s`; `command -v antigravity`; `antigravity --help` (availability probe failed as documented) |
-| T001 | Establish implementer workflow | codex | Done (probe passed) | Human provides CLI path/install or chooses alternative | Task input, cwd, file context, non-interactive mode and output verified from actual help | `antigravity --help`, followed by help for the documented task subcommand |
+| T001 | Establish implementer workflow | codex | Done (probe passed) | Human provides CLI path/install or chooses alternative | Task input, cwd, file context, non-interactive mode and output verified from actual help | `agy --help`; `agy help agent`; read-only `agy --print` probe as recorded in workflow |
 | T002 | Initialize local repository and ignore rules | antigravity | Done (Codex checks passed) |  T001, human go-ahead | Local Git initialized; `.env`, caches, dependencies and build artifacts ignored; `.env.example` has placeholders only; no remote operations | `git status --short`; `git check-ignore .env`; `git diff --check` |
 | T003 | Set up empty component structure and dependency manifests | antigravity | Done (Codex checks passed) | T002 | Separate API, feature/model, verification, copilot and console boundaries following architecture; no business logic; record runtime/dependency versions | `make check-structure` |
 | T004 | FastAPI hello-world and test runner | antigravity | Planned | T003 | Generic hello-world route, unit test and backend lint command; no mandate, data or policy implementation | `make test-api lint-api` |
@@ -26,4 +26,4 @@ The start gate is satisfied; this initial board covers Phase 0. Repository hygie
 - Wrong-code lockout and daily limits lack explicit persistence/contract details. Cash-gap tolerance and lockout threshold are absent from config; fee rate and caps remain null.
 - Validation seed/split allocation is unspecified; choose it with human approval before any evaluation-plan change.
 
-These are unresolved questions, not adopted design changes. Phase 0 can proceed after human go-ahead and implementer selection.
+These are unresolved questions, not adopted design changes. Phase 0 is authorized and underway with Antigravity via agy; design questions gate dependent later work.
