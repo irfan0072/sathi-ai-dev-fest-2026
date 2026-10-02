@@ -11,6 +11,7 @@ COPY backend/app ./app
 
 RUN pip install --no-cache-dir -c requirements-dev.lock .
 
+COPY backend/migrations /app/migrations
 COPY data/config.yaml /app/data/config.yaml
 
 EXPOSE 8000

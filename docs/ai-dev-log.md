@@ -177,3 +177,16 @@
 - Full config/assumptions/decisions changes reviewed. Codex removed duplicate aliases for rates, variance, credits, cash-gap formula, sanity ceiling and slice categories so each parameter has one authoritative config source. Synthetic timestamp clarified as timeline anchor, not official start time.
 - Exact approved value assertions and `make test lint build-console` passed; `git diff --check` passed. No domain schema/API change. Auxiliary assumptions documented distinctly; unresolved region/lifecycle/delivery/lockout persistence remain listed.
 - Dedicated sathi_phase1_test database created in the existing development PostgreSQL container for non-production integration tests. No existing tables or data removed.
+
+## 2026-10-02T15:05:30+06:00 — T013 delegation
+
+- Tool: Antigravity CLI. Prompt: “Read tasks/T013.md and implement only T013. Use file read/edit tools only, no shell/install/Git. Codex will install declared dependencies, update lock constraints, run integration tests and seed checks. Report files and pending checks.”
+- Migration skill applied: current domain tables do not exist yet, health endpoint does not read/write DB; exact additive schema migration with checksum ledger, transaction rollback on failure, idempotent replay, no destructive down migration. Seed-loader provenance prevents silent overwrites. Tests use dedicated development DB and disposable schemas.
+- Psycopg installation/transaction APIs checked against official docs: https://www.psycopg.org/psycopg3/docs/basic/install.html and https://www.psycopg.org/psycopg3/docs/basic/transactions.html.
+
+## 2026-10-02T15:21:39+06:00 — T013 verified
+
+- Full implementation reviewed. First test run passed21 backend tests; snapshot during implementer completion had4 lint formatting errors, which its final file edits corrected. Codex added timezone/finite-money/precision/synthetic-ID/seed-range validation, schema-only search path and autocommit connections so transaction contexts own commits; serialized seeding globally to avoid concurrent sequence races; suppressed connection URLs and raw DB errors in CLI. Added real SQL failure rollback proofs.
+- Installed declared Psycopg3.3.6/binary3.3.6 and pinned constraints; PyYAML6.0.3 already installed and now explicit runtime dependency. Initial sandbox package access failed DNS; permitted retry succeeded.
+- `SATHI_TEST_DATABASE_URL=... make test lint build-console` passed28 backend tests,1 frontend test, both linters and build. Main dev `make migrate` applied001_initial.sql; secondrun0applied. Dedicated test schema CLIseed2users/1agent/2txns/2sessions; repeatedseedno-op. Domain migration matches docs/schema.sql exactly.
+- CI now has dedicated PostgreSQL test service; Docker build allowlist includes migration files. No domain schema changes, mandate rows, destructive reset or model training.

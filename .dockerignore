@@ -7,6 +7,8 @@
 !backend/Dockerfile
 !backend/pyproject.toml
 !backend/requirements-dev.lock
+!backend/migrations
+!backend/migrations/*.sql
 !backend/app
 !backend/app/*
 !backend/app/**

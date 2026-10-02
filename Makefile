@@ -1,7 +1,8 @@
 PYTHON ?= .venv/bin/python
 API_PORT ?= 18000
+DATASET ?= data/generated/train.json
 
-.PHONY: test lint check-structure test-api lint-api run-api test-console lint-console build-console run-console smoke-skeleton
+.PHONY: test lint check-structure test-api lint-api run-api test-console lint-console build-console run-console smoke-skeleton migrate seed
 
 test: check-structure test-api test-console
 
@@ -33,3 +34,9 @@ run-console:
 
 smoke-skeleton:
 	python3 scripts/smoke_skeleton.py
+
+migrate:
+	PYTHONPATH=backend $(PYTHON) -m app.data.cli migrate
+
+seed:
+	PYTHONPATH=backend $(PYTHON) -m app.data.cli seed --dataset $(DATASET)
