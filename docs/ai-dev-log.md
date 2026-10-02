@@ -33,3 +33,26 @@
 - Outcome: full new-file contents reviewed; `.gitignore` and `.env.example` comply with the task; local Git initialized.
 - Independent validation: `git check-ignore .env` exit 0; `git check-ignore --no-index .env.example data/config.yaml docs/schema.sql` exit 1 with no matches (expected); `git diff --check` exit 0. No application suite or linters exist yet.
 - Next: local commits of pre-existing design/planning baseline and T002 hygiene; no remote configured or contacted.
+
+## 2026-10-02 — T003 delegation
+
+- Tool: Antigravity, interactive accept-edits session.
+- Prompt: “Read tasks/T003.md and implement only T003. Read only its listed references. Use file edit tools for source files; do not install packages. Report changes and checks. Do not commit or push.”
+- Brief: tasks/T003.md (component boundaries, manifests, structure check; no application logic).
+- Prior commits: 411f200 design/planning baseline; 725f557 T002 hygiene. No remote operations.
+- Status: implementation in progress, review and checks pending.
+
+## 2026-10-02 — T003 first review feedback
+
+- Tool: Codex reviewing Antigravity.
+- Independent check: `make check-structure` passed; Python syntax parsed.
+- Full-file review found an absent backend README referenced by the package manifest and import/line-length issues in the checker. Task remains in progress.
+- Feedback prompt: “T003 review feedback: backend/pyproject.toml references README.md relative to backend, but that file is absent. Remove the readme field; do not add extra files. Sort stdlib imports in scripts/check_structure.py and wrap lines 48 and 86 to the configured 100-character limit. Keep all other scope unchanged. Use edit tools; do not install packages or commit. Codex will run final checks.”
+
+## 2026-10-02T11:40:08+06:00 — T003 final review
+
+- Tool: Codex reviewing Antigravity.
+- Outcome: full new-file contents reviewed; missing README reference removed; checker lint issues corrected after one feedback round; no domain behavior added.
+- Dependency: Ruff 0.16.10 installed into ignored local .venv, within the already-declared pyproject dev dependency range. Initial sandbox download failed; approved registry download succeeded. No application or frontend packages installed.
+- Verification: `make check-structure` passed; `.venv/bin/ruff check --config backend/pyproject.toml backend scripts` passed. No application test suite exists yet; T004/T005 add it.
+- Next: local T003 commit, then FastAPI hello-world/test runner (T004). Docker engine remains stopped; public remote/deployment are unconfigured and require human input.

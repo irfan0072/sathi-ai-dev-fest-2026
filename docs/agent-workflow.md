@@ -48,7 +48,7 @@ Once the human supplies its executable path or installs the CLI, run its top-lev
 7. Log timestamp, task ID, tool, actual brief/prompt, and outcome in `docs/ai-dev-log.md`.
 8. Stop for human input after two failures following feedback or for design conflicts.
 
-No task execution method is approved or verified yet.
+Historical note: at the first inspection no task execution method was verified; the agy verification above supersedes this.
 
 ## Successful execution probe
 
@@ -59,3 +59,7 @@ No task execution method is approved or verified yet.
 The headless T002 run returned: `a tool required the command permission that headless mode cannot prompt for, so it was auto-denied`. No T002 files were created. Read-only success does not prove command/edit execution. Switched to the documented `--prompt-interactive` mode for specific permission prompts; no permission bypass is used.
 
 Host tool checks: Python 3.13.2, Node v20.20.2, npm 10.8.2, Docker Compose v5.3.1. Docker engine is unavailable at the configured socket.
+
+## Verified interactive implementation method
+
+Use `agy --mode accept-edits --prompt-interactive` with the task prompt in the project cwd. T002 and T003 were implemented in this mode. Inspect each command-permission request and authorize only task-scoped actions; conversation-local allowances were limited to Git status, check-ignore and diff. Do not use the permission-bypass flag. T003 required one review-feedback round. Codex independently ran structure checks and Ruff successfully.
