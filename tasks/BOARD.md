@@ -70,3 +70,7 @@ See docs/audit-2026-10-02.md. T016 baseline verified; T017/T018/T019/T020 PARTIA
 | T025 | Artifact-backed console and security/evaluation gates | Pending | 3Oct12:00 |
 | T026 | Render dashboard guide / live smoke / fallback | Pending human deploy | 3Oct14:00 |
 | T027 | Submission package and clean-clone verification | Pending | Outline3Oct16:00; complete4Oct06:00 |
+
+T022 update2Oct22:12: **paused at human two-failure gate**;184backendpass/1test-schema assertion failure,17frontendpass,Ruff6long lines. Permission requested for narrow retry. T023/T024 remain prepared, not delegated; no dependent implementation until gate resolved. Correct data provenance edits preserved uncommitted.
+
+T022 COMPLETE after human-authorized narrow retry:185 backend tests/zero skips,17 frontend tests, lint/build and real API18000/console13000 smoke pass. Samples labelled; unavailable metrics never replaced with invented numbers. Approved design clears T023/T024 architecture gate. Next T023.

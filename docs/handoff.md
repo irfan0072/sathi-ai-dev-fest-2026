@@ -1,15 +1,13 @@
 # Sathi handoff
 
-Updated: 2 October 2026 21:43 Asia/Dhaka. Orchestrator: Codex; implementer: agy. Antigravity IDE paused by human instruction. Read this, tasks/BOARD.md and docs/decisions.md first.
+Updated: 2 October 2026, Asia/Dhaka. Codex orchestrates; agy implements all code. Antigravity IDE remains paused. Read this, tasks/BOARD.md and docs/decisions.md first.
 
-HEAD at resume a7e47f6; T015–T020 were committed by prior orchestrator. Uncommitted IDE analytics/receipts/console screens are under review, NOT verified real inference. No reset/deletion performed. Full audit: docs/audit-2026-10-02.md.
+T021 audit committed/pushed as05c752c. See docs/audit-2026-10-02.md. Inherited model scores remain provisional, never verified final metrics.
 
-T021 VERIFIED: 185 backend tests, zero skips after unrestricted local PG access;3 frontend tests; Ruff/ESLint/build pass. Exact command: SATHI_TEST_DATABASE_URL=postgresql://sathi:CHANGE_ME@127.0.0.1:5432/sathi_phase1_test make test lint build-console. CSS whitespace pending. Report numbers reproduced by .venv/bin/python scripts/evaluate.py --sample-train-size4000 --output-report/private/tmp/sathi-audit-evaluation.md (use spaces between flags/values); results provisional due methodological defects.
+T022 COMPLETE after human-authorized narrow retry. Backend185 passed/zero skips with dedicated PostgreSQL; frontend17 passed; Ruff/ESLint/build passed. Final `make smoke-skeleton lint` passed API18000 and console13000. Docker rebuilt without database reset. Real metrics503 unavailable; outreach/risk explicitly illustrative; unknown receipt404. Console shows Unavailable without fallback scores. Screenshot:/private/tmp/sathi-t022-metrics-unavailable.jpg. Actual in-memory redemption timestamp added for honest receipts; persistence remains T024.
 
-Critical gaps: API analytics fabricated constants; UI fallback metrics; production VITE_API_URL ignored; region affects anomaly scores; anomaly evaluation fits evaluated agents; SHAP explains different estimator; cash-gap ablation empty; mandate/auth/audit in memory; Bangla parser absent; arbitrary receipts fabricated. Do not claim production readiness or report these scores as final.
+Human approved docs/design-repair-proposal.md: train-only anomaly references without region, disjoint calibration, durable attempts/locks, scoped synthetic authentication, terminal-only code issuance and ledger fees/receipts. T023/T024 prepared, no agy active at boundary. Next Codex adds approved config controls, agy implements T023, then reproducible evaluation artifacts T023b, durable demo T024, artifact-backed console T025, user-dashboard deployment T026 and submission T027. Evaluation fixtures must reuse reviewed generator rather than duplicate manual generator.
 
-Running local containers: API18000 only /health, console13000 old skeleton, PG5432. Mock18001 may exist; do not use as live evidence. PHP8000 untouched. New code needs rebuild after correction. Database/generation artifacts already exist; no reset authorized.
+Only Codex edits docs/config/board; update this after every task. API18000, console13000, PG5432; PHP8000 untouched. Mock18001 never live evidence. Existing data preserved. Routine tests/dependencies/commits/pushes/agy authorized. No paid APIs or hosting account actions authorized; user deploys through Render dashboard, never request credentials. Two task failures after feedback require stop-and-ask.
 
-Next: T022 provenance containment via agy; only Codex edits docs/config/board. Then T023 evaluation/inference correctness. Schema/API/persistence/auth decisions need human approval before dependent implementation. User approved routine tests/deps/commits/pushes/agy, no hosting account actions or paid APIs. Render dashboard by user only; never ask for keys/passwords/tokens.
-
-Deadline4Oct10:00Dhaka; internal08:00. Time-boxed board in audit doc and tasks/BOARD.md. Update this file after EVERY task. Full AI-tool history in docs/ai-dev-log.md. No new delegation until prior overlapping task completes.
+Deadline4Oct10:00Dhaka; internal08:00. Never cut generator, baselines or live demo. AI-tool history:docs/ai-dev-log.md.

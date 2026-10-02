@@ -114,6 +114,7 @@ class MandateRecord:
         self.expires_at = expires_at
         self.created_at = created_at or datetime.datetime.now(timezone.utc)
         self.redeemed_txn_id = redeemed_txn_id
+        self.redeemed_at: datetime.datetime | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -509,6 +510,7 @@ class MandateService:
 
         # Success: Redeem mandate
         record.status = "redeemed"
+        record.redeemed_at = now
         self._txn_counter += 1
         record.redeemed_txn_id = self._txn_counter
 

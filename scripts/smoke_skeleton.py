@@ -42,9 +42,16 @@ def check_frontend(url: str, timeout: float = 5.0) -> bool:
                 print(f"[Frontend] Unexpected status code: {response.status}")
                 return False
             body = response.read().decode("utf-8", errors="replace")
-            has_title = "<title>Sathi Console</title>" in body or bool(
-                re.search(
-                    r"<title[^>]*>\s*Sathi Console\s*</title>", body, re.IGNORECASE
+            has_title = (
+                "<title>Sathi (সাথী) — AI Scoped Mandate & Anomaly Console</title>"
+                in body
+                or bool(
+                    re.search(
+                        r"<title[^>]*>\s*Sathi \(সাথী\) — "
+                        r"AI Scoped Mandate & Anomaly Console\s*</title>",
+                        body,
+                        re.IGNORECASE,
+                    )
                 )
             )
             has_root = 'id="root"' in body or "id='root'" in body

@@ -24,6 +24,13 @@ export default [
         document: 'readonly',
         console: 'readonly',
         process: 'readonly',
+        fetch: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+        setInterval: 'readonly',
+        clearInterval: 'readonly',
+        SpeechSynthesisUtterance: 'readonly',
+        speechSynthesis: 'readonly',
       },
     },
     rules: {

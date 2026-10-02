@@ -22,9 +22,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+from app.analytics.router import router as analytics_router  # noqa: E402
 from app.mandates.router import router as mandates_router  # noqa: E402
 
 app.include_router(mandates_router)
+app.include_router(analytics_router)
 
 
 @app.get("/health")

@@ -36,7 +36,7 @@ services:
     runtime: static
     plan: free
     region: oregon
-    buildCommand: "npm --prefix frontend install && npm --prefix frontend run build"
+    buildCommand: "npm --prefix frontend ci && npm --prefix frontend run build"
     staticPublishPath: frontend/dist
     routes:
       - type: rewrite
@@ -45,7 +45,4 @@ services:
     autoDeploy: true
     envVars:
       - key: VITE_API_URL
-        fromService:
-          type: web
-          name: sathi-api
-          property: host
+        sync: false

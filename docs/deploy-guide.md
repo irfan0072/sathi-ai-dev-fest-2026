@@ -1,4 +1,6 @@
-# Sathi Production Deployment Guide (Render)
+# Sathi Render Deployment Guide — blocked pending repair
+
+> Resume audit: this guide is NOT deployment-ready. Do not deploy from these historical instructions yet. The blueprint private-network host is not a public browser API URL; data generation is missing; demo logins below are not implemented authentication; free services have no dashboard shell. See docs/audit-2026-10-02.md and the approved docs/design-repair-proposal.md. Codex will replace these steps after the repaired demo is verified. No hosting account action has been taken.
 
 This guide walks you through deploying the Sathi platform (Managed PostgreSQL database, FastAPI backend API, and React Console frontend) to **Render** using the repository's declarative Blueprint (`render.yaml`) directly from the Render web dashboard connected to your public GitHub repository.
 
@@ -8,8 +10,8 @@ This guide walks you through deploying the Sathi platform (Managed PostgreSQL da
 
 | Resource | Service Type | Free-Tier Limits & Expiry |
 |---|---|---|
-| **PostgreSQL Database** (`sathi-db`) | Managed Database | **Expires 30 days after creation.** After 30 days, Render drops the free database instance unless upgraded to a paid plan ($7/mo) or re-provisioned. Maximum 1 GB storage, 100 connections. |
-| **FastAPI Backend** (`sathi-api`) | Web Service (Python) | **Spins down (sleeps) after 15 minutes of inactivity.** When an incoming request arrives, a cold start takes approximately **30–50 seconds** to spin up. Includes 750 free instance hours per month (enough for continuous uptime of 1 service). |
+| **PostgreSQL Database** (`sathi-db`) | Managed Database | **Expires 30 days after creation**, then a 14-day upgrade grace period before deletion. Maximum 1 GB storage. Check current dashboard pricing before choosing a paid plan. |
+| **FastAPI Backend** (`sathi-api`) | Web Service (Python) | **Spins down (sleeps) after 15 minutes of inactivity.** When an incoming request arrives, a cold start takes about **one minute** to spin up. Includes 750 free instance hours per month (enough for continuous uptime of 1 service). |
 | **Sathi Console** (`sathi-console`) | Static Site | **Free forever.** Global CDN distribution, instant loads (no sleep, no cold starts), 100 GB free monthly bandwidth. |
 
 ---
@@ -77,7 +79,7 @@ Render automatically configures these from `render.yaml`. No secrets or password
 
 ## 5. Low-Privilege Synthetic Demo Logins
 
-For judges, evaluators, and live demonstrations, use these pre-seeded synthetic test accounts:
+**Historical illustrative identities only. These accounts and passwords are not implemented or verified login credentials. Do not present them as working judge logins.** The approved repair will seed scoped synthetic demo principals without any admin/policy privileges.
 
 ### 1. Agent Terminal Simulator (Assisting Agent)
 - **Role**: Field Agent initiating cash-out requests
@@ -98,3 +100,5 @@ For judges, evaluators, and live demonstrations, use these pre-seeded synthetic 
 - **Username**: `officer_audit`
 - **Password**: `demo_audit_2026`
 - **Capabilities**: Read-only access to flag cases, fairness audits, and audit logs. Cannot alter policy rules or bypass customer verification.
+
+Current platform references checked 2 October 2026: [Free services and database limits](https://render.com/docs/free), [Blueprint service properties](https://render.com/docs/blueprint-spec). An always-on paid API tier is recommended for the final days; the human selects any paid plan through the dashboard. Never send tokens, passwords or SSH keys to Codex.
