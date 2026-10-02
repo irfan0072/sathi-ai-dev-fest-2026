@@ -2,7 +2,7 @@ PYTHON ?= .venv/bin/python
 API_PORT ?= 18000
 DATASET ?= data/generated/train.json
 
-.PHONY: test lint check-structure test-api lint-api run-api test-console lint-console build-console run-console smoke-skeleton migrate seed
+.PHONY: test lint check-structure test-api lint-api run-api test-console lint-console build-console run-console smoke-skeleton migrate seed generate
 
 test: check-structure test-api test-console
 
@@ -40,3 +40,6 @@ migrate:
 
 seed:
 	PYTHONPATH=backend $(PYTHON) -m app.data.cli seed --dataset $(DATASET)
+
+generate:
+	PYTHONPATH=backend $(PYTHON) -m app.data.cli generate

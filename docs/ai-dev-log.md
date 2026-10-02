@@ -190,3 +190,21 @@
 - Installed declared Psycopg3.3.6/binary3.3.6 and pinned constraints; PyYAML6.0.3 already installed and now explicit runtime dependency. Initial sandbox package access failed DNS; permitted retry succeeded.
 - `SATHI_TEST_DATABASE_URL=... make test lint build-console` passed28 backend tests,1 frontend test, both linters and build. Main dev `make migrate` applied001_initial.sql; secondrun0applied. Dedicated test schema CLIseed2users/1agent/2txns/2sessions; repeatedseedno-op. Domain migration matches docs/schema.sql exactly.
 - CI now has dedicated PostgreSQL test service; Docker build allowlist includes migration files. No domain schema changes, mandate rows, destructive reset or model training.
+
+## 2026-10-02T15:23:01+06:00 — T014 delegation
+
+- Tool: Antigravity CLI. Prompt: “Read tasks/T014.md and implement only T014 using file read/edit tools. No shell/install/Git/model training. Keep output concise; Codex runs all validation, determinism, leakage and full checks. Main dev database must remain unseeded until final disjoint split artifacts. Report files and pending verification.”
+- Dataset-level determinism and feature-leakage guard are prerequisites before modeling. Synthetic actual cash and noisy customer observations stay separate from ledger columns; no mandate-dependent reporting schema invented.
+
+## 2026-10-02T15:31:11+06:00 — T014 review feedback
+
+- Reviewed generator/config/guard/CLI/tests. Focused tests passed58, but semantic gaps reject acceptance: session splitting does not double volume, service-count draw only gates anevent, hardcoded creditcycles/rounding, missing nestedconfigvalidation, latent top_agent_share collides with legitimate feature name.
+- Prompt: “Read tasks/T014-review.md and correct T014 only. Existing focused tests passed58 but semantic review found missing configured behaviors; implement every numbered correction and meaningful regression tests. Use file read/edit tools only, no commands/install/Git. Codex runs full checks. Keep response concise.” Exact numbered feedback retained in tasks/T014-review.md.
+- No modeling or score tuning performed; no generated dataset accepted/seeded yet.
+
+## 2026-10-02T17:42:13+06:00 — T014 correction and full-scale verification
+
+- Antigravity corrected nested config validation, single cashout amount multiplier, configured cycles/rounding, service usage, latent metadata and guards; it did not execute tests. Codex corrected formatting/imports, made timing windows/day ranges configurable, removed minimum targeting-weight override, implemented largest-remainder population quotas, added namespace/output validation and short-cycle regression, and preserved test env with monkeypatch.
+- Full gate passed96 backend tests with realDB integrations,1 frontend test, linters/build. Full-scale generation seed42:20000users/300agents/189819transactions/189819sessions. Main SHA256 fbeaa930b345a64ef77012d41185c0c28b8afd44c26ce4542e154c1717303827 repeated identically; full ledger balances independently checked;1953 sampled behavior flips (synthetic probability0.10).
+- Dedicated sathi_generator_test DB loaded full dataset, repeatseedno-op; SQLcounts20000/300/189819/189819 and0mandates. Main devDB remains empty awaiting final disjointcohorts. Generatedoutputs are ignored.
+- Localimages rebuilt successfully with config/migrations/dependencies; no Docker-sharing edits, destructive resets or model evaluation. Agent propensities and capped spikes/service activity proxy documented as limitations. Raw sidecar assisted summaries renamed to transaction fractions to avoid implying customer fractions.

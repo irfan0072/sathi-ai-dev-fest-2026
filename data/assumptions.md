@@ -110,7 +110,7 @@ Evaluation slices exist for fairness evaluation only, never as model inputs:
 Sathi adoption among assisted users: 30%, 50%, 70%. Report all three.
 
 ## 12. Ethics
-- No real names, numbers, NID values or photos. IDs are random tokens.
+- No real names, numbers, NID values or photos. IDs are deterministic synthetic tokens; no real identifiers are used.
 - Gender, age band and region exist for fairness evaluation only, never as model inputs.
 
 ## 13. Change Log
@@ -118,3 +118,20 @@ Sathi adoption among assisted users: 30%, 50%, 70%. Report all three.
 |---|---|---|
 | 2026-10-02 | Added validation seed 4242 and 60/20/20 agent allocation | Human approved explicit validation setup; fee and caps remain unset pending separate values |
 | 2026-10-02 | Approved Phase 1 simulation assumptions and auxiliary defaults | Human approved fee (0.015), mandate cap (5000 BDT), daily limit (25000 BDT), TTL (15 min), verification attempts (2), cash gap max(50,.02*amt), population/agent distributions, skimming profiles and report rate/accuracy. Noise magnitude is an auxiliary implementation assumption. Added distinct auxiliary implementation assumptions for generator reproducibility and 0.98 PR-AUC sanity ceiling. |
+
+## Generator implementation details (ASSUMPTIONS)
+
+- Ledger amounts/credits use a configured 50 BDT rounding increment; affordability and payouts retain cents precision. Payout reduction percentages are rounded to cents, not coarse denominations that would exaggerate skimming.
+- Opening balances are synthetic add-money credits at 5–60 minutes from the timeline anchor. Credit hour windows: allowance7–12, family8–20, independent8–12; extra services9–21. These auxiliary windows are configurable, not observed customer facts.
+- Agent assisted shares0.2/0.6 are relative sampling propensities. With35% global assisted population they cannot guarantee each agent's exact assisted fraction. Sidecars record realized fractions.
+- High-volume honest allowance-day multiplier acts on requested amount and is capped by available balance including fee. Realized aggregate volume need not equal exactly2x; it is not forced to match a target.
+- Service-count draws drive activity-use opportunities, not the number of distinct service categories: the current schema offers credit/cash_out/send/bill_pay. Additional service types remain outside Phase1.
+- Actual payouts, noisy reports, effective profiles and sampled propensities live in a simulation sidecar, not the ledger seed tables. No model may consume latent simulation truth. The cash-report sidecar has no applicable domain storage table until mandate reporting is implemented.
+
+| Date | Change | Reason |
+|---|---|---|
+| 2026-10-02 | Added configurable rounding/time windows and clarified agent propensities, volume cap and service-count proxy | Auxiliary generator ASSUMPTIONS; preserve balances and existing schema without tuning to a model score |
+
+Extra-service active cycle-day range1–28 is a configurable auxiliary ASSUMPTION, clamped to short cycles. Cycle days are zero-based offsets from the synthetic timeline anchor.
+
+Sidecar assisted-fraction summaries count transactions using effective behavior profiles; they are not exact assisted-customer share guarantees and must not be quoted as customer demographics.

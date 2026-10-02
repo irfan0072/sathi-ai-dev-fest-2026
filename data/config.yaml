@@ -44,7 +44,6 @@ simulation:
   credits:
     allowance:
       cycle_days: 30
-      disbursement_day: 5
       amount_min: 1500
       amount_max: 5000
     family:
@@ -92,6 +91,11 @@ simulation:
   auxiliary_assumptions:
     initial_balance: 5000
     min_cashout: 100
+    opening_delay_minutes: [5, 60]
+    credit_hours: {allowance: [7, 12], family: [8, 20], independent: [8, 12]}
+    extra_service_hours: [9, 21]
+    extra_service_day_range: [1, 28]
+    amount_rounding_bdt: 50            # ASSUMPTION: BDT rounding increment for cashouts and credits
     independent_loyal_fraction: 0.15 # independent users adopting assisted top-share Beta(6, 2)
     customer_report_noise_sigma_bdt: 50
     extra_service:

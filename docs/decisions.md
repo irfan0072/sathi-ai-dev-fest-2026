@@ -88,6 +88,7 @@ The following auxiliary assumptions are recorded distinctly as implementation ch
 - Independent credit cycle: 30 days, amount range 1,500–5,000 BDT.
 - Initial balance: 5,000 BDT.
 - Minimum cashout: 100 BDT.
+- Amount rounding increment: 50 BDT (`amount_rounding_bdt: 50`).
 - Extra-service probability: 0.15 per cycle, amount range 100–500 BDT.
 - Session steps: Independent 4, Assisted 7.
 

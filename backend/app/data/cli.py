@@ -1,10 +1,13 @@
-"""Command-line interface for Sathi database migrations and dataset seeding."""
+"""CLI for Sathi migrations, synthetic generation, and dataset seeding."""
 
 import argparse
+import hashlib
+import json
 import os
 import sys
 from pathlib import Path
 
+from app.data.config import load_config
 from app.data.database import (
     MigrationError,
     SeedCollisionError,
@@ -12,15 +15,43 @@ from app.data.database import (
     load_seed,
     run_migrations,
 )
+from app.data.generator import generate_dataset
 
 
 def build_parser() -> argparse.ArgumentParser:
-    """Build command-line parser for database migrations and seeding."""
+    """Build command-line parser for database migrations, generation, and seeding."""
     parser = argparse.ArgumentParser(
         prog="python -m app.data.cli",
-        description="Sathi database migration and seed CLI",
+        description="Sathi database migration, generator, and seed CLI",
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
+
+    # generate subcommand
+    generate_parser = subparsers.add_parser(
+        "generate", help="Generate synthetic dataset and sidecar"
+    )
+    generate_parser.add_argument(
+        "--config",
+        default=None,
+        help="Path to YAML configuration file (defaults to data/config.yaml)",
+    )
+    generate_parser.add_argument(
+        "--seed",
+        type=int,
+        default=None,
+        help="Random seed (defaults to seed_train in config)",
+    )
+    generate_parser.add_argument(
+        "--output",
+        default="data/generated/train.json",
+        help="Path to output main dataset JSON (defaults to data/generated/train.json)",
+    )
+    generate_parser.add_argument(
+        "--customers",
+        type=int,
+        default=None,
+        help="Optional customer count override (e.g. for smoke testing)",
+    )
 
     # migrate subcommand
     migrate_parser = subparsers.add_parser("migrate", help="Apply schema migrations")
@@ -61,6 +92,51 @@ def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
 
+    if args.command == "generate":
+        try:
+            cfg = load_config(args.config)
+            seed = args.seed if args.seed is not None else cfg["simulation"]["seed_train"]
+            output_file = Path(args.output)
+            output_file.parent.mkdir(parents=True, exist_ok=True)
+
+            main_data, sidecar_data = generate_dataset(
+                config=cfg,
+                seed=seed,
+                customers=args.customers,
+                return_observations=True,
+            )
+
+            main_bytes = json.dumps(main_data, sort_keys=True, separators=(",", ":")).encode(
+                "utf-8"
+            )
+            sidecar_bytes = json.dumps(sidecar_data, sort_keys=True, separators=(",", ":")).encode(
+                "utf-8"
+            )
+
+            output_file.write_bytes(main_bytes)
+
+            if output_file.name.endswith(".json"):
+                obs_file = output_file.with_name(output_file.stem + ".observations.json")
+            else:
+                obs_file = output_file.with_suffix(".observations.json")
+            obs_file.write_bytes(sidecar_bytes)
+
+            main_hash = hashlib.sha256(main_bytes).hexdigest()
+            u_count = len(main_data["users"])
+            a_count = len(main_data["agents"])
+            t_count = len(main_data["transactions"])
+            s_count = len(main_data["sessions"])
+            print(
+                f"Generated dataset (seed={seed}): {u_count} users, {a_count} agents, "
+                f"{t_count} transactions, {s_count} sessions."
+            )
+            print(f"Checksum (SHA-256): {main_hash}")
+            return 0
+        except Exception as exc:
+            print(f"Generation error ({type(exc).__name__}): {exc}", file=sys.stderr)
+            return 1
+
+    # Database commands (migrate, seed) require DATABASE_URL
     db_url = args.database_url
     if not db_url:
         print(
@@ -69,7 +145,6 @@ def main(argv: list[str] | None = None) -> int:
             file=sys.stderr,
         )
         return 1
-
 
     if args.command == "migrate":
         print("Applying migrations...")
