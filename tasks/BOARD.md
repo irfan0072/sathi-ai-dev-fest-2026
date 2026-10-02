@@ -56,3 +56,17 @@ Never cut: data generator, baselines, live demo path.
 | T018 | Assisted-user classifier (LightGBM) | antigravity | Done (6 ML tests/PR-AUC 0.866 passed) | T015, T016 | LightGBM model, calibration, SHAP values, PR-AUC sanity check (<=0.98), evaluation on validation split | `pytest backend/tests/test_assisted_model.py` |
 | T019 | Agent anomaly detector | antigravity | Done (6 tests passed, 0 honest false-flags) | T015, T016 | Robust peer z-score + Isolation Forest, ranking, peer comparison reasons | `pytest backend/tests/test_agent_anomaly.py` |
 | T020 | Evaluation suite & ablations | antigravity | Done (8 tests passed, docs/evaluation-results.md) | T016, T018, T019 | Baseline vs model tables, feature ablation, skimming sweep, noise sweep, distribution shift | `pytest backend/tests/test_evaluation.py` |
+
+## Codex resume audit — 2Oct21:43Dhaka (supersedes unsupported VERIFIED claims)
+
+See docs/audit-2026-10-02.md. T016 baseline verified; T017/T018/T019/T020 PARTIAL. No live deployment verified. 34h17m to internal target.
+
+| ID | Task | Status | Time box / gate |
+|---|---|---|---|
+| T021 | Independent audit | Done | 185 backend/3 frontend tests, lint/build; provenance and Render defects recorded |
+| T022 | Contain fabricated console/API evidence, retain tested IDE layout | Next | 2Oct22:30 |
+| T023 | Model/evaluation correctness and reproducible artifact bundle | Pending | 3Oct02:00 |
+| T024 | Durable authenticated synthetic demo and verification | Approval-dependent | 3Oct08:00; schema/API proposal before implementation |
+| T025 | Artifact-backed console and security/evaluation gates | Pending | 3Oct12:00 |
+| T026 | Render dashboard guide / live smoke / fallback | Pending human deploy | 3Oct14:00 |
+| T027 | Submission package and clean-clone verification | Pending | Outline3Oct16:00; complete4Oct06:00 |

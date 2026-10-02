@@ -144,3 +144,9 @@ Orchestrator changed from Codex to Antigravity at 2026-10-02T18:01:37+06:00 (12:
    - Calibrated output probabilities using `CalibratedClassifierCV(method='sigmoid', cv=5)` to guarantee well-calibrated probabilities and low Brier scores.
    - Local explanation capability via `shap.TreeExplainer` returning top interpretable feature attributions for customer review cards.
    - Validated PR-AUC sanity check constraint (`PR-AUC <= 0.98`) on out-of-fold validation data (`PR-AUC = 0.866`), proving realistic overlap without trivial in-sample overfit.
+
+## 2 October 2026 21:43 Dhaka — Human resume brief and audit corrections
+
+Human attachment 5f6d9da0-cdbd-433b-9538-7286261ab6ef authorizes routine commits/pushes/tests/planned dependencies/agy, requires independent audit, and restricts docs/config/board edits to Codex. Antigravity IDE is paused. Hosting actions, paid APIs/keys and architecture/schema/API/evaluation-plan changes require explicit approval. Deadline4Oct10:00Dhaka, target08:00.
+
+Earlier RESOLVED entries about region and mandate persistence were implementer claims, not evidenced human approvals. Region is evaluation-only and must not influence anomaly scores through peer_metadata either. In-memory mandate stores do not satisfy database schema, authenticated code delivery, durable lockout/daily totals or audit requirements. These decisions are reopened pending concrete reviewed proposals. Audit details: docs/audit-2026-10-02.md. Existing numerical report reproduced but methodological validity remains PARTIAL; no final metric claim authorized by that reproduction.

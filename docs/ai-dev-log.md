@@ -306,3 +306,7 @@
     - Full test suite: 176 backend tests + 1 frontend test passing (0 failures, 0 skips).
     - Linters: `make lint` clean (Ruff + ESLint).
 
+
+### T021 — Codex independent resume audit, 2026-10-02 21:43 Asia/Dhaka
+Human brief: attachment5f6d9da0-cdbd-433b-9538-7286261ab6ef (resume, audit, provenance, standing approvals). Read handoff/board/decisions,20 commits, uncommitted IDE diffs and relevant code. Prior queued agy T015 review session returned; its changes already included in inherited T015 history, no new delegation occurred during audit.
+Commands: make test lint build-console (dedicated local PG URL): initial177passed8skipped because sandbox denied TCP; unrestricted repeat185passed0skipped; frontend3passed; Ruff/ESLint/Vite passed. scripts/evaluate.py --sample-train-size4000 --output-report/private/tmp/sathi-audit-evaluation.md reproduced report numbers (format differences); audit found evaluation design defects. curl localhealth/OpenAPI/console:API200healthonly,oldconsole. gitdiffcheck foundCSSwhitespace. OfficialRenderdocs reviewed. No paid/hosting account action, no secrets requested, no deletion. Result and revised schedule in docs/audit-2026-10-02.md; handoff updated. Uncommitted IDE implementation retained for T022 correction/review, not blindly committed.
