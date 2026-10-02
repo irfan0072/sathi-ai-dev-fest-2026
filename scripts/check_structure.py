@@ -45,9 +45,11 @@ def check_pyproject() -> list[str]:
 
     project = data.get("project", {})
     req_python = project.get("requires-python", "")
-    if ">=3.11" not in req_python:
+    min_py_match = re.findall(r">=\s*3\.(\d+)", req_python)
+    if not min_py_match or int(min_py_match[0]) < 11:
         errors.append(
-            f"backend/pyproject.toml requires-python must include '>=3.11', got '{req_python}'"
+            f"backend/pyproject.toml requires-python must require Python >=3.11 "
+            f"(got '{req_python}')"
         )
 
     deps = project.get("dependencies", [])
@@ -96,7 +98,8 @@ def check_package_json() -> list[str]:
     ]
     if not minimum_majors or min(minimum_majors) < 20:
         errors.append(
-            f"frontend/package.json engines.node must require Node 20 or newer, got '{node_engine}'"
+            f"frontend/package.json engines.node must require Node 20 or newer, "
+            f"got '{node_engine}'"
         )
 
     deps = data.get("dependencies", {})

@@ -1,205 +1,80 @@
-"""Tests for comprehensive evaluation suite (T020).
+"""Tests for comprehensive evaluation suite (T020 / T023).
 
 Verifies that all 6 experiments from docs/evaluation-plan.md and demographic fairness audits
 run against isolated small generated synthetic fixtures in a tmp directory (1000 customers,
-30 agents with 20/6/4 mix), honoring the final-test-only rule.
+30 agents with 20/6/4 mix), honoring the final-test-only rule and reusing app.data generator.
 """
 
 from __future__ import annotations
 
-import json
+import copy
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 import pytest
+from app.data.config import ConfigError, load_config, validate_config
+from app.data.generator import build_canonical_agent_registry
+from app.data.splits import (
+    allocate_cohorts,
+    generate_shifted_test_split,
+    generate_splits,
+)
 from app.evaluation.suite import EvaluationRunner
+from app.ml.agent_model import AgentAnomalyDetector
+from app.ml.assisted_model import AssistedUserClassifier
+from app.ml.features import extract_agent_features, extract_user_features
+
+
+def get_small_eval_config() -> dict[str, Any]:
+    """Build small valid configuration for unit test evaluation fixtures."""
+    cfg = copy.deepcopy(load_config())
+    cfg["simulation"]["customers"] = 1000
+    cfg["simulation"]["agents"] = 30
+    cfg["simulation"]["agent_mix"] = {"normal": 20, "high_volume_honest": 6, "skimmers": 4}
+    cfg["simulation"]["agent_split"] = {"train": 0.60, "validation": 0.20, "test": 0.20}
+    return validate_config(cfg)
 
 
 def _generate_synthetic_fixture(base_dir: Path) -> None:
-    """Generate small disjoint synthetic datasets (1000 customers, 30 agents: 20/6/4 mix)."""
-    regions = ["dhaka", "chittagong", "rajshahi", "sylhet"]
-    age_bands = ["18-35", "36-59", "60+"]
-    genders = ["female", "male"]
-    urban_rurals = ["urban", "rural"]
+    """Generate small disjoint synthetic datasets (1000 customers, 30 agents: 20/6/4 mix).
 
-    def build_split(
-        prefix: str,
-        n_users: int,
-        n_agents: int,
-        n_skimmers: int,
-        start_user_idx: int,
-        start_agent_idx: int,
-        start_tx_idx: int,
-        shifted: bool = False,
-    ) -> tuple[dict[str, Any], int, int, int]:
-        agents = []
-        for a_i in range(n_agents):
-            aid = f"A_{prefix}_{start_agent_idx + a_i:03d}"
-            is_skimmer = a_i < n_skimmers
-            agents.append(
-                {
-                    "agent_id": aid,
-                    "agent_type": "skimmer" if is_skimmer else "normal",
-                    "region": regions[(start_agent_idx + a_i) % len(regions)],
-                    "volume_band": "high_volume" if a_i % 2 == 0 else "standard",
-                }
-            )
+    Reuses app.data generator/split logic and guarantees schema and seed conformance.
+    """
+    cfg = get_small_eval_config()
+    canonical_agents = build_canonical_agent_registry(cfg)
+    cohort_agents = allocate_cohorts(cfg, canonical_agents=canonical_agents)
 
-        users = []
-        transactions = []
-        sessions = []
-        curr_tx = start_tx_idx
+    # Disjoint agent cohorts: 18 train, 6 validation, 6 test (60-20-20)
+    assert len(cohort_agents["train"]) == 18
+    assert len(cohort_agents["validation"]) == 6
+    assert len(cohort_agents["test"]) == 6
 
-        for u_i in range(n_users):
-            uid = f"U_{prefix}_{start_user_idx + u_i:04d}"
-            is_assisted = (u_i % 2 == 0)
-            users.append(
-                {
-                    "user_id": uid,
-                    "group_label": "assisted" if is_assisted else "independent",
-                    "gender": genders[u_i % len(genders)],
-                    "age_band": age_bands[u_i % len(age_bands)],
-                    "region": regions[u_i % len(regions)],
-                    "urban_rural": urban_rurals[u_i % len(urban_rurals)],
-                }
-            )
+    # Generate standard splits (train, validation, test) with manifest
+    split_result = generate_splits(config=cfg, output_dir=base_dir)
 
-            # Credit transaction
-            cr_amt = 4000.0 if shifted else 3000.0
-            transactions.append(
-                {
-                    "txn_id": curr_tx,
-                    "user_id": uid,
-                    "agent_id": None,
-                    "txn_type": "credit",
-                    "amount": cr_amt,
-                    "fee": 0.0,
-                    "balance_after": cr_amt,
-                    "ts": "2026-10-01T09:00:00",
-                }
-            )
-            curr_tx += 1
-
-            # Cash-out transaction (with agent assignment)
-            assigned_agent = agents[u_i % len(agents)]
-            is_agent_skimmer = (assigned_agent["agent_type"] == "skimmer")
-            co_amt = 2500.0 if shifted else 2000.0
-            fee_rate = 0.018 if shifted else 0.015
-            fee_mult = 1.35 if is_agent_skimmer else 1.0
-            co_fee = round(co_amt * fee_rate * fee_mult, 2)
-            transactions.append(
-                {
-                    "txn_id": curr_tx,
-                    "user_id": uid,
-                    "agent_id": assigned_agent["agent_id"],
-                    "txn_type": "cash_out",
-                    "amount": co_amt,
-                    "fee": co_fee,
-                    "balance_after": max(0.0, cr_amt - co_amt - co_fee),
-                    "ts": "2026-10-05T12:00:00",
-                    "channel": "agent_initiated" if is_assisted else "customer_app",
-                }
-            )
-            curr_tx += 1
-
-            # Send transaction
-            transactions.append(
-                {
-                    "txn_id": curr_tx,
-                    "user_id": uid,
-                    "agent_id": None,
-                    "txn_type": "send",
-                    "amount": 200.0,
-                    "fee": 5.0,
-                    "balance_after": max(0.0, cr_amt - co_amt - co_fee - 205.0),
-                    "ts": "2026-10-06T14:00:00",
-                }
-            )
-            curr_tx += 1
-
-            # Bill pay transaction
-            transactions.append(
-                {
-                    "txn_id": curr_tx,
-                    "user_id": uid,
-                    "agent_id": None,
-                    "txn_type": "bill_pay",
-                    "amount": 100.0,
-                    "fee": 0.0,
-                    "balance_after": max(0.0, cr_amt - co_amt - co_fee - 305.0),
-                    "ts": "2026-10-07T15:00:00",
-                }
-            )
-            curr_tx += 1
-
-            # PIN session
-            pin_retries = 2 if is_assisted else 0
-            pin_ms = 8000 if is_assisted else 2500
-            steps = 5 if is_assisted else 3
-            if shifted:
-                pin_ms += 1500
-            sessions.append(
-                {
-                    "session_id": f"sess_{uid}_1",
-                    "user_id": uid,
-                    "pin_retries": pin_retries,
-                    "pin_entry_ms": pin_ms,
-                    "steps": steps,
-                }
-            )
-
-        data = {
-            "users": users,
-            "agents": agents,
-            "transactions": transactions,
-            "sessions": sessions,
-        }
-        return data, start_user_idx + n_users, start_agent_idx + n_agents, curr_tx
-
-    u_idx, a_idx, tx_idx = 0, 0, 1000
-
-    # 1. Train split: 600 customers, 20 agents (16 normal, 4 skimmers)
-    train_data, u_idx, a_idx, tx_idx = build_split(
-        "TR", 600, 20, 4, u_idx, a_idx, tx_idx
+    # Generate shifted test split using test cohort agents
+    generate_shifted_test_split(
+        config=cfg,
+        output_dir=base_dir,
+        canonical_agents=canonical_agents,
+        test_agent_ids=cohort_agents["test"],
     )
-    with open(base_dir / "train.json", "w", encoding="utf-8") as f:
-        json.dump(train_data, f)
 
-    # 2. Validation split: 200 customers, 6 agents (4 normal, 2 skimmers)
-    val_data, u_idx, a_idx, tx_idx = build_split(
-        "VAL", 200, 6, 2, u_idx, a_idx, tx_idx
-    )
-    with open(base_dir / "validation.json", "w", encoding="utf-8") as f:
-        json.dump(val_data, f)
-
-    # 3. Test split: 200 customers, 4 agents (3 normal, 1 skimmer)
-    test_data, test_u_idx, test_a_idx, test_tx_idx = build_split(
-        "TEST", 200, 4, 1, u_idx, a_idx, tx_idx
-    )
-    with open(base_dir / "test.json", "w", encoding="utf-8") as f:
-        json.dump(test_data, f)
-
-    # 4. Synthetic Shifted Test split: same 200 test customers and 4 test agents
-    # with shifted behavior
-    shifted_data, _, _, _ = build_split(
-        "TEST", 200, 4, 1, u_idx, a_idx, test_tx_idx, shifted=True
-    )
-    with open(base_dir / "test_shifted.json", "w", encoding="utf-8") as f:
-        json.dump(shifted_data, f)
-
-    # 5. Test observations for adoption sensitivity
-    observations = {
-        "transaction_observations": {
-            f"obs_{i}": {
-                "is_skimmer_action": (i % 3 != 0),
-                "fee_overcharge": 50.0 if (i % 3 != 0) else 0.0,
-                "payout_reduction": 100.0 if (i % 3 != 0) else 0.0,
-            }
-            for i in range(1, 20)
-        }
+    # Assert user/agent disjointness and expected sizes
+    datasets = {
+        c: split_result["splits"][c]["dataset"] for c in ("train", "validation", "test")
     }
-    with open(base_dir / "test.observations.json", "w", encoding="utf-8") as f:
-        json.dump(observations, f)
+    assert len(datasets["train"]["users"]) == 600
+    assert len(datasets["validation"]["users"]) == 200
+    assert len(datasets["test"]["users"]) == 200
+
+    train_users = {u["user_id"] for u in datasets["train"]["users"]}
+    val_users = {u["user_id"] for u in datasets["validation"]["users"]}
+    test_users = {u["user_id"] for u in datasets["test"]["users"]}
+    assert train_users.isdisjoint(val_users)
+    assert train_users.isdisjoint(test_users)
+    assert val_users.isdisjoint(test_users)
 
 
 @pytest.fixture
@@ -317,11 +192,13 @@ def test_experiment_6_distribution_shift(eval_runner: EvaluationRunner) -> None:
     train_data = eval_runner.load_split("train")
     test_data = eval_runner.load_split("test")
     test_shifted = eval_runner.load_split("test_shifted")
+    val_data = eval_runner.load_split("validation")
 
     res = eval_runner.run_experiment_6_distribution_shift(
         train_data=train_data,
         test_data=test_data,
         test_shifted_data=test_shifted,
+        val_data=val_data,
         sample_train_size=1000,
     )
 
@@ -377,7 +254,7 @@ def test_markdown_report_generation(eval_runner: EvaluationRunner) -> None:
             test_obs
         ),
         "experiment_6_distribution_shift": eval_runner.run_experiment_6_distribution_shift(
-            train_data, test_data, test_shifted, sample_train_size=1000
+            train_data, test_data, test_shifted, val_data=val_data, sample_train_size=1000
         ),
         "fairness_evaluation": eval_runner.run_fairness_evaluation(
             train_data, val_data, sample_train_size=1000
@@ -394,3 +271,72 @@ def test_markdown_report_generation(eval_runner: EvaluationRunner) -> None:
     assert "## 6. Robustness under Distribution Shift" in report
     assert "## 7. Demographic Fairness Audit" in report
     assert "Slice Disparity Gaps:" in report
+
+
+def test_configured_controls_validation() -> None:
+    """Test that configured controls fail closed when given invalid configuration values."""
+    base_cfg = get_small_eval_config()
+
+    # 1. Invalid assisted classifier classification threshold
+    bad_cfg1 = copy.deepcopy(base_cfg)
+    bad_cfg1["models"]["assisted_classifier"]["classification_threshold"] = 1.5
+    with pytest.raises(ConfigError):
+        validate_config(bad_cfg1)
+
+    # 2. Region illegally injected into agent_anomaly peer groups
+    bad_cfg2 = copy.deepcopy(base_cfg)
+    bad_cfg2["models"]["agent_anomaly"]["peer_groups"] = ["region", "volume_band"]
+    with pytest.raises(ConfigError, match=r"peer_groups must equal"):
+        validate_config(bad_cfg2)
+
+    # 3. Invalid volume quantiles (not ordered)
+    bad_cfg3 = copy.deepcopy(base_cfg)
+    bad_cfg3["models"]["agent_anomaly"]["volume_quantiles"] = [0.8, 0.2]
+    with pytest.raises(ConfigError):
+        validate_config(bad_cfg3)
+
+    # 4. Weights not summing to 1.0
+    bad_cfg4 = copy.deepcopy(base_cfg)
+    bad_cfg4["models"]["agent_anomaly"]["weight_z"] = 0.5
+    bad_cfg4["models"]["agent_anomaly"]["weight_iforest"] = 0.2
+    with pytest.raises(ConfigError, match="must sum to 1.0"):
+        validate_config(bad_cfg4)
+
+
+def test_loaded_artifact_predictions(eval_runner: EvaluationRunner, tmp_path: Path) -> None:
+    """Test trained model serialization, reloading from tmp artifact, and prediction parity."""
+    train_data = eval_runner.load_split("train")
+    val_data = eval_runner.load_split("validation")
+
+    X_tr, y_tr, _, _ = extract_user_features(
+        train_data["users"][:300], train_data["transactions"], train_data["sessions"]
+    )
+    X_val, y_val, _, _ = extract_user_features(
+        val_data["users"][:100], val_data["transactions"], val_data["sessions"]
+    )
+
+    clf = AssistedUserClassifier(random_state=42)
+    clf.fit(X_tr, y_tr, X_val, y_val)
+
+    art_path = tmp_path / "artifacts" / "test_model.joblib"
+    clf.save(art_path)
+
+    loaded = AssistedUserClassifier.load(art_path)
+    orig_probs = clf.predict_proba(X_val)
+    loaded_probs = loaded.predict_proba(X_val)
+
+    np.testing.assert_allclose(orig_probs, loaded_probs, atol=1e-6)
+
+    # Test agent anomaly detector artifact save/load
+    X_ag, _, meta_df, _ = extract_agent_features(val_data["agents"], val_data["transactions"])
+    detector = AgentAnomalyDetector()
+    detector.fit(X_ag)
+
+    ag_art_path = tmp_path / "artifacts" / "agent_detector.joblib"
+    detector.save(ag_art_path)
+
+    loaded_detector = AgentAnomalyDetector.load(ag_art_path)
+    orig_scores, _ = detector.score_combined(X_ag)
+    loaded_scores, _ = loaded_detector.score_combined(X_ag)
+
+    np.testing.assert_allclose(orig_scores, loaded_scores, atol=1e-6)

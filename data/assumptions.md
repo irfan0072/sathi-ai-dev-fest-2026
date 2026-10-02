@@ -149,3 +149,11 @@ Extra-service active cycle-day range1–28 is a configurable auxiliary ASSUMPTIO
 
 Sidecar assisted-fraction summaries count transactions using effective behavior profiles; they are not exact assisted-customer share guarantees and must not be quoted as customer demographics.
 
+
+## Approved model repair controls — ASSUMPTIONS
+
+Model defaults are reproducibility controls, not real upay figures or validated operating thresholds: LightGBM100 trees, learning rate0.05, depth5, probability threshold0.5, disjoint sigmoid calibration; anomaly100 trees, contamination0.05, train-observed volume terciles, robust-z/IF weights0.7/0.3, MAD floor0.02, sigmoid slope2.5/midpoint1.5, medium review risk0.5. Region never forms scoring peers. Controls are frozen before final evaluation; no generator tuning to a target score.
+
+| Date | Change | Reason |
+|---|---|---|
+| 2026-10-02 | Added explicit model controls and removed region from scoring peers | ASSUMPTIONS implementing human-approved repair design; preserve generator behavior and separate demographic evaluation |

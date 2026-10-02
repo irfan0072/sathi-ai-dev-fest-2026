@@ -2,21 +2,23 @@
 
 Implements:
 1. AssistedUserRuleBaseline: Classifies customer as assisted if:
-   top_agent_share >= 0.70 AND credit_to_cashout_hours_mean <= 24.0.
+   top_agent_share >= top_agent_share_min AND
+   credit_to_cashout_hours_mean <= hours_credit_to_cashout_max.
 2. AgentAnomalyRuleBaseline: Flags agent as anomalous/skimmer if:
-   agent_fee_ratio_over_official >= 1.2.
+   agent_fee_ratio_over_official >= fee_ratio_over_official_min.
 
-Both read defaults from data/config.yaml and verify against the feature guard.
+Both read defaults from data/config.yaml using app.data.config.load_config
+and verify against the feature guard.
 """
 
 from __future__ import annotations
 
+import math
 from pathlib import Path
 from typing import Any
 
 import numpy as np
 import pandas as pd
-import yaml
 from sklearn.metrics import (
     accuracy_score,
     auc,
@@ -27,38 +29,26 @@ from sklearn.metrics import (
     recall_score,
 )
 
+from app.data.config import ConfigError, load_config
 from app.features.guard import assert_feature_columns
 
 
-def load_config_baselines(config_path: str | Path | None = None) -> dict[str, Any]:
-    """Load baseline configurations from data/config.yaml."""
-    search_paths = []
-    if config_path:
-        search_paths.append(Path(config_path))
+def load_config_baselines(
+    config_path: str | Path | None = None,
+    config: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Load baseline configurations from data/config.yaml using shared loader."""
+    if config is not None:
+        from app.data.config import validate_config
 
-    cwd = Path.cwd()
-    search_paths.extend(
-        [
-            cwd / "data" / "config.yaml",
-            cwd.parent / "data" / "config.yaml",
-            Path(__file__).resolve().parent.parent.parent.parent / "data" / "config.yaml",
-        ]
-    )
+        cfg = validate_config(config)
+    else:
+        cfg = load_config(config_path)
 
-    for path in search_paths:
-        if path.exists():
-            try:
-                with open(path, "r", encoding="utf-8") as f:
-                    cfg = yaml.safe_load(f)
-                if isinstance(cfg, dict) and "models" in cfg and "baselines" in cfg["models"]:
-                    return cfg["models"]["baselines"]
-            except Exception:
-                continue
+    if isinstance(cfg, dict) and "models" in cfg and "baselines" in cfg["models"]:
+        return cfg["models"]["baselines"]
 
-    return {
-        "assisted_rule": {"top_agent_share_min": 0.7, "hours_credit_to_cashout_max": 24.0},
-        "agent_rule": {"fee_ratio_over_official_min": 1.2},
-    }
+    raise ConfigError("models.baselines mapping not found in configuration.")
 
 
 class AssistedUserRuleBaseline:
@@ -68,25 +58,62 @@ class AssistedUserRuleBaseline:
         self,
         top_agent_share_min: float | None = None,
         hours_credit_to_cashout_max: float | None = None,
+        config: dict[str, Any] | None = None,
         config_path: str | Path | None = None,
     ) -> None:
-        cfg = load_config_baselines(config_path).get("assisted_rule", {})
-        self.top_agent_share_min = (
-            float(top_agent_share_min)
-            if top_agent_share_min is not None
-            else float(cfg.get("top_agent_share_min", 0.7))
-        )
-        self.hours_credit_to_cashout_max = (
-            float(hours_credit_to_cashout_max)
-            if hours_credit_to_cashout_max is not None
-            else float(cfg.get("hours_credit_to_cashout_max", 24.0))
-        )
+        bl_cfg = load_config_baselines(config_path=config_path, config=config)
+        cfg = bl_cfg.get("assisted_rule")
+        if not isinstance(cfg, dict):
+            raise ConfigError("Missing models.baselines.assisted_rule mapping in configuration.")
+
+        if top_agent_share_min is not None:
+            if (
+                isinstance(top_agent_share_min, bool)
+                or not isinstance(top_agent_share_min, (int, float))
+                or not math.isfinite(top_agent_share_min)
+                or not (0.0 <= top_agent_share_min <= 1.0)
+            ):
+                raise ValueError("top_agent_share_min must be a probability in [0.0, 1.0].")
+            self.top_agent_share_min = float(top_agent_share_min)
+        elif "top_agent_share_min" in cfg:
+            self.top_agent_share_min = float(cfg["top_agent_share_min"])
+        else:
+            raise ConfigError(
+                "models.baselines.assisted_rule.top_agent_share_min is required in config."
+            )
+
+        if hours_credit_to_cashout_max is not None:
+            if (
+                isinstance(hours_credit_to_cashout_max, bool)
+                or not isinstance(hours_credit_to_cashout_max, (int, float))
+                or not math.isfinite(hours_credit_to_cashout_max)
+                or hours_credit_to_cashout_max <= 0.0
+            ):
+                raise ValueError("hours_credit_to_cashout_max must be a positive finite number.")
+            self.hours_credit_to_cashout_max = float(hours_credit_to_cashout_max)
+        elif "hours_credit_to_cashout_max" in cfg:
+            self.hours_credit_to_cashout_max = float(cfg["hours_credit_to_cashout_max"])
+        else:
+            raise ConfigError(
+                "models.baselines.assisted_rule.hours_credit_to_cashout_max is required in config."
+            )
+
+    def _validate_input(self, X: pd.DataFrame) -> None:
+        if not isinstance(X, pd.DataFrame):
+            raise ValueError(f"X must be a pandas DataFrame, got {type(X).__name__}")
+        assert_feature_columns(X)
+        for col in ("top_agent_share", "credit_to_cashout_hours_mean"):
+            if col not in X.columns:
+                raise ValueError(f"Missing required feature column '{col}'")
+        arr = X[["top_agent_share", "credit_to_cashout_hours_mean"]].to_numpy()
+        if not np.all(np.isfinite(arr)):
+            raise ValueError("Feature matrix contains NaN or infinite values.")
 
     def predict(self, X: pd.DataFrame) -> np.ndarray:
         """Predict binary classification (1=assisted, 0=independent)."""
-        assert_feature_columns(X)
-        top_share = X["top_agent_share"].to_numpy()
-        delays = X["credit_to_cashout_hours_mean"].to_numpy()
+        self._validate_input(X)
+        top_share = X["top_agent_share"].to_numpy(dtype=float)
+        delays = X["credit_to_cashout_hours_mean"].to_numpy(dtype=float)
 
         mask = (top_share >= self.top_agent_share_min) & (
             delays <= self.hours_credit_to_cashout_max
@@ -94,12 +121,10 @@ class AssistedUserRuleBaseline:
         return mask.astype(int)
 
     def predict_proba(self, X: pd.DataFrame) -> np.ndarray:
-        """Return pseudo-probabilities based on rule confidence."""
-        assert_feature_columns(X)
+        """Return pseudo-probabilities based on actual binary rule prediction."""
+        self._validate_input(X)
         preds = self.predict(X)
-        # Score proportional to top_agent_share if matching, else 0.1
-        scores = np.where(preds == 1, np.clip(X["top_agent_share"].to_numpy(), 0.6, 1.0), 0.1)
-        p1 = np.clip(scores, 0.0, 1.0)
+        p1 = preds.astype(float)
         p0 = 1.0 - p1
         return np.column_stack([p0, p1])
 
@@ -110,12 +135,11 @@ class AssistedUserRuleBaseline:
         slices: pd.DataFrame | None = None,
     ) -> dict[str, Any]:
         """Compute performance metrics and fairness breakdown."""
-        assert_feature_columns(X)
-        y_true = np.asarray(y)
+        self._validate_input(X)
+        y_true = np.asarray(y, dtype=int)
         y_pred = self.predict(X)
-        y_proba = self.predict_proba(X)[:, 1]
+        y_proba = y_pred.astype(float)
 
-        # PR-AUC
         precision_pts, recall_pts, _ = precision_recall_curve(y_true, y_proba)
         pr_auc = float(auc(recall_pts, precision_pts))
 
@@ -129,7 +153,6 @@ class AssistedUserRuleBaseline:
             "brier_score": float(brier_score_loss(y_true, y_proba)),
         }
 
-        # Slices breakdown
         if slices is not None:
             slice_metrics: dict[str, dict[str, float]] = {}
             for col in ("gender", "age_band", "region", "urban_rural"):
@@ -163,25 +186,60 @@ class AgentAnomalyRuleBaseline:
     def __init__(
         self,
         fee_ratio_over_official_min: float | None = None,
+        config: dict[str, Any] | None = None,
         config_path: str | Path | None = None,
     ) -> None:
-        cfg = load_config_baselines(config_path).get("agent_rule", {})
-        self.fee_ratio_min = (
-            float(fee_ratio_over_official_min)
-            if fee_ratio_over_official_min is not None
-            else float(cfg.get("fee_ratio_over_official_min", 1.2))
-        )
+        bl_cfg = load_config_baselines(config_path=config_path, config=config)
+        cfg = bl_cfg.get("agent_rule")
+        if not isinstance(cfg, dict):
+            raise ConfigError("Missing models.baselines.agent_rule mapping in configuration.")
+
+        if fee_ratio_over_official_min is not None:
+            if (
+                isinstance(fee_ratio_over_official_min, bool)
+                or not isinstance(fee_ratio_over_official_min, (int, float))
+                or not math.isfinite(fee_ratio_over_official_min)
+                or fee_ratio_over_official_min < 1.0
+            ):
+                raise ValueError("fee_ratio_over_official_min must be a finite number >= 1.0.")
+            self.fee_ratio_min = float(fee_ratio_over_official_min)
+        elif "fee_ratio_over_official_min" in cfg:
+            val = cfg["fee_ratio_over_official_min"]
+            if (
+                isinstance(val, bool)
+                or not isinstance(val, (int, float))
+                or not math.isfinite(val)
+                or val < 1.0
+            ):
+                raise ConfigError(
+                    "models.baselines.agent_rule.fee_ratio_over_official_min must be >= 1.0."
+                )
+            self.fee_ratio_min = float(val)
+        else:
+            raise ConfigError(
+                "models.baselines.agent_rule.fee_ratio_over_official_min is required in config."
+            )
+
+    def _validate_input(self, X: pd.DataFrame) -> None:
+        if not isinstance(X, pd.DataFrame):
+            raise ValueError(f"X must be a pandas DataFrame, got {type(X).__name__}")
+        assert_feature_columns(X)
+        if "agent_fee_ratio_over_official" not in X.columns:
+            raise ValueError("Missing required feature column 'agent_fee_ratio_over_official'")
+        arr = X["agent_fee_ratio_over_official"].to_numpy()
+        if not np.all(np.isfinite(arr)):
+            raise ValueError("Feature matrix contains NaN or infinite values.")
 
     def predict(self, X: pd.DataFrame) -> np.ndarray:
         """Flag agent as anomalous (1) or normal (0)."""
-        assert_feature_columns(X)
-        ratios = X["agent_fee_ratio_over_official"].to_numpy()
+        self._validate_input(X)
+        ratios = X["agent_fee_ratio_over_official"].to_numpy(dtype=float)
         return (ratios >= self.fee_ratio_min).astype(int)
 
     def score(self, X: pd.DataFrame) -> np.ndarray:
         """Continuous anomaly score (higher means more suspicious)."""
-        assert_feature_columns(X)
-        return X["agent_fee_ratio_over_official"].to_numpy()
+        self._validate_input(X)
+        return X["agent_fee_ratio_over_official"].to_numpy(dtype=float)
 
     def evaluate(
         self,
@@ -191,16 +249,14 @@ class AgentAnomalyRuleBaseline:
         top_k: int = 15,
     ) -> dict[str, Any]:
         """Evaluate agent detection precision, recall, and false-positive flags."""
-        assert_feature_columns(X)
-        y_true = np.asarray(y)
+        self._validate_input(X)
+        y_true = np.asarray(y, dtype=int)
         y_pred = self.predict(X)
         scores = self.score(X)
 
-        # Precision at top-K
         top_k_indices = np.argsort(scores)[::-1][:top_k]
         p_at_k = float(y_true[top_k_indices].sum()) / float(top_k) if top_k > 0 else 0.0
 
-        # False-flag rate on honest high volume
         false_flag_rate_honest = 0.0
         if agent_types is not None:
             types_arr = np.asarray(agent_types)

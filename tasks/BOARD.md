@@ -74,3 +74,11 @@ See docs/audit-2026-10-02.md. T016 baseline verified; T017/T018/T019/T020 PARTIA
 T022 update2Oct22:12: **paused at human two-failure gate**;184backendpass/1test-schema assertion failure,17frontendpass,Ruff6long lines. Permission requested for narrow retry. T023/T024 remain prepared, not delegated; no dependent implementation until gate resolved. Correct data provenance edits preserved uncommitted.
 
 T022 COMPLETE after human-authorized narrow retry:185 backend tests/zero skips,17 frontend tests, lint/build and real API18000/console13000 smoke pass. Samples labelled; unavailable metrics never replaced with invented numbers. Approved design clears T023/T024 architecture gate. Next T023.
+
+T023 started: approved controls written by Codex; agy implements model boundaries and faithful explanations. T022 committed/pushed0a69194.
+
+T023 PAUSED at second failed verification after feedback:208backendpass/5fail,zero skips,Ruff3findings; structure and diffcheck pass. Failures are test signatures/stale message assertions; separate probe reproduces rejected refit mutating base while retaining old calibration. Precise correction tasks/T023-review2.md; human go-ahead required. No active agy; T024 not started, final scoring not run.
+
+T023 resumed with explicit human go-ahead for tasks/T023-review2.md. agy correction active; completion pending independent gates. T024 remains next.
+
+T023 COMPLETE at2Oct23:58 after authorized retry:215backend/zero skips,17frontend,focused57,structure/lint/build/diffcheck passed; inverted-label refit state preserved; Linux native ML imports/config passed. Final evaluation scores still pendingT023b. Approved nullability clarification clears T024 migration gate. Next durableT024.

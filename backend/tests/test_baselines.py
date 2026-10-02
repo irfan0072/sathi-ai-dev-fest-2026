@@ -1,19 +1,23 @@
-"""Tests for deterministic rule-based baselines (T016).
+"""Tests for deterministic rule-based baselines (T016 / T023).
 
 Verifies:
 - AssistedUserRuleBaseline logic (top_share >= 0.70 & delay <= 24h)
 - AgentAnomalyRuleBaseline logic (fee_ratio >= 1.2x)
 - Strict feature leakage guard assertion (rejection of protected/ground-truth columns)
+- Input validation: rejection of NaNs and missing columns
 - Metric computations (Precision, Recall, F1, PR-AUC, Brier score)
 - Demographic slice fairness calculations
-- Config-driven threshold loading from data/config.yaml
+- Config-driven threshold loading from data/config.yaml and configured threshold updates
 """
 
 from __future__ import annotations
 
+import copy
+
 import numpy as np
 import pandas as pd
 import pytest
+from app.data.config import load_config
 from app.features.guard import FeatureLeakageError
 from app.ml.baselines import (
     AgentAnomalyRuleBaseline,
@@ -89,6 +93,34 @@ def test_config_loading_baselines() -> None:
     assert cfg["agent_rule"]["fee_ratio_over_official_min"] == 1.2
 
 
+def test_configured_threshold_updates(
+    clean_user_features: pd.DataFrame, clean_agent_features: pd.DataFrame
+) -> None:
+    """Verify modifying configured thresholds changes rule classification boundaries."""
+    base_cfg = load_config()
+
+    # Stricter assisted rule: top_agent_share >= 0.80 and delay <= 10h
+    custom_cfg = copy.deepcopy(base_cfg)
+    custom_cfg["models"]["baselines"]["assisted_rule"]["top_agent_share_min"] = 0.80
+    custom_cfg["models"]["baselines"]["assisted_rule"]["hours_credit_to_cashout_max"] = 10.0
+
+    stricter_baseline = AssistedUserRuleBaseline(config=custom_cfg)
+    preds = stricter_baseline.predict(clean_user_features)
+    assert preds[0] == 1  # Row 0: share 0.85 >= 0.80 and delay 8 <= 10 -> 1
+    assert preds[1] == 0
+    assert preds[2] == 0
+    assert preds[3] == 0
+
+    # Stricter agent rule: fee_ratio >= 1.40
+    custom_cfg["models"]["baselines"]["agent_rule"]["fee_ratio_over_official_min"] = 1.40
+    stricter_agent_baseline = AgentAnomalyRuleBaseline(config=custom_cfg)
+    ag_preds = stricter_agent_baseline.predict(clean_agent_features)
+    assert ag_preds[0] == 0  # 1.0 < 1.4
+    assert ag_preds[1] == 0  # 1.35 < 1.4
+    assert ag_preds[2] == 0  # 1.05 < 1.4
+    assert ag_preds[3] == 1  # 1.45 >= 1.4
+
+
 def test_assisted_user_rule_predictions(clean_user_features: pd.DataFrame) -> None:
     """Assisted user rule requires BOTH top_agent_share >= 0.70 AND delay <= 24h."""
     baseline = AssistedUserRuleBaseline()
@@ -126,6 +158,20 @@ def test_assisted_user_leakage_guard_rejection() -> None:
     )
     with pytest.raises(FeatureLeakageError):
         baseline.predict(leaky_demo)
+
+
+def test_assisted_user_nan_and_missing_rejection(clean_user_features: pd.DataFrame) -> None:
+    """Baseline must reject NaNs or missing columns."""
+    baseline = AssistedUserRuleBaseline()
+
+    nan_df = clean_user_features.copy()
+    nan_df.iloc[0, 0] = np.nan
+    with pytest.raises(ValueError, match="NaN or infinite"):
+        baseline.predict(nan_df)
+
+    missing_df = clean_user_features.drop(columns=["top_agent_share"])
+    with pytest.raises(ValueError, match="Missing required feature column"):
+        baseline.predict(missing_df)
 
 
 def test_assisted_user_evaluation_and_fairness(clean_user_features: pd.DataFrame) -> None:
@@ -180,6 +226,20 @@ def test_agent_rule_leakage_guard_rejection() -> None:
         baseline.predict(leaky_df)
 
 
+def test_agent_rule_nan_and_missing_rejection(clean_agent_features: pd.DataFrame) -> None:
+    """Agent baseline must reject NaNs and missing columns."""
+    baseline = AgentAnomalyRuleBaseline()
+
+    nan_df = clean_agent_features.copy()
+    nan_df.iloc[0, 0] = np.nan
+    with pytest.raises(ValueError, match="NaN or infinite"):
+        baseline.predict(nan_df)
+
+    missing_df = clean_agent_features.drop(columns=["agent_fee_ratio_over_official"])
+    with pytest.raises(ValueError, match="Missing required feature column"):
+        baseline.predict(missing_df)
+
+
 def test_agent_rule_evaluation(clean_agent_features: pd.DataFrame) -> None:
     """Verify precision@k and anomaly ranking for agents."""
     baseline = AgentAnomalyRuleBaseline()
@@ -187,6 +247,30 @@ def test_agent_rule_evaluation(clean_agent_features: pd.DataFrame) -> None:
     res = baseline.evaluate(clean_agent_features, y_true, top_k=2)
 
     assert res["model"] == "agent_rule_baseline"
-    assert res["precision_at_2"] == 1.0  # Top 2 scores are rows 3 and 1, both true skimmers!
+    assert res["precision_at_2"] == 1.0
     assert res["flagged_count"] == 2
     assert res["total_agents"] == 4
+
+
+def test_baselines_invalid_overrides() -> None:
+    """Verify rejection of invalid override values in rule baselines."""
+    with pytest.raises(ValueError):
+        AssistedUserRuleBaseline(top_agent_share_min=1.5)
+    with pytest.raises(ValueError):
+        AssistedUserRuleBaseline(top_agent_share_min=True)
+    with pytest.raises(ValueError):
+        AssistedUserRuleBaseline(hours_credit_to_cashout_max=-1.0)
+    with pytest.raises(ValueError):
+        AgentAnomalyRuleBaseline(fee_ratio_over_official_min=0.5)
+    with pytest.raises(ValueError):
+        AgentAnomalyRuleBaseline(fee_ratio_over_official_min=True)
+
+
+def test_baselines_non_dataframe_rejection() -> None:
+    """Verify ValueError is raised if input is not a DataFrame."""
+    bl = AssistedUserRuleBaseline()
+    with pytest.raises(ValueError, match="X must be a pandas DataFrame"):
+        bl.predict([[0.5, 10.0]])  # type: ignore[arg-type]
+    ag = AgentAnomalyRuleBaseline()
+    with pytest.raises(ValueError, match="X must be a pandas DataFrame"):
+        ag.predict([[1.5]])  # type: ignore[arg-type]

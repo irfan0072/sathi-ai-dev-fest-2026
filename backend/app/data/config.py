@@ -505,7 +505,12 @@ def validate_config(config: dict[str, Any]) -> dict[str, Any]:
         min_val=0.0,
         exclusive_min=True,
     )
-    _check_prob(policy.get("agent_risk_high"), "policy.agent_risk_high")
+    risk_high = _check_prob(policy.get("agent_risk_high"), "policy.agent_risk_high")
+    risk_med = _check_prob(policy.get("agent_risk_medium"), "policy.agent_risk_medium")
+    if risk_med >= risk_high:
+        raise ConfigError(
+            "policy.agent_risk_medium must be strictly less than policy.agent_risk_high"
+        )
     _check_prob(policy.get("assisted_outreach_threshold"), "policy.assisted_outreach_threshold")
     _check_int(
         policy.get("max_verification_attempts"), "policy.max_verification_attempts", min_val=1
@@ -527,7 +532,120 @@ def validate_config(config: dict[str, Any]) -> dict[str, Any]:
     _check_finite_num(c_gap.get("min_bdt"), "policy.cash_gap.min_bdt", min_val=0.0)
     _check_prob(c_gap.get("rate"), "policy.cash_gap.rate")
 
-    # 15. Fairness
+    # 15. Models (T023 controls) - required, fail closed
+    if "models" not in config:
+        raise ConfigError("Missing required 'models' mapping in configuration.")
+    models = config["models"]
+    if not isinstance(models, dict):
+        raise ConfigError("Missing or invalid 'models' mapping in configuration.")
+
+    # Assisted classifier
+    ac = models.get("assisted_classifier")
+    if not isinstance(ac, dict):
+        raise ConfigError("Missing 'models.assisted_classifier' mapping.")
+    _check_int(ac.get("n_estimators"), "models.assisted_classifier.n_estimators", min_val=1)
+    _check_finite_num(
+        ac.get("learning_rate"),
+        "models.assisted_classifier.learning_rate",
+        min_val=0.0,
+        exclusive_min=True,
+    )
+    _check_int(ac.get("max_depth"), "models.assisted_classifier.max_depth", min_val=1)
+    _check_prob(
+        ac.get("classification_threshold"),
+        "models.assisted_classifier.classification_threshold",
+    )
+    cal_method = ac.get("calibration_method")
+    if cal_method not in ("sigmoid", "isotonic"):
+        raise ConfigError(
+            f"models.assisted_classifier.calibration_method must be 'sigmoid' or 'isotonic', "
+            f"got {cal_method!r}"
+        )
+    if "calibrate" not in ac:
+        raise ConfigError("Missing 'models.assisted_classifier.calibrate' control.")
+    if type(ac.get("calibrate")) is not bool:
+        raise ConfigError("models.assisted_classifier.calibrate must be a boolean.")
+
+    # Agent anomaly
+    aa = models.get("agent_anomaly")
+    if not isinstance(aa, dict):
+        raise ConfigError("Missing 'models.agent_anomaly' mapping.")
+    _check_int(aa.get("n_estimators"), "models.agent_anomaly.n_estimators", min_val=1)
+    _check_finite_num(
+        aa.get("contamination"),
+        "models.agent_anomaly.contamination",
+        min_val=0.0,
+        max_val=0.5,
+        exclusive_min=True,
+    )
+    _check_int(aa.get("review_top_k"), "models.agent_anomaly.review_top_k", min_val=1)
+    peer_groups = aa.get("peer_groups")
+    if peer_groups != ["volume_band"]:
+        raise ConfigError("models.agent_anomaly.peer_groups must equal ['volume_band'].")
+    vq = aa.get("volume_quantiles")
+    if not isinstance(vq, list) or len(vq) != 2:
+        raise ConfigError(
+            "models.agent_anomaly.volume_quantiles must be a list of two probabilities."
+        )
+    q1 = _check_prob(vq[0], "volume_quantiles[0]")
+    q2 = _check_prob(vq[1], "volume_quantiles[1]")
+    if q1 <= 0.0 or q2 >= 1.0 or q1 >= q2:
+        raise ConfigError("volume_quantiles must satisfy 0.0 < q1 < q2 < 1.0.")
+    w_z = _check_finite_num(
+        aa.get("weight_z"), "models.agent_anomaly.weight_z", min_val=0.0, max_val=1.0
+    )
+    w_if = _check_finite_num(
+        aa.get("weight_iforest"),
+        "models.agent_anomaly.weight_iforest",
+        min_val=0.0,
+        max_val=1.0,
+    )
+    if abs(w_z + w_if - 1.0) > 1e-4:
+        raise ConfigError(f"models.agent_anomaly weights must sum to 1.0, got {w_z + w_if}")
+    _check_finite_num(
+        aa.get("mad_floor"), "models.agent_anomaly.mad_floor", min_val=0.0, exclusive_min=True
+    )
+    _check_finite_num(
+        aa.get("z_sigmoid_slope"),
+        "models.agent_anomaly.z_sigmoid_slope",
+        min_val=0.0,
+        exclusive_min=True,
+    )
+    _check_finite_num(aa.get("z_sigmoid_midpoint"), "models.agent_anomaly.z_sigmoid_midpoint")
+
+    # Baselines
+    bl = models.get("baselines")
+    if not isinstance(bl, dict):
+        raise ConfigError("Missing 'models.baselines' mapping.")
+    ar = bl.get("assisted_rule")
+    if not isinstance(ar, dict):
+        raise ConfigError("Missing 'models.baselines.assisted_rule' mapping.")
+    _check_prob(
+        ar.get("top_agent_share_min"),
+        "models.baselines.assisted_rule.top_agent_share_min",
+    )
+    _check_finite_num(
+        ar.get("hours_credit_to_cashout_max"),
+        "models.baselines.assisted_rule.hours_credit_to_cashout_max",
+        min_val=0.0,
+        exclusive_min=True,
+    )
+    agr = bl.get("agent_rule")
+    if not isinstance(agr, dict):
+        raise ConfigError("Missing 'models.baselines.agent_rule' mapping.")
+    _check_finite_num(
+        agr.get("fee_ratio_over_official_min"),
+        "models.baselines.agent_rule.fee_ratio_over_official_min",
+        min_val=1.0,
+    )
+
+    # Sanity
+    san = models.get("sanity")
+    if not isinstance(san, dict):
+        raise ConfigError("Missing 'models.sanity' mapping.")
+    _check_prob(san.get("max_pr_auc"), "models.sanity.max_pr_auc")
+
+    # 16. Fairness
     fairness = config.get("fairness")
     if not isinstance(fairness, dict):
         raise ConfigError("Missing required 'fairness' mapping in configuration.")

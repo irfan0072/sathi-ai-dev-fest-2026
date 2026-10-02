@@ -1,5 +1,7 @@
 # Sathi Evaluation & Experimentation Results
 
+> PROVISIONAL inherited run: do not use these numbers as final submission or console evidence. The resume audit found fit/calibration, cohort scaling and ablation defects. Retained for provenance until corrected artifacts replace it. See docs/audit-2026-10-02.md.
+
 > [!NOTE]
 > All evaluations use synthetic MFS simulation data generated with disjoint cohorts per `docs/evaluation-plan.md` (Train Seed 42, Validation Seed 4242, Test Seed 2026). Zero protected demographic features or ground truth labels were included in model feature matrices.
 

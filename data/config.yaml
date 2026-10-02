@@ -111,6 +111,7 @@ policy:
   user_cap_default: 5000             # BDT mandate cap assumption (approved 2026-10-02)
   daily_cash_out_limit: 25000        # BDT daily cash-out limit assumption (approved 2026-10-02)
   agent_risk_high: 0.8
+  agent_risk_medium: 0.5            # ASSUMPTION: review display threshold, never authorization
   assisted_outreach_threshold: 0.6
   verification_modes: [keypad, voice]
   max_verification_attempts: 2       # does not define wrong-code lockout
@@ -120,8 +121,27 @@ policy:
     rate: 0.02
 
 models:
-  assisted_classifier: {type: lightgbm, features_window_days: 30, calibrate: true}
-  agent_anomaly: {methods: [peer_robust_zscore, isolation_forest], peer_groups: [region, volume_band], review_top_k: 15}
+  assisted_classifier:
+    type: lightgbm
+    features_window_days: 30
+    calibrate: true
+    n_estimators: 100
+    learning_rate: 0.05
+    max_depth: 5
+    classification_threshold: 0.5
+    calibration_method: sigmoid
+  agent_anomaly:
+    methods: [peer_robust_zscore, isolation_forest]
+    peer_groups: [volume_band]      # ASSUMPTION: train-observed volume only; region excluded
+    review_top_k: 15
+    n_estimators: 100
+    contamination: 0.05
+    volume_quantiles: [0.3333333333, 0.6666666667]
+    weight_z: 0.7
+    weight_iforest: 0.3
+    mad_floor: 0.02
+    z_sigmoid_slope: 2.5
+    z_sigmoid_midpoint: 1.5
   baselines:
     assisted_rule: {top_agent_share_min: 0.7, hours_credit_to_cashout_max: 24}
     agent_rule: {fee_ratio_over_official_min: 1.2}

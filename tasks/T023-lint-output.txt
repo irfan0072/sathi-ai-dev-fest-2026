@@ -1,0 +1,371 @@
+.venv/bin/python -m ruff check --config backend/pyproject.toml backend scripts
+E501 Line too long (107 > 100)
+   --> backend/app/data/config.py:512:101
+    |
+510 |         risk_med = _check_prob(policy.get("agent_risk_medium"), "policy.agent_risk_medium")
+511 |         if risk_med >= risk_high:
+512 |             raise ConfigError("policy.agent_risk_medium must be strictly less than policy.agent_risk_high")
+    |                                                                                                     ^^^^^^^
+513 |     _check_prob(policy.get("assisted_outreach_threshold"), "policy.assisted_outreach_threshold")
+514 |     _check_int(
+    |
+
+E501 Line too long (116 > 100)
+   --> backend/app/data/config.py:559:101
+    |
+557 |         if cal_method not in ("sigmoid", "isotonic"):
+558 |             raise ConfigError(
+559 |                 f"models.assisted_classifier.calibration_method must be 'sigmoid' or 'isotonic', got {cal_method!r}"
+    |                                                                                                     ^^^^^^^^^^^^^^^^
+560 |             )
+561 |         if "calibrate" in ac and type(ac.get("calibrate")) is not bool:
+    |
+
+E501 Line too long (102 > 100)
+   --> backend/app/data/config.py:579:101
+    |
+577 |             or not all(isinstance(g, str) and g for g in peer_groups)
+578 |         ):
+579 |             raise ConfigError("models.agent_anomaly.peer_groups must be a non-empty list of strings.")
+    |                                                                                                     ^^
+580 |         if "region" in peer_groups or "agent_type" in peer_groups:
+581 |             raise ConfigError(
+    |
+
+E501 Line too long (107 > 100)
+   --> backend/app/data/config.py:587:101
+    |
+585 |         vq = aa.get("volume_quantiles")
+586 |         if not isinstance(vq, list) or len(vq) != 2:
+587 |             raise ConfigError("models.agent_anomaly.volume_quantiles must be a list of two probabilities.")
+    |                                                                                                     ^^^^^^^
+588 |         q1 = _check_prob(vq[0], "volume_quantiles[0]")
+589 |         q2 = _check_prob(vq[1], "volume_quantiles[1]")
+    |
+
+E501 Line too long (101 > 100)
+   --> backend/app/data/config.py:596:101
+    |
+594 |         )
+595 |         w_if = _check_finite_num(
+596 |             aa.get("weight_iforest"), "models.agent_anomaly.weight_iforest", min_val=0.0, max_val=1.0
+    |                                                                                                     ^
+597 |         )
+598 |         if abs(w_z + w_if - 1.0) > 1e-4:
+    |
+
+E501 Line too long (104 > 100)
+   --> backend/app/data/config.py:618:101
+    |
+616 |         if not isinstance(ar, dict):
+617 |             raise ConfigError("Missing 'models.baselines.assisted_rule' mapping.")
+618 |         _check_prob(ar.get("top_agent_share_min"), "models.baselines.assisted_rule.top_agent_share_min")
+    |                                                                                                     ^^^^
+619 |         _check_finite_num(
+620 |             ar.get("hours_credit_to_cashout_max"),
+    |
+
+E501 Line too long (106 > 100)
+ --> backend/app/models/agent_model.py:4:101
+  |
+3 | Conforms strictly to docs/design-repair-proposal.md, docs/api-contracts.md, and tasks/T023:
+4 | - Fit uses X numeric behavior only; never uses peer_metadata region, agent_type, or generated volume_band.
+  |                                                                                                     ^^^^^^
+5 | - Learns volume-band boundaries from train agent_volume_daily_mean only using configured quantiles.
+6 | - Reference robust fee statistics (median, MAD) and Isolation Forest normalization bounds (min, max)
+  |
+
+E501 Line too long (109 > 100)
+   --> backend/app/models/agent_model.py:169:101
+    |
+167 |             if list(X.columns) != self.feature_names_:
+168 |                 raise ValueError(
+169 |                     f"Column mismatch: expected trained columns {self.feature_names_}, got {list(X.columns)}"
+    |                                                                                                     ^^^^^^^^^
+170 |                 )
+    |
+
+E501 Line too long (106 > 100)
+  --> backend/app/models/assisted_model.py:9:101
+   |
+ 7 | - Never refits base model on validation.
+ 8 | - Zero feature leakage: rigorously enforces feature guard allowlist.
+ 9 | - Input matrices require exact trained columns in order, finite numeric only; target length/classes valid.
+   |                                                                                                     ^^^^^^
+10 | - SHAP TreeExplainer explains THAT base estimator, explicitly raw log-odds (not calibrated probability),
+11 |   with raw-score additivity verification.
+   |
+
+E501 Line too long (104 > 100)
+  --> backend/app/models/assisted_model.py:10:101
+   |
+ 8 | - Zero feature leakage: rigorously enforces feature guard allowlist.
+ 9 | - Input matrices require exact trained columns in order, finite numeric only; target length/classes valid.
+10 | - SHAP TreeExplainer explains THAT base estimator, explicitly raw log-odds (not calibrated probability),
+   |                                                                                                     ^^^^
+11 |   with raw-score additivity verification.
+12 | - Predictions calibrated; save/load preserves fitted calibration + base + configuration and schema.
+   |
+
+E501 Line too long (107 > 100)
+   --> backend/app/models/assisted_model.py:110:101
+    |
+108 |             self.classification_threshold = float(ac_cfg["classification_threshold"])
+109 |         else:
+110 |             raise ConfigError("models.assisted_classifier.classification_threshold is required in config.")
+    |                                                                                                     ^^^^^^^
+111 |
+112 |         if calibration_method is not None:
+    |
+
+E501 Line too long (109 > 100)
+   --> backend/app/models/assisted_model.py:148:101
+    |
+146 |             if list(X.columns) != self.feature_names_:
+147 |                 raise ValueError(
+148 |                     f"Column mismatch: expected trained columns {self.feature_names_}, got {list(X.columns)}"
+    |                                                                                                     ^^^^^^^^^
+149 |                 )
+    |
+
+E501 Line too long (106 > 100)
+   --> backend/app/models/assisted_model.py:180:101
+    |
+178 |         y_val: pd.Series | np.ndarray | None = None,
+179 |     ) -> AssistedUserClassifier:
+180 |         """Fit one LightGBM on X_train/y_train; if calibrated, require separate X_val/y_val and freeze."""
+    |                                                                                                     ^^^^^^
+181 |         self._validate_input_matrix(X_train, is_fitting=True)
+182 |         self.feature_names_ = list(X_train.columns)
+    |
+
+E501 Line too long (101 > 100)
+   --> backend/app/models/assisted_model.py:431:101
+    |
+430 |     def save(self, filepath: str | Path) -> None:
+431 |         """Serialize model artifact to disk preserving calibration, base model, config and schema."""
+    |                                                                                                     ^
+432 |         path = Path(filepath)
+433 |         path.parent.mkdir(parents=True, exist_ok=True)
+    |
+
+E501 Line too long (106 > 100)
+ --> backend/app/models/baselines.py:5:101
+  |
+3 | Implements:
+4 | 1. AssistedUserRuleBaseline: Classifies customer as assisted if:
+5 |    top_agent_share >= top_agent_share_min AND credit_to_cashout_hours_mean <= hours_credit_to_cashout_max.
+  |                                                                                                     ^^^^^^
+6 | 2. AgentAnomalyRuleBaseline: Flags agent as anomalous/skimmer if:
+7 |    agent_fee_ratio_over_official >= fee_ratio_over_official_min.
+  |
+
+E501 Line too long (112 > 100)
+  --> backend/app/models/baselines.py:9:101
+   |
+ 7 |    agent_fee_ratio_over_official >= fee_ratio_over_official_min.
+ 8 |
+ 9 | Both read defaults from data/config.yaml using app.data.config.load_config and verify against the feature guard.
+   |                                                                                                     ^^^^^^^^^^^^
+10 | """
+   |
+
+E501 Line too long (105 > 100)
+   --> backend/app/models/baselines.py:102:101
+    |
+100 |         self._validate_input(X)
+101 |         preds = self.predict(X)
+102 |         scores = np.where(preds == 1, np.clip(X["top_agent_share"].to_numpy(dtype=float), 0.6, 1.0), 0.1)
+    |                                                                                                     ^^^^^
+103 |         p1 = np.clip(scores, 0.0, 1.0)
+104 |         p0 = 1.0 - p1
+    |
+
+F821 Undefined name `Path`
+   --> backend/app/models/features.py:243:24
+    |
+241 |     allowance_day_of_cycle: int | None = None,
+242 |     config: dict[str, Any] | None = None,
+243 |     config_path: str | Path | None = None,
+    |                        ^^^^
+244 | ) -> tuple[pd.DataFrame, pd.Series, pd.DataFrame, list[str]]:
+245 |     """Extract behavioral features for agents.
+    |
+
+E501 Line too long (106 > 100)
+   --> backend/app/models/features.py:250:101
+    |
+248 |         X (pd.DataFrame): Pure numeric behavioral features adhering to guard allowlist.
+249 |         y (pd.Series): Binary ground truth (1 for skimmer, 0 for normal/honest).
+250 |         meta_df (pd.DataFrame): Evaluation metadata returned separately (region, volume_band, agent_type).
+    |                                                                                                     ^^^^^^
+251 |         agent_ids (list[str]): Agent IDs.
+252 |     """
+    |
+
+E501 Line too long (105 > 100)
+   --> backend/app/models/features.py:318:101
+    |
+316 |                         start_dt = start_dt.replace(tzinfo=dt.tzinfo)
+317 |                     day_offset = (dt.date() - start_dt.date()).days
+318 |                     if day_offset >= 0 and (day_offset % allowance_cycle_days) == allowance_day_of_cycle:
+    |                                                                                                     ^^^^^
+319 |                         allowance_tx_count += 1
+320 |                 except Exception:
+    |
+
+F401 [*] `typing.Any` imported but unused
+  --> backend/tests/test_agent_anomaly.py:21:20
+   |
+19 | import tempfile
+20 | from pathlib import Path
+21 | from typing import Any
+   |                    ^^^
+22 |
+23 | import numpy as np
+   |
+help: Remove unused import: `typing.Any`
+   |
+20 | from pathlib import Path
+   - from typing import Any
+21 |
+   |
+
+E501 Line too long (104 > 100)
+   --> backend/tests/test_agent_anomaly.py:278:101
+    |
+276 |     """
+277 |     raw_agents = [
+278 |         {"agent_id": f"A_{i:03d}", "region": "dhaka", "volume_band": "standard", "agent_type": "normal"}
+    |                                                                                                     ^^^^
+279 |         for i in range(5)
+280 |     ]
+    |
+
+E501 Line too long (106 > 100)
+   --> backend/tests/test_agent_anomaly.py:298:101
+    |
+297 |     altered_agents = [
+298 |         {"agent_id": f"A_{i:03d}", "region": "chittagong", "volume_band": "high", "agent_type": "skimmer"}
+    |                                                                                                     ^^^^^^
+299 |         for i in range(5)
+300 |     ]
+    |
+
+E501 Line too long (101 > 100)
+   --> backend/tests/test_agent_anomaly.py:312:101
+    |
+310 |     ],
+311 | ) -> None:
+312 |     """Verify agent detector serialization preserves frozen train state and restores exact scores."""
+    |                                                                                                     ^
+313 |     X_train, _, _, X_val, _, _, _ = synthetic_agent_dataset
+314 |     detector = AgentAnomalyDetector()
+    |
+
+E501 Line too long (101 > 100)
+   --> backend/tests/test_agent_anomaly.py:332:101
+    |
+331 | def test_small_fixture_integration() -> None:
+332 |     """Integration test using small deterministic synthetic fixture (never canonical final split)."""
+    |                                                                                                     ^
+333 |     cfg = copy.deepcopy(load_config())
+334 |     cfg["simulation"]["customers"] = 300
+    |
+
+E501 Line too long (103 > 100)
+   --> backend/tests/test_agent_anomaly.py:341:101
+    |
+340 |     train_data, _ = generate_dataset_with_observations(
+341 |         config=cfg, seed=42, agent_ids=agent_ids[:10], customers=200, canonical_agents=canonical_agents
+    |                                                                                                     ^^^
+342 |     )
+343 |     val_data, _ = generate_dataset_with_observations(
+    |
+
+E501 Line too long (105 > 100)
+   --> backend/tests/test_agent_anomaly.py:344:101
+    |
+342 |     )
+343 |     val_data, _ = generate_dataset_with_observations(
+344 |         config=cfg, seed=4242, agent_ids=agent_ids[10:], customers=100, canonical_agents=canonical_agents
+    |                                                                                                     ^^^^^
+345 |     )
+    |
+
+F401 [*] `app.data.config.ConfigError` imported but unused
+  --> backend/tests/test_assisted_model.py:26:29
+   |
+24 | import pandas as pd
+25 | import pytest
+26 | from app.data.config import ConfigError, load_config
+   |                             ^^^^^^^^^^^
+27 | from app.data.generator import build_canonical_agent_registry, generate_dataset_with_observations
+28 | from app.features.guard import FeatureLeakageError
+   |
+help: Remove unused import: `app.data.config.ConfigError`
+   |
+25 | import pytest
+   - from app.data.config import ConfigError, load_config
+26 + from app.data.config import load_config
+27 | from app.data.generator import build_canonical_agent_registry, generate_dataset_with_observations
+   |
+
+E501 Line too long (103 > 100)
+  --> backend/tests/test_assisted_model.py:34:101
+   |
+33 | @pytest.fixture
+34 | def synthetic_training_data() -> tuple[pd.DataFrame, pd.Series, pd.DataFrame, pd.DataFrame, pd.Series]:
+   |                                                                                                     ^^^
+35 |     """Generate deterministic disjoint train and validation behavioral dataset."""
+36 |     rng = np.random.default_rng(42)
+   |
+
+E501 Line too long (104 > 100)
+   --> backend/tests/test_assisted_model.py:294:101
+    |
+292 |             raw_margin,
+293 |             atol=1e-5,
+294 |             err_msg=f"SHAP raw additivity violated for row {i}: {reconstructed_margin} vs {raw_margin}",
+    |                                                                                                     ^^^^
+295 |         )
+    |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> backend/tests/test_baselines.py:13:1
+   |
+11 |   """
+12 |
+13 | / from __future__ import annotations
+14 | |
+15 | | import copy
+16 | | import numpy as np
+17 | | import pandas as pd
+18 | | import pytest
+19 | | from app.data.config import load_config
+20 | | from app.features.guard import FeatureLeakageError
+21 | | from app.ml.baselines import (
+22 | |     AgentAnomalyRuleBaseline,
+23 | |     AssistedUserRuleBaseline,
+24 | |     load_config_baselines,
+25 | | )
+   | |_^
+help: Organize imports
+   |
+15 | import copy
+16 +
+17 | import numpy as np
+   |
+
+E501 Line too long (117 > 100)
+  --> backend/tests/test_baselines.py:95:101
+   |
+95 | def test_configured_threshold_updates(clean_user_features: pd.DataFrame, clean_agent_features: pd.DataFrame) -> None:
+   |                                                                                                     ^^^^^^^^^^^^^^^^^
+96 |     """Verify modifying configured thresholds changes rule classification boundaries."""
+97 |     base_cfg = load_config()
+   |
+
+Found 32 errors.
+[*] 3 fixable with the `--fix` option.
+make: *** [lint-api] Error 1

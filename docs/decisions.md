@@ -155,3 +155,9 @@ Earlier RESOLVED entries about region and mandate persistence were implementer c
 Human response: “Approve the proposed repair design” to docs/design-repair-proposal.md. Authorized model boundary repair, durable migration002, scoped synthetic demo auth, server-counted attempts, terminal-only issue-code endpoint, ledger fees/receipts and post-redemption cash confirmation. Proposed redemption limit3 is approved separately from verification2. No paid or hosting account action authorized by this approval. Implement in small reviewed tasks with preservation/integration proofs; existing data must not be deleted.
 
 T022 retry approved2Oct22:13Dhaka: human “Resume with the narrow test and lint corrections”. Fix the invalid ablation test assertion and six Ruff lines, rerun gates. No waiver of other tests or truthfulness rules.
+
+Public repository gate: human confirmed repository is private. Existing authenticated Git access/push works; anonymous repository/CI404 is expected. Development continues. Human must change visibility before submission as required by brief; no credentials requested. Public CI status remains unverified.
+
+Human authorized T023 second-gate retry: “Resume the precise T023 corrections”. Scope tasks/T023-review2.md: test signatures/assertions,3lint findings, atomic fitting and regression proof under previously approved design.
+
+Human approved docs/schema-nullability-clarification.md: “Approve the nullability clarification”. migration002 permits NULL hash for unissued requested/verified/rejected/expired/revoked states; active/redeemed require valid64hex hash, all populated hashes valid. Preserve applied001 and existing rows.

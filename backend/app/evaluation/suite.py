@@ -110,7 +110,7 @@ class EvaluationRunner:
 
         # LightGBM Clean
         clf_clean = AssistedUserClassifier(random_state=self.random_state)
-        clf_clean.fit(X_tr, y_tr)
+        clf_clean.fit(X_tr, y_tr, X_val, y_val)
         probs_clean = clf_clean.predict_proba(X_val)[:, 1]
         p_c, r_c, _ = precision_recall_curve(y_val, probs_clean)
         pr_auc_clean = float(auc(r_c, p_c))
@@ -128,7 +128,7 @@ class EvaluationRunner:
         y_tr_noisy[flip_mask] = 1 - y_tr_noisy[flip_mask]
 
         clf_noisy = AssistedUserClassifier(random_state=self.random_state)
-        clf_noisy.fit(X_tr, y_tr_noisy)
+        clf_noisy.fit(X_tr, y_tr_noisy, X_val, y_val)
         probs_noisy = clf_noisy.predict_proba(X_val)[:, 1]
         p_n, r_n, _ = precision_recall_curve(y_val, probs_noisy)
         pr_auc_noisy = float(auc(r_n, p_n))
@@ -267,7 +267,7 @@ class EvaluationRunner:
             assert_feature_columns(sub_val)
 
             clf = AssistedUserClassifier(random_state=self.random_state)
-            clf.fit(sub_tr, y_tr)
+            clf.fit(sub_tr, y_tr, sub_val, y_val)
             probs = clf.predict_proba(sub_val)[:, 1]
             p, r, _ = precision_recall_curve(y_val, probs)
             return float(auc(r, p))
@@ -344,6 +344,7 @@ class EvaluationRunner:
         train_data: dict[str, Any] | None = None,
         test_data: dict[str, Any] | None = None,
         test_shifted_data: dict[str, Any] | None = None,
+        val_data: dict[str, Any] | None = None,
         sample_train_size: int = 4000,
     ) -> dict[str, Any]:
         """Experiment 6: Robustness under distribution shift (canonical vs shifted test)."""
@@ -353,12 +354,17 @@ class EvaluationRunner:
             test_data = self.load_split("test")
         if test_shifted_data is None:
             test_shifted_data = self.load_split("test_shifted")
+        if val_data is None:
+            val_data = self.load_split("validation")
 
         users_tr = (
             train_data["users"][:sample_train_size] if sample_train_size else train_data["users"]
         )
         X_tr, y_tr, _, _ = extract_user_features(
             users_tr, train_data["transactions"], train_data["sessions"]
+        )
+        X_val, y_val, _, _ = extract_user_features(
+            val_data["users"], val_data["transactions"], val_data["sessions"]
         )
         X_test, y_test, _, _ = extract_user_features(
             test_data["users"], test_data["transactions"], test_data["sessions"]
@@ -370,7 +376,7 @@ class EvaluationRunner:
         )
 
         clf = AssistedUserClassifier(random_state=self.random_state)
-        clf.fit(X_tr, y_tr)
+        clf.fit(X_tr, y_tr, X_val, y_val)
 
         def _get_metrics(X_df: pd.DataFrame, y_ser: pd.Series) -> dict[str, float]:
             probs = clf.predict_proba(X_df)[:, 1]
@@ -419,7 +425,7 @@ class EvaluationRunner:
         )
 
         clf = AssistedUserClassifier(random_state=self.random_state)
-        clf.fit(X_tr, y_tr)
+        clf.fit(X_tr, y_tr, X_val, y_val)
         probs = clf.predict_proba(X_val)[:, 1]
         preds = (probs >= 0.50).astype(int)
         y_val_arr = y_val.to_numpy()
@@ -488,7 +494,11 @@ class EvaluationRunner:
         )
         exp5 = self.run_experiment_5_adoption_sensitivity(test_obs)
         exp6 = self.run_experiment_6_distribution_shift(
-            train_data, test_data, test_shifted, sample_train_size=sample_train_size
+            train_data,
+            test_data,
+            test_shifted,
+            val_data=val_data,
+            sample_train_size=sample_train_size,
         )
         fairness = self.run_fairness_evaluation(
             train_data, val_data, sample_train_size=sample_train_size

@@ -8,7 +8,9 @@ any feature matrix is exposed to models.
 from __future__ import annotations
 
 import datetime
+import math
 from collections import defaultdict
+from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -235,15 +237,99 @@ def extract_user_features(
 def extract_agent_features(
     agents_data: list[dict[str, Any]],
     transactions_data: list[dict[str, Any]],
-    official_fee_rate: float = 0.015,
-) -> tuple[pd.DataFrame, pd.Series, list[str]]:
+    official_fee_rate: float | None = None,
+    start_timestamp: str | None = None,
+    allowance_cycle_days: int | None = None,
+    allowance_day_of_cycle: int | None = None,
+    config: dict[str, Any] | None = None,
+    config_path: str | Path | None = None,
+) -> tuple[pd.DataFrame, pd.Series, pd.DataFrame, list[str]]:
     """Extract behavioral features for agents.
 
     Returns:
-        X (pd.DataFrame): Behavioral features strictly adhering to guard allowlist.
+        X (pd.DataFrame): Pure numeric behavioral features adhering to guard allowlist.
         y (pd.Series): Binary ground truth (1 for skimmer, 0 for normal/honest).
+        meta_df (pd.DataFrame): Evaluation metadata returned separately
+            (region, volume_band, agent_type).
         agent_ids (list[str]): Agent IDs.
     """
+    if config is not None:
+        from app.data.config import validate_config
+
+        cfg = validate_config(config)
+    else:
+        from app.data.config import load_config
+
+        cfg = load_config(config_path)
+
+    sim_cfg = cfg.get("simulation")
+    if not isinstance(sim_cfg, dict):
+        from app.data.config import ConfigError
+
+        raise ConfigError("Missing required 'simulation' mapping in configuration.")
+
+    if official_fee_rate is not None:
+        if (
+            isinstance(official_fee_rate, bool)
+            or not isinstance(official_fee_rate, (int, float))
+            or not math.isfinite(official_fee_rate)
+            or official_fee_rate <= 0.0
+        ):
+            raise ValueError("official_fee_rate must be a positive finite number.")
+        fee_rate = float(official_fee_rate)
+    else:
+        if "official_fee_rate" not in sim_cfg:
+            from app.data.config import ConfigError
+
+            raise ConfigError("simulation.official_fee_rate is required in config.")
+        fee_rate = float(sim_cfg["official_fee_rate"])
+
+    if start_timestamp is not None:
+        if not isinstance(start_timestamp, str):
+            raise ValueError("start_timestamp must be an ISO 8601 string.")
+        start_ts = start_timestamp
+    else:
+        if "start_timestamp" not in sim_cfg:
+            from app.data.config import ConfigError
+
+            raise ConfigError("simulation.start_timestamp is required in config.")
+        start_ts = str(sim_cfg["start_timestamp"])
+
+    if allowance_cycle_days is not None:
+        if (
+            isinstance(allowance_cycle_days, bool)
+            or not isinstance(allowance_cycle_days, int)
+            or allowance_cycle_days < 1
+        ):
+            raise ValueError("allowance_cycle_days must be an integer >= 1.")
+        cycle_days = allowance_cycle_days
+    else:
+        credits_cfg = sim_cfg.get("credits", {})
+        allowance_cfg = credits_cfg.get("allowance", {})
+        if "cycle_days" not in allowance_cfg:
+            from app.data.config import ConfigError
+
+            raise ConfigError("simulation.credits.allowance.cycle_days is required in config.")
+        cycle_days = int(allowance_cfg["cycle_days"])
+
+    if allowance_day_of_cycle is not None:
+        if (
+            isinstance(allowance_day_of_cycle, bool)
+            or not isinstance(allowance_day_of_cycle, int)
+            or allowance_day_of_cycle < 0
+            or allowance_day_of_cycle >= cycle_days
+        ):
+            raise ValueError("allowance_day_of_cycle must be inside the configured cycle.")
+        day_of_cycle = allowance_day_of_cycle
+    else:
+        if "allowance_day_of_cycle" not in sim_cfg:
+            from app.data.config import ConfigError
+
+            raise ConfigError("simulation.allowance_day_of_cycle is required in config.")
+        day_of_cycle = int(sim_cfg["allowance_day_of_cycle"])
+
+    start_dt = datetime.datetime.fromisoformat(start_ts.replace("Z", "+00:00"))
+
     tx_by_agent: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for tx in transactions_data:
         aid = tx.get("agent_id")
@@ -263,7 +349,6 @@ def extract_agent_features(
 
         txs = tx_by_agent.get(aid, [])
         if txs:
-            # Fee ratio over official (applicable to cash_out)
             fee_ratios: list[float] = []
             days_set: set[str] = set()
             allowance_tx_count = 0
@@ -271,15 +356,23 @@ def extract_agent_features(
                 if t.get("txn_type") == "cash_out":
                     amt = float(t["amount"])
                     fee = float(t.get("fee", 0.0))
-                    expected_fee = amt * official_fee_rate
+                    expected_fee = amt * fee_rate
                     if expected_fee > 0:
                         fee_ratios.append(fee / expected_fee)
                 dt_str = t["ts"][:10]
                 days_set.add(dt_str)
-                # Allowance day check: day 5 of monthly cycle
+                # Allowance day check: determined by configured start_timestamp + cycle
                 try:
-                    dt = datetime.datetime.fromisoformat(t["ts"])
-                    if dt.day == 5:
+                    dt = datetime.datetime.fromisoformat(t["ts"].replace("Z", "+00:00"))
+                    if dt.tzinfo is None and start_dt.tzinfo is not None:
+                        dt = dt.replace(tzinfo=start_dt.tzinfo)
+                    elif dt.tzinfo is not None and start_dt.tzinfo is None:
+                        start_dt = start_dt.replace(tzinfo=dt.tzinfo)
+                    day_offset = (dt.date() - start_dt.date()).days
+                    if (
+                        day_offset >= 0
+                        and (day_offset % cycle_days) == day_of_cycle
+                    ):
                         allowance_tx_count += 1
                 except Exception:
                     pass
