@@ -49,22 +49,10 @@ def _quantize_float(val: Decimal | float) -> float:
     return float(round(val, 2))
 
 
-def generate_dataset(
+def build_canonical_agent_registry(
     config: dict[str, Any] | None = None,
-    seed: int | None = None,
-    agent_ids: list[str] | set[str] | tuple[str, ...] | None = None,
-    customers: int | None = None,
-    return_observations: bool = False,
-) -> DatasetResult | tuple[dict[str, Any], dict[str, Any]]:
-    """Generate synthetic Sathi dataset and sidecar cash observations.
-
-    Parameters:
-        config: Simulation configuration dictionary (loads data/config.yaml if None).
-        seed: Random seed for customer/timeline generation (defaults to simulation.seed_train).
-        agent_ids: Optional explicit agent IDs for cohort-isolated routing (T015).
-        customers: Optional customer count override (e.g. for smoke testing or small fixtures).
-        return_observations: If True, returns (main_dataset, observations).
-                             If False, returns DatasetResult.
+) -> list[dict[str, Any]]:
+    """Build canonical stable global agent registry using seed_train RNG.
 
     Canonical agents are stable across generation seeds via independent seed_train RNG.
     """
@@ -78,6 +66,79 @@ def generate_dataset(
     slice_cats = fairness_cfg.get("slice_categories", {})
 
     seed_train = sim_cfg["seed_train"]
+    total_agents = sim_cfg["agents"]
+    agent_mix = sim_cfg["agent_mix"]
+
+    fairness_regions = slice_cats["region"]
+    start_ts_str = sim_cfg["start_timestamp"]
+
+    agent_rng = random.Random(seed_train)
+
+    canonical_types = (
+        ["normal"] * agent_mix["normal"]
+        + ["high_volume_honest"] * agent_mix["high_volume_honest"]
+        + ["skimmer"] * agent_mix["skimmers"]
+    )
+    if len(canonical_types) != total_agents:
+        raise ConfigError(
+            f"agent_mix sum ({len(canonical_types)}) does not match agents count ({total_agents})"
+        )
+    agent_rng.shuffle(canonical_types)
+
+    canonical_agents: list[dict[str, Any]] = []
+    for idx in range(total_agents):
+        aid = f"A_{idx:06d}"
+        atype = canonical_types[idx]
+        region = agent_rng.choice(fairness_regions)
+        if atype == "high_volume_honest":
+            volume_band = "high"
+        elif atype == "skimmer":
+            volume_band = agent_rng.choice(["medium", "high", "standard"])
+        else:
+            volume_band = agent_rng.choice(["low", "medium", "standard"])
+
+        arec = {
+            "agent_id": aid,
+            "region": region,
+            "volume_band": volume_band,
+            "agent_type": atype,
+            "created_at": start_ts_str,
+        }
+        canonical_agents.append(arec)
+
+    return canonical_agents
+
+
+def generate_dataset(
+    config: dict[str, Any] | None = None,
+    seed: int | None = None,
+    agent_ids: list[str] | set[str] | tuple[str, ...] | None = None,
+    customers: int | None = None,
+    return_observations: bool = False,
+    canonical_agents: list[dict[str, Any]] | None = None,
+) -> DatasetResult | tuple[dict[str, Any], dict[str, Any]]:
+    """Generate synthetic Sathi dataset and sidecar cash observations.
+
+    Parameters:
+        config: Simulation configuration dictionary (loads data/config.yaml if None).
+        seed: Random seed for customer/timeline generation (defaults to simulation.seed_train).
+        agent_ids: Optional explicit agent IDs for cohort-isolated routing (T015).
+        customers: Optional customer count override (e.g. for smoke testing or small fixtures).
+        return_observations: If True, returns (main_dataset, observations).
+                             If False, returns DatasetResult.
+        canonical_agents: Optional pre-built canonical agents registry for reuse across cohorts.
+
+    Canonical agents are stable across generation seeds via independent seed_train RNG.
+    """
+    if config is None:
+        raw_config = load_config()
+    else:
+        raw_config = validate_config(config)
+
+    sim_cfg = raw_config["simulation"]
+    fairness_cfg = raw_config.get("fairness", {})
+    slice_cats = fairness_cfg.get("slice_categories", {})
+
     if seed is not None:
         if type(seed) is not int or isinstance(seed, bool) or not (0 <= seed < 2**31):
             raise ConfigError(
@@ -85,7 +146,7 @@ def generate_dataset(
             )
         gen_seed = seed
     else:
-        gen_seed = seed_train
+        gen_seed = sim_cfg["seed_train"]
 
     if customers is not None:
         if type(customers) is not int or isinstance(customers, bool) or customers <= 0:
@@ -106,45 +167,11 @@ def generate_dataset(
     # -------------------------------------------------------------------------
     # 1. Canonical Agents Registry (Independent RNG using seed_train)
     # -------------------------------------------------------------------------
-    agent_rng = random.Random(seed_train)
-    total_agents = sim_cfg["agents"]
-    agent_mix = sim_cfg["agent_mix"]
-
-    fairness_regions = slice_cats["region"]
-
-    canonical_types = (
-        ["normal"] * agent_mix["normal"]
-        + ["high_volume_honest"] * agent_mix["high_volume_honest"]
-        + ["skimmer"] * agent_mix["skimmers"]
-    )
-    if len(canonical_types) != total_agents:
-        raise ConfigError(
-            f"agent_mix sum ({len(canonical_types)}) does not match agents count ({total_agents})"
-        )
-    agent_rng.shuffle(canonical_types)
-
-    canonical_agents: list[dict[str, Any]] = []
-    canonical_agents_dict: dict[str, dict[str, Any]] = {}
-    for idx in range(total_agents):
-        aid = f"A_{idx:06d}"
-        atype = canonical_types[idx]
-        region = agent_rng.choice(fairness_regions)
-        if atype == "high_volume_honest":
-            volume_band = "high"
-        elif atype == "skimmer":
-            volume_band = agent_rng.choice(["medium", "high", "standard"])
-        else:
-            volume_band = agent_rng.choice(["low", "medium", "standard"])
-
-        arec = {
-            "agent_id": aid,
-            "region": region,
-            "volume_band": volume_band,
-            "agent_type": atype,
-            "created_at": start_ts_str,
-        }
-        canonical_agents.append(arec)
-        canonical_agents_dict[aid] = arec
+    if canonical_agents is None:
+        canonical_agents = build_canonical_agent_registry(raw_config)
+    canonical_agents_dict: dict[str, dict[str, Any]] = {
+        a["agent_id"]: a for a in canonical_agents
+    }
 
     # Filter to cohort agents if explicit agent_ids provided; reject unknown IDs
     if agent_ids is not None:
@@ -896,6 +923,7 @@ def generate_dataset_with_observations(
     seed: int | None = None,
     agent_ids: list[str] | set[str] | tuple[str, ...] | None = None,
     customers: int | None = None,
+    canonical_agents: list[dict[str, Any]] | None = None,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     """Convenience function returning (main_dataset, sidecar_observations)."""
     return generate_dataset(
@@ -904,4 +932,5 @@ def generate_dataset_with_observations(
         agent_ids=agent_ids,
         customers=customers,
         return_observations=True,
+        canonical_agents=canonical_agents,
     )

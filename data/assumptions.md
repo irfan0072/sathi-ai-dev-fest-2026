@@ -90,7 +90,12 @@ Where the human approved general behavior without complete parameterization, the
 ## 8. Splits and Evaluation Boundaries
 - Train/validation/test split **by agent and by seed**, not by row.
 - Agent allocation: 60% train, 20% validation, 20% test (human-approved); seeds 42 / 4242 / 2026.
-- A clean test set is never used for training or threshold tuning.
+- Exact agent cohort counts (300 total): 180 train, 60 validation, 60 test.
+- Stratified agent types across cohorts: normal 162/54/54, high-volume honest 12/4/4, skimmers 6/2/2.
+- Customer split across cohorts (20,000 total): 12,000 train, 4,000 validation, 4,000 test.
+- Agents belong to exactly one cohort. Each user's entire timeline (all transactions and sessions) routes strictly within their home cohort agents. Metadata / evaluation reports are linked only within the same cohort.
+- A clean test set is never used for training or threshold tuning; generating the test artifact only is not evaluating it.
+- **Immutable seed provenance**: Changing simulation configuration requires a fresh dev dataset database/schema or new seed namespaces; no reseed overwrite or reset command exists to prevent test set contamination.
 - Baseline vs model heldout agents and second seed remain future modeling, do not train now.
 
 ## 9. Model Sanity Check Ceiling
@@ -118,6 +123,7 @@ Sathi adoption among assisted users: 30%, 50%, 70%. Report all three.
 |---|---|---|
 | 2026-10-02 | Added validation seed 4242 and 60/20/20 agent allocation | Human approved explicit validation setup; fee and caps remain unset pending separate values |
 | 2026-10-02 | Approved Phase 1 simulation assumptions and auxiliary defaults | Human approved fee (0.015), mandate cap (5000 BDT), daily limit (25000 BDT), TTL (15 min), verification attempts (2), cash gap max(50,.02*amt), population/agent distributions, skimming profiles and report rate/accuracy. Noise magnitude is an auxiliary implementation assumption. Added distinct auxiliary implementation assumptions for generator reproducibility and 0.98 PR-AUC sanity ceiling. |
+| 2026-10-02 | Implemented T015 disjoint agent and seed split tooling | Disjoint agent allocation (180/60/60) stratified across agent types (normal 162/54/54, high 12/4/4, skimmers 6/2/2) and customer splits (12k/4k/4k) across seeds 42/4242/2026. Documented immutable seed provenance, loader validation, and manifest tracking. |
 
 ## Generator implementation details (ASSUMPTIONS)
 

@@ -36,4 +36,22 @@ These are unresolved questions, not adopted design changes. Phase 0 is authorize
 | T012 | Record approved simulation assumptions | antigravity | Done (config assertions/full checks passed) | Human Phase 1 go-ahead | Approved defaults and auxiliary assumptions documented; uncovered decisions remain explicit | Config assertions; make test lint build-console |
 | T013 | Schema migration and seed loader | antigravity | Done (28 backend tests/full checks passed) | T012 | Exact domain schema; transactional, repeatable migration/seed; no destructive reset | Database integration tests; make test lint build-console |
 | T014 | Synthetic generator and leakage guard | antigravity | Done (full-scale determinism/seed checks passed) | T013 | Deterministic users/agents/transactions/sessions; configured noise/overlap and leakage enforcement before modeling | Generator determinism and leakage tests; full checks |
-| T015 | Agent/seed split tooling | antigravity | Planned | T014 | Disjoint cohorts and seeds; shared-agent users cannot cross cohorts | Disjointness tests; full generation/seed checks |
+| T015 | Agent/seed split tooling | antigravity | Done (34 split tests/full SQL seed passed) | T014 | Disjoint cohorts and seeds; shared-agent users cannot cross cohorts; seed dev DB | Disjointness tests; make test lint build-console; SQL counts |
+
+## Phase 2 (Parallel Tracks — Models vs Mandate Service)
+
+Target finish line: **4 October 2026 08:00 Asia/Dhaka** (Submission buffer). Report and video outline started by **3 October 2026 16:00 Asia/Dhaka**. Public skeleton deployment scheduled by **3 October 2026 14:00 Asia/Dhaka**.
+
+Cut priority if behind:
+1. Graph feature first
+2. Voice speech recognition second (keep keypad)
+3. LLM narrative third (keep deterministic templates)
+Never cut: data generator, baselines, live demo path.
+
+| ID | Title | Owner | Status | Dependencies | Acceptance criteria | Test command |
+|---|---|---|---|---|---|---|
+| T016 | Baseline rule implementations | antigravity | Planned | T015 | Assisted rule (top_share >= 0.70 & hours <= 24) and agent rule (fee_ratio >= 1.2x); evaluation-only ground truth excluded | `pytest backend/tests/test_baselines.py` |
+| T017 | Mandate service & deterministic policy | agy (CLI) | Planned | T013, T015 | Scoped one-time mandates, SHA-256 hashed codes, TTL, single-use, lockout, audit log, config thresholds | `pytest backend/tests/test_mandates.py` |
+| T018 | Assisted-user classifier (LightGBM) | antigravity | Planned | T015, T016 | LightGBM model, calibration, SHAP values, PR-AUC sanity check (<=0.98), evaluation on validation split | `pytest backend/tests/test_assisted_model.py` |
+| T019 | Agent anomaly detector | antigravity | Planned | T015, T016 | Robust peer z-score + Isolation Forest, ranking, peer comparison reasons | `pytest backend/tests/test_agent_anomaly.py` |
+| T020 | Evaluation suite & ablations | antigravity | Planned | T016, T018, T019 | Baseline vs model tables, feature ablation, skimming sweep, noise sweep, distribution shift | `pytest backend/tests/test_evaluation.py` |

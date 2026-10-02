@@ -2,13 +2,13 @@
 
 AI DEV FEST 2026 (DIU CPC x upay), Track 07: Open Innovation. Team: Runtime Terrors.
 
-**Current status: verified local Phase 0 skeleton.** FastAPI health endpoint, React hello-world console, PostgreSQL container, tests, linting, production frontend build and CI configuration exist. Domain features below remain planned. Official start confirmed by the human: 1 October 2026, 10:00 AM Asia/Dhaka. Public runtime deployment is deferred at the human's request; work remains local.
+**Current status: verified Phase 1 synthetic data generation and disjoint cohort splits; database seeding pending verification.** FastAPI health endpoint, React console, PostgreSQL container and migrations, deterministic synthetic generator, disjoint agent/seed splits (train/validation/test), seed loading implementation (database seeding pending verification), tests, linting, and production frontend build exist. Domain features below remain planned (no models or policy claimed). Official start confirmed by the human: 1 October 2026, 10:00 AM Asia/Dhaka. Public runtime deployment is deferred at the human's request; work remains local.
 
 ## 1. Project overview
 
 Many users need help operating mobile wallets and may share their PIN with an agent or relative. Sathi proposes scoped, one-time, auditable cash-out mandates to reduce that exposure. It will check the customer's understanding of the amount in Bangla, identify users likely to need assistance, and flag abnormal agent activity for human review.
 
-All data and reported outcomes will be synthetic/simulated. Amount verification checks comprehension; it does not detect coercion or lying. Models will never make allow/deny decisions: deterministic configuration rules and human review own those outcomes.
+All data and reported outcomes will be synthetic/simulated. All financial, fee, and balance values are explicitly simulation ASSUMPTIONS, not actual upay figures. Amount verification checks comprehension; it does not detect coercion or lying. Models will never make allow/deny decisions: deterministic configuration rules and human review own those outcomes.
 
 Repository: [irfan0072/sathi-ai-dev-fest-2026](https://github.com/irfan0072/sathi-ai-dev-fest-2026).
 
@@ -17,9 +17,10 @@ Repository: [irfan0072/sathi-ai-dev-fest-2026](https://github.com/irfan0072/sath
 | Feature | Status | Intended approach |
 |---|---|---|
 | Local API, console and database skeleton | Implemented and checked | FastAPI `/health`, React hello-world, PostgreSQL |
-| Scoped one-time mandates | Planned | Deterministic policy, hashed codes, expiry and audit |
-| Assisted-user detection | Planned | Rule baseline, LightGBM, SHAP and calibration |
-| Agent anomaly detection | Planned | Rule baseline, robust peer z-score and Isolation Forest |
+| Phase 1 synthetic generation & disjoint splits | Implemented (seeding pending verification) | Config-driven generator, deterministic RNG, disjoint agent cohorts (60/20/20), manifest tracking |
+| Scoped one-time mandates | Planned | Deterministic policy, hashed codes, expiry and audit (no policy claimed) |
+| Assisted-user detection | Planned | Rule baseline, LightGBM, SHAP and calibration (no models claimed) |
+| Agent anomaly detection | Planned | Rule baseline, robust peer z-score and Isolation Forest (no models claimed) |
 | Bangla amount verification | Planned | Keypad first, rule-based parser; optional speech interface |
 | Receipts and case narratives | Planned | Optional LLM wording with numeric validation |
 | Analyst console and review queue | Planned | Human decisions over structured evidence |
@@ -41,7 +42,7 @@ No API keys, real customer data or external AI accounts are needed to run the sk
 
 ## 5. Installation and setup
 
-These dependency-install and check commands were verified in an isolated clone of the public repository on 2 October 2026:
+These dependency-install and check commands were verified in an isolated clone of the public repository on 2 October 2026 (Phase 0 clean-clone verification):
 
 ```sh
 git clone https://github.com/irfan0072/sathi-ai-dev-fest-2026.git
@@ -52,7 +53,7 @@ npm --prefix frontend ci
 make test lint build-console
 ```
 
-The backend constraints file records tested runtime/dev versions; `frontend/package-lock.json` pins the frontend dependencies. Migrations, synthetic generation, seeding and model training commands are not implemented yet. `docs/schema.sql` remains a design artifact and is not applied by Compose.
+The backend constraints file records tested runtime/dev versions; `frontend/package-lock.json` pins the frontend dependencies. Phase 0 clean-clone verification tested the initial test, lint, and build-console commands. Phase 1 schema migrations, synthetic dataset generation, disjoint train/validation/test split generation, and PostgreSQL seed loading are implemented (main database seeding pending verification by Codex). Model training commands remain planned.
 
 ## 6. Environment variables
 
@@ -105,6 +106,42 @@ make run-console   # Vite prefers localhost:5173; chooses the next free port if 
 
 `make build-console` produces the ignored `frontend/dist` bundle. The Vite development port differs from the container console port; use the URL printed by Vite. The development commands were verified from the clean clone using API port 18001 and Vite port 5174 to avoid existing listeners. Stop this development stack without removing its database volume with `docker compose --env-file .env.example stop`.
 
+### Synthetic data generation, splits, and database seeding
+
+Make does not automatically source `.env`; export `DATABASE_URL` explicitly in your host terminal before running database commands:
+
+```sh
+# Explicitly export the host DATABASE_URL for local Make commands (Make does not source .env)
+export DATABASE_URL="postgresql://sathi:CHANGE_ME@localhost:5432/sathi"
+
+# Optional: override target database schema (search_path)
+# export DATABASE_SCHEMA="public"
+
+# Dedicated test database URL for running integration database tests:
+# export SATHI_TEST_DATABASE_URL="postgresql://sathi:CHANGE_ME@localhost:5432/sathi_test"
+
+# Apply schema migrations to PostgreSQL
+make migrate
+
+# Generate single-file dataset as a separate inspection artifact (seed 42)
+make generate
+
+# Generate disjoint train, validation, and test splits with canonical manifest
+make split
+
+# Seed individual disjoint splits into PostgreSQL (pending verification)
+make seed DATASET=data/generated/splits/train.json
+make seed DATASET=data/generated/splits/validation.json
+make seed DATASET=data/generated/splits/test.json
+```
+
+- **Main dev DB `sathi` (pending verification)**: Main database seeding is implemented, with end-to-end database verification pending Codex execution in the next gate. Once verified, seeding train, then validation, then test executes without ID collision, loading the full combined 20,000 customers/users and 300 agents, and repeating any or all seed steps is an idempotent no-op.
+- **Standalone generation artifact**: `make generate` produces `data/generated/train.json` (and sidecar `train.observations.json`) as a separate inspection artifact using seed 42. Because the disjoint train split (`data/generated/splits/train.json`) also uses seed 42, do not seed both the standalone artifact and the disjoint train cohort into the same database schema, as their user IDs (`U_42_*`) overlap.
+- **Disjointness and isolation**: Train, validation, and test cohorts are mutually disjoint across agents (180/60/60) and customers (12,000/4,000/4,000). Every transaction and session routes strictly within its cohort.
+- **Git ignore**: All generated files in `data/generated/` are ignored by Git.
+- **Immutable seed provenance**: Changing simulation configuration requires a fresh dev dataset database/schema or new seed namespaces; no reseed overwrite or reset command exists to prevent test/train contamination.
+- **Evaluation boundary**: Generating the test split artifact is strictly for isolation and reproducible storage; no test set training and no scored metric evaluation are performed. No models or policy rules are claimed.
+
 ## 8. Live deployment URL
 
 Pending. The human requested local work for now. There are no demo logins or public runtime URL; the public GitHub repository contains the source and continuous commit history.
@@ -123,9 +160,9 @@ The existing TestClient emits a nonfatal HTTPX deprecation warning. npm reports 
 
 ## 10. Other configuration
 
-Thresholds and synthetic assumptions live in `data/config.yaml` and `data/assumptions.md`. The approved validation seed is 4242 and train/validation/test agents will be disjoint in a 60/20/20 split, with seeds 42/4242/2026. No dataset has been generated and no test set has been evaluated.
+Thresholds and synthetic assumptions live in `data/config.yaml` and `data/assumptions.md`. Simulation seeds are 42 (train), 4242 (validation), and 2026 (test). The 300 agents are partitioned into disjoint cohorts using a 60/20/20 split (180 train, 60 validation, 60 test) stratified across normal (162/54/54), high-volume honest (12/4/4), and skimmer (6/2/2) types. Customers are partitioned 12,000 train, 4,000 validation, and 4,000 test.
 
-Fee rate, mandate cap and daily limit remain unset pending human-supplied simulation values. Region is evaluation-only under the project rules, while a proposed peer-group setting includes it; that conflict awaits human resolution before model implementation. Mandate lifecycle/storage and code-delivery contract questions also remain open in `tasks/BOARD.md` and `docs/decisions.md`.
+All financial values, fee rates, balances, and caps are explicitly simulation ASSUMPTIONS, not actual upay figures or commercial tariffs: approved simulation assumptions include official fee rate (0.015 / 1.5%), user mandate cap (5,000 BDT default), daily cash-out limit (25,000 BDT), mandate TTL (15 min), max verification attempts (2), and cash gap tolerance `max(50, 0.02 * amount)`. Documented auxiliary generator defaults include initial balance (5,000 BDT), minimum cash-out (100 BDT), 50 BDT rounding increment, and independent loyal fraction (0.15). Region is evaluation-only under the project rules, while a proposed peer-group setting includes it; that conflict awaits human resolution before model implementation. Mandate lifecycle/storage and code-delivery contract questions also remain open in `tasks/BOARD.md` and `docs/decisions.md`.
 
 ## Disclosures
 

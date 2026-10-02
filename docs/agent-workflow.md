@@ -67,3 +67,8 @@ Use `agy --mode accept-edits --prompt-interactive` with the task prompt in the p
 ## Verified headless file-only implementation
 
 T004 completed through `agy --mode accept-edits --print` when explicitly limited to file read/edit tools. Codex handled package installation and command checks. This avoids headless command-permission denial while retaining review and permission enforcement. One file-only feedback prompt corrected a lint issue. Use this method for later source tasks; implementation test results are always independently verified by Codex.
+
+## 2026-10-02 Implementer CLI verification under Antigravity orchestration
+
+Tested `/Users/apple/.local/bin/agy --mode accept-edits --print "Read scripts/smoke_skeleton.py. Add a docstring comment '# Smoke test verified' directly under the existing module docstring. Use file edit tools only. Do not run any shell commands or git mutations."`
+Result: exit 0, file edit applied cleanly and headlessly without requiring interactive terminal permission prompts. The test change was verified via `git diff` and cleanly reverted. The implementer CLI can take tasks headlessly from the command line when scoped to file editing tools.

@@ -344,7 +344,13 @@ def test_db_schema():
 
     # Generate isolated temporary schema
     schema_name = f"sathi_test_{uuid.uuid4().hex[:10]}"
-    conn = get_connection(test_db_url)
+    try:
+        conn = get_connection(test_db_url)
+    except Exception as e:
+        pytest.skip(
+            f"Could not connect to {sanitize_database_url(test_db_url)}: {e}"
+        )
+
     try:
         with conn.cursor() as cur:
             cur.execute(f"CREATE SCHEMA {schema_name};")

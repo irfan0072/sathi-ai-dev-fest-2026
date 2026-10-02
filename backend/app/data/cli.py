@@ -16,6 +16,7 @@ from app.data.database import (
     run_migrations,
 )
 from app.data.generator import generate_dataset
+from app.data.splits import generate_splits
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -51,6 +52,21 @@ def build_parser() -> argparse.ArgumentParser:
         type=int,
         default=None,
         help="Optional customer count override (e.g. for smoke testing)",
+    )
+
+    # split subcommand
+    split_parser = subparsers.add_parser(
+        "split", help="Generate disjoint train/validation/test splits and manifest"
+    )
+    split_parser.add_argument(
+        "--config",
+        default=None,
+        help="Path to YAML configuration file (defaults to data/config.yaml)",
+    )
+    split_parser.add_argument(
+        "--output-dir",
+        default="data/generated/splits",
+        help="Directory to write split datasets and manifest (defaults to data/generated/splits)",
     )
 
     # migrate subcommand
@@ -134,6 +150,31 @@ def main(argv: list[str] | None = None) -> int:
             return 0
         except Exception as exc:
             print(f"Generation error ({type(exc).__name__}): {exc}", file=sys.stderr)
+            return 1
+
+    if args.command == "split":
+        try:
+            cfg = load_config(args.config)
+            out_dir = Path(args.output_dir)
+            print(f"Generating disjoint dataset splits into {out_dir}...")
+            result = generate_splits(config=cfg, output_dir=out_dir)
+            manifest = result["manifest"]
+            print("Successfully generated disjoint dataset splits:")
+            for c_name in ("train", "validation", "test"):
+                c_info = manifest["cohorts"][c_name]
+                print(
+                    f"  - {c_name} (seed={c_info['seed']}): {c_info['customer_count']} customers, "
+                    f"{c_info['agent_count']} agents ({c_info['counts']['transactions']} txns, "
+                    f"{c_info['counts']['sessions']} sessions) "
+                    f"[SHA-256: {c_info['content_sha256'][:16]}...]"
+                )
+            print(
+                f"Split manifest (config SHA-256: {manifest['config_sha256'][:16]}...) "
+                f"written to {out_dir / 'manifest.json'}"
+            )
+            return 0
+        except Exception as exc:
+            print(f"Split generation error ({type(exc).__name__}): {exc}", file=sys.stderr)
             return 1
 
     # Database commands (migrate, seed) require DATABASE_URL

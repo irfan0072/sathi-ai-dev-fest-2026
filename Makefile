@@ -1,8 +1,9 @@
 PYTHON ?= .venv/bin/python
 API_PORT ?= 18000
 DATASET ?= data/generated/train.json
+SATHI_TEST_DATABASE_URL ?= postgresql://sathi:CHANGE_ME@localhost:5432/sathi_phase1_test
 
-.PHONY: test lint check-structure test-api lint-api run-api test-console lint-console build-console run-console smoke-skeleton migrate seed generate
+.PHONY: test lint check-structure test-api lint-api run-api test-console lint-console build-console run-console smoke-skeleton migrate seed generate split
 
 test: check-structure test-api test-console
 
@@ -12,7 +13,7 @@ check-structure:
 	python3 scripts/check_structure.py
 
 test-api:
-	PYTHONPATH=backend $(PYTHON) -m pytest backend/tests
+	SATHI_TEST_DATABASE_URL=$(SATHI_TEST_DATABASE_URL) PYTHONPATH=backend $(PYTHON) -m pytest backend/tests
 
 lint-api:
 	$(PYTHON) -m ruff check --config backend/pyproject.toml backend scripts
@@ -43,3 +44,6 @@ seed:
 
 generate:
 	PYTHONPATH=backend $(PYTHON) -m app.data.cli generate
+
+split:
+	PYTHONPATH=backend $(PYTHON) -m app.data.cli split

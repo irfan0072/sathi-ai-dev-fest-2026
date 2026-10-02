@@ -97,3 +97,7 @@ The following auxiliary assumptions are recorded distinctly as implementation ch
 - Evaluation slice categories: Defined in config (`gender`, `age_band`, `region`, `urban_rural`).
 - Model sanity check: Max PR-AUC 0.98. Validation-only diagnosis to check feature overlap; generator must never be tuned to score or inspect final test set.
 - Modeling boundaries: Baseline vs model heldout agents and second seed remain future modeling, do not train now.
+
+## 2026-10-02T18:01:37+06:00 — Orchestrator handover
+
+Orchestrator changed from Codex to Antigravity at 2026-10-02T18:01:37+06:00 (12:01:37 UTC); Codex reached its usage limit. Antigravity assumes lead engineer and orchestrator roles for Sathi.

@@ -208,3 +208,26 @@
 - Full gate passed96 backend tests with realDB integrations,1 frontend test, linters/build. Full-scale generation seed42:20000users/300agents/189819transactions/189819sessions. Main SHA256 fbeaa930b345a64ef77012d41185c0c28b8afd44c26ce4542e154c1717303827 repeated identically; full ledger balances independently checked;1953 sampled behavior flips (synthetic probability0.10).
 - Dedicated sathi_generator_test DB loaded full dataset, repeatseedno-op; SQLcounts20000/300/189819/189819 and0mandates. Main devDB remains empty awaiting final disjointcohorts. Generatedoutputs are ignored.
 - Localimages rebuilt successfully with config/migrations/dependencies; no Docker-sharing edits, destructive resets or model evaluation. Agent propensities and capped spikes/service activity proxy documented as limitations. Raw sidecar assisted summaries renamed to transaction fractions to avoid implying customer fractions.
+
+## 2026-10-02T17:45:08+06:00 — T015 delegation
+
+- Tool: Antigravity CLI. Prompt: “Read tasks/T015.md and implement only T015 using file read/edit tools. No commands/install/Git/model training. Reuse the reviewed generator and preserve canonical registry behavior when extracting helper. Codex will test all disjointness, repeat hashes, full SQL seed and whole checks. Report files and pending verification concisely.”
+- Separate seeds/cohorts share a stable global registry, stratified by agenttype where feasible. All customer transactions remain within assigned cohort; no row splitting, training, scoring or threshold tuning on test artifacts. Main devDB will load only final split artifacts.
+
+## 2026-10-02T18:01:37+06:00 (12:01:37 UTC) — Orchestrator handover
+
+- Tool: Antigravity taking over from Codex.
+- Context: Codex reached its usage limit mid-project. Antigravity assumes lead engineer and orchestrator roles for Sathi.
+- Actions: Audited entire repository state, verified source of truth documents, inspected git history and uncommitted changes (T015 in progress), tested CLI headless capability, ran full test suites (128 backend tests pass, 1 frontend test passes, linters pass, build passes).
+
+## 2026-10-02T18:27:00+06:00 — T015 acceptance, dev DB seed, and mock contract
+
+- Tool: Antigravity.
+- Human review: Audit accepted. Approved: commit T015, seed dev database, prepare console mock contract, and deploy skeleton tonight. Standing approvals confirmed for routine commits, pushes to public remote, dependency installations, and test/lint error fixes.
+- Actions:
+  - Fixed T015 regex assertions and line-length linting without weakening disjointness assertions.
+  - Added positive and negative transaction cohort isolation tests (`test_positive_no_transaction_crosses_cohort_customer_and_agent` and `test_negative_contamination_txn_cross_cohort_user`).
+  - Configured `Makefile` with `SATHI_TEST_DATABASE_URL` default and connection fallback so `make test` executes all 130 backend tests locally and in CI with 0 skips.
+  - Seeded main dev database `sathi` with disjoint splits (`train.json`, `validation.json`, `test.json`); verified SQL row counts (users: 20000, agents: 300, transactions: 190269, sessions: 190269, mandates: 0). Verified seed idempotency (no-op on repeated load).
+  - Authored `docs/console-mock-contract.md` and `scripts/mock_server.py` for parallel frontend console development.
+- Outcome: T015 Done; all 130 backend tests and frontend tests pass; zero lint errors.
