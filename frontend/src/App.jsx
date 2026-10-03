@@ -1,6 +1,8 @@
-import { useState, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import './style.css';
+import { api } from './api';
 import Header from './components/Header';
+import DemoLogin from './components/DemoLogin';
 import NavTabs from './components/NavTabs';
 import LiveSimulation from './components/LiveSimulation';
 import ReviewQueue from './components/ReviewQueue';
@@ -11,49 +13,25 @@ import ArchitecturePage from './components/ArchitecturePage';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('simulation');
-  const [caseNotification, setCaseNotification] = useState(false);
-
-  const handleCaseCreated = useCallback(() => {
-    setCaseNotification(true);
-    // Reset badge after a while
-    setTimeout(() => setCaseNotification(false), 15000);
-  }, []);
-
-  const handleTabSelect = (tab) => {
-    setActiveTab(tab);
-    if (tab === 'cases') setCaseNotification(false);
+  const [session, setSession] = useState(api.getSession);
+  const [flow, setFlow] = useState({});
+  useEffect(() => api.subscribeSession(setSession), []);
+  const content = () => {
+    if (activeTab === 'architecture') return <ArchitecturePage />;
+    if (activeTab === 'simulation') return <LiveSimulation session={session} flow={flow} setFlow={setFlow} />;
+    if (session?.role !== 'analyst') return <div className="glass-card">Sign in as the human analyst to view saved evidence and review cases.</div>;
+    if (activeTab === 'cases') return <ReviewQueue />;
+    if (activeTab === 'outreach') return <OutreachList />;
+    if (activeTab === 'agents') return <AgentRiskBoard />;
+    return <MetricsPage />;
   };
-
-  const renderContent = () => {
-    switch (activeTab) {
-      case 'simulation':
-        return <LiveSimulation onCaseCreated={handleCaseCreated} />;
-      case 'cases':
-        return <ReviewQueue />;
-      case 'outreach':
-        return <OutreachList />;
-      case 'agents':
-        return <AgentRiskBoard />;
-      case 'metrics':
-        return <MetricsPage />;
-      case 'architecture':
-        return <ArchitecturePage />;
-      default:
-        return <LiveSimulation onCaseCreated={handleCaseCreated} />;
-    }
-  };
-
-  return (
-    <>
-      <Header />
-      <NavTabs
-        activeTab={activeTab}
-        onSelectTab={handleTabSelect}
-        caseNotification={caseNotification}
-      />
-      <main className="main-content">
-        {renderContent()}
-      </main>
-    </>
-  );
+  return <>
+    <Header />
+    <div className="synthetic-banner">SYNTHETIC DEMO · No real upay data or transactions. All financial figures are ASSUMPTIONS. Models never authorize cash-out.</div>
+    <main className="main-content">
+      <DemoLogin session={session} onLogout={() => { api.logout(); setFlow({}); }} />
+      <NavTabs activeTab={activeTab} onSelectTab={setActiveTab} />
+      <div key={`${session?.role || 'signed-out'}:${session?.subject || ''}`}>{content()}</div>
+    </main>
+  </>;
 }

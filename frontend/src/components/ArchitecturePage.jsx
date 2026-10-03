@@ -38,12 +38,12 @@ export default function ArchitecturePage() {
           </h3>
           <div style={{ fontSize: '0.88rem', lineHeight: 1.7, color: 'var(--text-dim)' }}>
             <p style={{ marginBottom: '0.75rem' }}>
-              Instead of disclosing her PIN, Rahima receives a <strong style={{ color: '#10b981' }}>verification prompt in Bangla</strong> (voice or keypad). She states the withdrawal amount — if it matches the agent's request, a <strong>scoped one-time code</strong> is issued.
+              Instead of disclosing her PIN, Rahima receives a <strong style={{ color: '#10b981' }}>verification prompt in Bangla</strong> (keypad). She states the withdrawal amount — if it matches the agent's request, a <strong>scoped one-time code</strong> is issued.
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.75rem' }}>
               {[
                 '🔒 Single-use, 15-min TTL, agent-bound code',
-                '💬 Bangla voice prompt prototype: no smartphone required',
+                '💬 Bangla keypad prototype; telecom channel integration remains future work',
                 '🛡️ Amount mismatch → immediately flagged for human review',
                 '📋 In-memory event audit log (durable persistence planned)',
                 '🔍 Risk heuristics inform review; human supervisors decide',
@@ -64,7 +64,7 @@ export default function ArchitecturePage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
             {[
               { step: 'requested', desc: 'Agent requests cash-out for customer', color: '#06b6d4' },
-              { step: 'verifying', desc: 'Customer receives Bangla voice / USSD prompt', color: '#a855f7' },
+              { step: 'verifying', desc: 'Customer enters Bangla amount through the simulated keypad', color: '#a855f7' },
               { step: 'active', desc: 'Amount matches → one-time code issued to agent terminal', color: '#10b981' },
               { step: 'redeemed', desc: 'Agent enters code → cash disbursed', color: '#10b981' },
               { step: 'review case', desc: 'Amount mismatch → human supervisor reviews evidence', color: '#f59e0b' },

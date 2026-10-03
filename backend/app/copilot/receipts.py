@@ -104,8 +104,9 @@ def generate_bangla_receipt(
 
     receipt_text = (
         f"সাথী ক্যাশ-আউট সফল হয়েছে। "
-        f"উত্তোলন: {amt_bn} টাকা, ফি: {fee_bn} টাকা, প্রাপ্ত অর্থ: {payout_bn} টাকা। "
-        f"এজেন্ট: {agent_id}, ট্রানজ্যাকশন আইডি: {txn_bn}।"
+        f"উত্তোলন: {amt_bn} টাকা, ফি: {fee_bn} টাকা, লেজার অনুযায়ী প্রদেয় অর্থ: {payout_bn} টাকা। "
+        f"এজেন্ট: {agent_id}, ট্রানজ্যাকশন আইডি: {txn_bn}। "
+        "এই রসিদ বাস্তবে হাতে পাওয়া নগদ টাকার প্রমাণ নয়।"
     )
 
     # Post-check: numerical integrity verification

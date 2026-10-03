@@ -645,3 +645,23 @@ body {
   cursor: pointer;
   height: 6px;
 }
+
+/* Verified role-specific demo and compact evidence tables. */
+.synthetic-banner { padding: .65rem 1.5rem; background: #3b2e13; color: #fcd34d; border-bottom: 1px solid #796026; font-size: .85rem; }
+.login-card { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
+.login-form { display: flex; flex-wrap: wrap; align-items: end; gap: .6rem; }
+label { display: block; color: var(--text-dim); margin: .7rem 0; font-size: .85rem; }
+input, select, textarea { display: block; border: 1px solid #475569; border-radius: 7px; padding: .7rem; background: #0f172a; color: #f8fafc; max-width: 100%; width: 100%; margin-top: .3rem; }
+button { cursor: pointer; }
+button:disabled { opacity: .5; cursor: not-allowed; }
+.primary-btn { background: #059669; color: white; padding: .7rem 1rem; border: 1px solid #10b981; border-radius: 8px; margin: .3rem .5rem .3rem 0; font-weight: 600; }
+.terminal-actions { margin-top: 1.2rem; border-top: 1px solid #334155; padding-top: .7rem; }
+.amount-summary, .result-box { padding: 1rem; background: #0c302a; border: 1px solid #166354; border-radius: 8px; margin: 1rem 0; }
+.error-box { padding: .8rem; color: #fda4af; border: 1px solid #9f1239; background: #3b1224; border-radius: 8px; margin: .7rem 0; }
+.terminal-code { font: 1.5rem var(--font-mono); color: #fbbf24; letter-spacing: .15rem; }
+.keypad-grid { display: grid; grid-template-columns: repeat(3, 3rem); gap: .4rem; margin: .8rem 0; }
+.keypad-grid button { padding: .6rem; background: #1e293b; color: white; border: 1px solid #64748b; border-radius: 8px; }
+.glass-card { margin: 1rem 0; overflow-x: auto; }
+.glass-card p { margin: .6rem 0; }
+pre { white-space: pre-wrap; overflow-wrap: anywhere; max-width: 100%; font-size: .8rem; color: #cbd5e1; }
+h3, h4 { margin: .8rem 0; }

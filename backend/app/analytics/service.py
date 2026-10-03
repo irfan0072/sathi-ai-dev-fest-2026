@@ -12,37 +12,32 @@ Provides:
 from __future__ import annotations
 
 import datetime
+import hashlib
 import json
+import os
 from decimal import Decimal
+from pathlib import Path
 from typing import Any
 
 from app.copilot.receipts import generate_bangla_receipt
+from app.data.config import load_config, validate_config
+from app.evaluation.artifacts import ArtifactLoader, ArtifactVerificationError
 from app.mandates.router import get_mandate_service
 from app.mandates.service import MandateService
 
-FEATURE_DISPLAY_NAMES = {
-    "top_agent_share": "শীর্ষ এজেন্টে লেনদেনের হার (Top-Agent Share)",
-    "hours_credit_to_cashout": "টাকা জমার পর উত্তোলনের সময় (Credit-to-Cashout Delay)",
-    "withdrawn_fraction": "উত্তোলিত ব্যালেন্সের অনুপাত (Withdrawn Fraction)",
-    "allowance_count": "ভাতা প্রাপ্তির সংখ্যা (Allowance Count)",
-    "cash_out_mean": "গড় ক্যাশ-আউট পরিমাণ (Mean Cash-Out Amount)",
-    "pin_retry_ratio": "ভুল পিন প্রদানের হার (PIN Retry Ratio)",
-    "night_txn_fraction": "রাতের লেনদেনের হার (Night Txn Fraction)",
-    "fee_ratio_vs_official": "নির্ধারিত ফির অনুপাত (Fee Ratio vs Official 1.5%)",
-    "assisted_customer_fraction": "সহায়তা গ্রহণকারী গ্রাহক অনুপাত (Assisted Customer Share)",
-    "unexplained_cash_gap_rate": "নগদ পার্থক্যের অভিযোগ হার (Customer Cash Gap Rate)",
-    "allowance_day_volume_spike": "ভাতার দিনে অস্বাভাবিক লেনদেন বৃদ্ধি (Allowance Day Spike)",
-}
-
 
 class AnalyticsService:
-    """Service providing intelligence queries, durable case management, and receipts."""
+    """Verified offline evidence and durable runtime records, with separate provenance."""
 
     def __init__(
         self,
         mandate_service: MandateService | None = None,
+        artifact_dir: str | Path | None = None,
+        config: dict[str, Any] | None = None,
     ) -> None:
         self._mandate_service = mandate_service
+        self._artifact_dir = artifact_dir
+        self._config = validate_config(config) if config is not None else None
 
     @property
     def mandate_service(self) -> MandateService:
@@ -50,184 +45,100 @@ class AnalyticsService:
             self._mandate_service = get_mandate_service()
         return self._mandate_service
 
-    def get_user_assisted_score(self, user_id: str) -> dict[str, Any]:
-        """Return illustrative sample score and feature profile for demonstration."""
-        is_known_assisted = "000008" in user_id or "000123" in user_id or "assisted" in user_id
-        score = 0.884 if is_known_assisted else 0.125
-
-        top_reasons = (
-            [
-                {
-                    "feature": "top_agent_share",
-                    "display_name": FEATURE_DISPLAY_NAMES["top_agent_share"],
-                    "value": 0.92,
-                    "peer_median": 0.38,
-                    "sample_weight": "+0.34",
-                    "direction": "positive",
-                },
-                {
-                    "feature": "hours_credit_to_cashout",
-                    "display_name": FEATURE_DISPLAY_NAMES["hours_credit_to_cashout"],
-                    "value": 3.5,
-                    "peer_median": 48.0,
-                    "sample_weight": "+0.28",
-                    "direction": "positive",
-                },
-                {
-                    "feature": "withdrawn_fraction",
-                    "display_name": FEATURE_DISPLAY_NAMES["withdrawn_fraction"],
-                    "value": 0.96,
-                    "peer_median": 0.45,
-                    "sample_weight": "+0.19",
-                    "direction": "positive",
-                },
-            ]
-            if is_known_assisted
-            else [
-                {
-                    "feature": "top_agent_share",
-                    "display_name": FEATURE_DISPLAY_NAMES["top_agent_share"],
-                    "value": 0.28,
-                    "peer_median": 0.38,
-                    "sample_weight": "-0.22",
-                    "direction": "negative",
-                },
-                {
-                    "feature": "hours_credit_to_cashout",
-                    "display_name": FEATURE_DISPLAY_NAMES["hours_credit_to_cashout"],
-                    "value": 72.0,
-                    "peer_median": 48.0,
-                    "sample_weight": "-0.15",
-                    "direction": "negative",
-                },
-            ]
+    def _bundle(self) -> dict[str, Any]:
+        """Verify every request; changed/tampered files never reuse a cached good result."""
+        config = self._config if self._config is not None else load_config()
+        directory = self._artifact_dir or os.getenv(
+            "SATHI_ARTIFACTS_DIR", "data/artifacts/deployment"
         )
+        try:
+            bundle = ArtifactLoader.load_deployment_bundle_json(directory)
+            config_hash = hashlib.sha256(
+                json.dumps(config, sort_keys=True, separators=(",", ":")).encode()
+            ).hexdigest()
+            if bundle["manifest"]["config_sha256"] != config_hash:
+                raise ArtifactVerificationError("Configuration differs from frozen artifact")
+            return bundle
+        except (OSError, ValueError, KeyError, TypeError) as exc:
+            raise ArtifactVerificationError("Invalid local artifact bundle") from exc
 
+    @staticmethod
+    def _provenance(bundle: dict[str, Any]) -> dict[str, Any]:
+        meta = bundle["metrics_provenance"]
+        return {
+            key: meta[key]
+            for key in (
+                "git_revision",
+                "config_sha256",
+                "final_run_timestamp",
+                "as_of",
+                "cutoff",
+                "window_days",
+            )
+        }
+
+    def get_user_assisted_score(self, user_id: str) -> dict[str, Any]:
+        bundle = self._bundle()
+        rows = bundle["synthetic_inference_snapshot"]["customers"]
+        row = next((item for item in rows if item["user_id"] == user_id), None)
+        if row is None:
+            raise KeyError("Subject absent from bounded synthetic snapshot")
         return {
             "user_id": user_id,
-            "score": score,
-            "assisted": is_known_assisted,
-            "is_sample": True,
-            "provenance": "illustrative sample, not a result",
-            "model_version": "sample_template",
-            "top_reasons": top_reasons,
+            "score": row["predicted_probability"],
+            "assisted": bool(row["predicted_class"]),
+            "is_sample": False,
+            "synthetic": True,
+            "provenance": "verified synthetic simulation snapshot",
+            "model_version": bundle["manifest"]["git_revision"],
+            "top_reasons": row["explanations"],
+            "features": row["features"],
+            "explanation_unit": "base-model raw log-odds, not calibrated probability",
+            "run_provenance": self._provenance(bundle),
         }
 
     def get_agent_risk(self, agent_id: str) -> dict[str, Any]:
-        """Return illustrative sample anomaly profile with peer comparison breakdown."""
-        skimmer_tokens = ("000015", "000016", "0042", "000042")
-        is_known_skimmer = any(tok in agent_id for tok in skimmer_tokens)
-
-        if is_known_skimmer:
-            risk = 0.865
-            level = "HIGH"
-            reasons = [
-                {
-                    "feature": "fee_ratio_vs_official",
-                    "display_name": FEATURE_DISPLAY_NAMES["fee_ratio_vs_official"],
-                    "value": 1.35,
-                    "peer_median": 1.00,
-                    "z_score": 3.82,
-                },
-                {
-                    "feature": "assisted_customer_fraction",
-                    "display_name": FEATURE_DISPLAY_NAMES["assisted_customer_fraction"],
-                    "value": 0.64,
-                    "peer_median": 0.20,
-                    "z_score": 4.10,
-                },
-                {
-                    "feature": "unexplained_cash_gap_rate",
-                    "display_name": FEATURE_DISPLAY_NAMES["unexplained_cash_gap_rate"],
-                    "value": 0.18,
-                    "peer_median": 0.01,
-                    "z_score": 5.20,
-                },
-            ]
-        else:
-            risk = 0.142
-            level = "LOW"
-            reasons = [
-                {
-                    "feature": "fee_ratio_vs_official",
-                    "display_name": FEATURE_DISPLAY_NAMES["fee_ratio_vs_official"],
-                    "value": 1.00,
-                    "peer_median": 1.00,
-                    "z_score": 0.00,
-                },
-                {
-                    "feature": "assisted_customer_fraction",
-                    "display_name": FEATURE_DISPLAY_NAMES["assisted_customer_fraction"],
-                    "value": 0.22,
-                    "peer_median": 0.20,
-                    "z_score": 0.15,
-                },
-            ]
-
+        bundle = self._bundle()
+        rows = bundle["synthetic_inference_snapshot"]["agents"]
+        row = next((item for item in rows if item["agent_id"] == agent_id), None)
+        if row is None:
+            raise KeyError("Subject absent from bounded synthetic snapshot")
         return {
             "agent_id": agent_id,
-            "risk": risk,
-            "level": level,
-            "is_sample": True,
-            "provenance": "illustrative sample, not a result",
-            "peer_group": "cohort=standard,volume=high",
-            "model_version": "sample_template",
-            "reasons": reasons,
+            "risk": row["risk_score"],
+            "level": row["risk_level"],
+            "is_sample": False,
+            "synthetic": True,
+            "provenance": "verified synthetic simulation snapshot",
+            "model_version": bundle["manifest"]["git_revision"],
+            "reasons": row["reasons"],
+            "features": row["features"],
+            "peer_group": "train-derived volume peers",
+            "run_provenance": self._provenance(bundle),
         }
 
     def get_outreach_list(self) -> dict[str, Any]:
-        """Ranked list of illustrative sample beneficiaries for onboarding demonstration."""
-        items = [
-            {
-                "user_id": "U_42_000008",
-                "assisted_score": 0.942,
-                "primary_agent_id": "A_000015",
-                "monthly_volume_bdt": 4500.00,
-                "risk_band": "sample_high_assistance",
-                "outreach_recommended": "sample_mandate_enrolment",
-                "last_active": "2026-10-02T12:30:00Z",
-                "is_sample": True,
-                "provenance": "illustrative sample, not a result",
-            },
-            {
-                "user_id": "U_42_000012",
-                "assisted_score": 0.915,
-                "primary_agent_id": "A_000042",
-                "monthly_volume_bdt": 3200.00,
-                "risk_band": "sample_high_assistance",
-                "outreach_recommended": "sample_mandate_enrolment",
-                "last_active": "2026-10-02T11:45:00Z",
-                "is_sample": True,
-                "provenance": "illustrative sample, not a result",
-            },
-            {
-                "user_id": "U_42_000013",
-                "assisted_score": 0.887,
-                "primary_agent_id": "A_000016",
-                "monthly_volume_bdt": 2800.00,
-                "risk_band": "sample_high_assistance",
-                "outreach_recommended": "sample_mandate_enrolment",
-                "last_active": "2026-10-02T10:15:00Z",
-                "is_sample": True,
-                "provenance": "illustrative sample, not a result",
-            },
-            {
-                "user_id": "U_42_000123",
-                "assisted_score": 0.884,
-                "primary_agent_id": "A_000042",
-                "monthly_volume_bdt": 3000.00,
-                "risk_band": "sample_high_assistance",
-                "outreach_recommended": "sample_mandate_enrolment",
-                "last_active": "2026-10-02T09:00:00Z",
-                "is_sample": True,
-                "provenance": "illustrative sample, not a result",
-            },
-        ]
+        bundle = self._bundle()
+        rows = sorted(
+            bundle["synthetic_inference_snapshot"]["customers"],
+            key=lambda row: (-row["predicted_probability"], row["user_id"]),
+        )
         return {
-            "total": len(items),
-            "items": items,
-            "is_sample": True,
-            "provenance": "illustrative sample, not a result",
+            "total": len(rows),
+            "items": [
+                {
+                    "user_id": row["user_id"],
+                    "assisted_score": row["predicted_probability"],
+                    "is_sample": False,
+                    "provenance": "verified synthetic simulation snapshot",
+                }
+                for row in rows
+            ],
+            "synthetic": True,
+            "is_sample": False,
+            "provenance": "verified synthetic simulation snapshot",
+            "selection": bundle["synthetic_inference_snapshot"]["selection"],
+            "run_provenance": self._provenance(bundle),
         }
 
     def list_cases(self) -> dict[str, Any]:
@@ -290,9 +201,7 @@ class AnalyticsService:
                     row = cur.fetchone()
 
                     if row is None:
-                        raise KeyError(
-                            f"Case {case_id} not found in durable database cases store."
-                        )
+                        raise KeyError(f"Case {case_id} not found in durable database cases store.")
 
                     cur.execute(
                         "UPDATE cases SET status = %s WHERE case_id = %s;",
@@ -381,7 +290,16 @@ class AnalyticsService:
             conn.close()
 
     def get_metrics_summary(self) -> dict[str, Any]:
-        """Evaluation metrics summary is unavailable until evaluation artifacts are wired."""
-        raise RuntimeError(
-            "Evaluation metrics summary unavailable until evaluation artifacts are wired"
-        )
+        bundle = self._bundle()
+        return {
+            "schema_version": 1,
+            "synthetic": True,
+            "status": "verified",
+            "results": bundle["results"],
+            "provenance": self._provenance(bundle),
+            "seeds": bundle["manifest"]["seeds"],
+            "cohorts": bundle["manifest"]["cohorts"],
+            "snapshot_agent_ids": [
+                row["agent_id"] for row in bundle["synthetic_inference_snapshot"]["agents"]
+            ],
+        }

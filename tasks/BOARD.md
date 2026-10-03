@@ -108,3 +108,5 @@ T023b precise retry paused after two focused checks:45passed/6failed then53passe
 T023b source VERIFIED after human “ok continue”:335backend/zero skips,17frontend,lint/build/diffcheck pass. Final reproduction/artifact curation next; not yet final-score complete.
 
 T023b COMPLETE3Oct08:39Dhaka:sourceac18e14,335backend/zero skips,17frontend,lint/build; single new-directory final reproduction and verified hashed model/JSON bundle. Canonical PR-AUC0.809101 vsrule0.696698; agent estimates2skimmers/4honestHV only; shifted IF3/4honestHV false flags disclosed. No generator tuning. T025 begins approved console wiring.
+
+T025 local browser/API acceptance verified: actual scoped flow/receipt/replay/cash-gap review; saved metrics equal JSON. Full343backend/zero skips+30frontend/lint/build passed. Narrow receipt wording clarification pending focused check/commit; T026 bootstrap next. No public runtime/account action.

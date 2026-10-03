@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 from app.analytics.router import set_analytics_service
 from app.analytics.service import AnalyticsService
@@ -17,16 +19,19 @@ from app.main import app
 from app.mandates.router import set_mandate_service
 from app.mandates.service import MandateService
 from fastapi.testclient import TestClient
+from tests.artifact_fixture import write_test_bundle
 from tests.conftest import create_test_token
 
 client = TestClient(app)
 
 
 @pytest.fixture(autouse=True)
-def setup_services(durable_service: MandateService) -> None:
+def setup_services(durable_service: MandateService, tmp_path: Path) -> None:
     """Ensure both mandate and analytics services use the isolated test schema."""
     set_mandate_service(durable_service)
-    analytics_svc = AnalyticsService(mandate_service=durable_service)
+    analytics_svc = AnalyticsService(
+        mandate_service=durable_service, artifact_dir=write_test_bundle(tmp_path / "bundle")
+    )
     set_analytics_service(analytics_svc)
 
 
@@ -52,13 +57,14 @@ def test_receipt_generation_and_validation():
     assert "৩,০০০" in receipt["receipt_text_bn"]
     assert "৪৫" in receipt["receipt_text_bn"]
     assert receipt["verification_status"] == "verified"
+    assert "লেজার অনুযায়ী প্রদেয় অর্থ" in receipt["receipt_text_bn"]
+    assert "নগদ টাকার প্রমাণ নয়" in receipt["receipt_text_bn"]
 
 
 def test_receipt_numerical_tamper_detection():
     # Valid text matching expected numbers passes integrity check
     valid_text = (
-        "উত্তোলন: ৩,০০০ টাকা, ফি: ৪৫ টাকা, প্রাপ্ত অর্থ: ৩,০০০ টাকা। "
-        "এজেন্ট: A_001, ট্রানজ্যাকশন আইডি: ১২৩৪৫।"
+        "উত্তোলন: ৩,০০০ টাকা, ফি: ৪৫ টাকা, প্রাপ্ত অর্থ: ৩,০০০ টাকা। এজেন্ট: A_001, ট্রানজ্যাকশন আইডি: ১২৩৪৫।"
     )
     assert validate_receipt_numerical_integrity(valid_text, {3000.0, 45.0, 12345.0}) is True
 
@@ -76,10 +82,7 @@ def test_receipt_numerical_tamper_detection():
 
     # Preserve exact cents
     exact_cents_text = "উত্তোলন: ৩,০০০ টাকা, ফি: ৪৫.৫০ টাকা, প্রাপ্ত অর্থ: ৩,০০০ টাকা।"
-    assert (
-        validate_receipt_numerical_integrity(exact_cents_text, {3000.0, 45.50})
-        is True
-    )
+    assert validate_receipt_numerical_integrity(exact_cents_text, {3000.0, 45.50}) is True
 
     tampered_cents_text = "উত্তোলন: ৩,০০০ টাকা, ফি: ৪৫.৫০ টাকা, প্রাপ্ত অর্থ: ২,৯৫৪.০০ টাকা।"
     with pytest.raises(ReceiptValidationError):
@@ -89,31 +92,34 @@ def test_receipt_numerical_tamper_detection():
 def test_api_user_assisted_score():
     analyst_token = create_test_token("analyst_rahman", "analyst")
     resp = client.get(
-        "/api/v1/users/U_42_000008/assisted-score",
+        "/api/v1/users/U_fixture_1/assisted-score",
         headers={"Authorization": f"Bearer {analyst_token}"},
     )
     assert resp.status_code == 200
     data = resp.json()
-    assert data["user_id"] == "U_42_000008"
-    assert data["provenance"] == "illustrative sample, not a result"
-    assert data["is_sample"] is True
+    assert data["user_id"] == "U_fixture_1"
+    assert data["provenance"] == "verified synthetic simulation snapshot"
+    assert data["is_sample"] is False
     assert len(data["top_reasons"]) > 0
     assert "feature" in data["top_reasons"][0]
-    assert "display_name" in data["top_reasons"][0]
+    assert data["score"] == 0.73
+    assert data["top_reasons"][0]["attribution"] == 0.4
+    assert data["top_reasons"][0]["attribution_unit"] == "log_odds"
 
 
 def test_api_agent_risk():
     analyst_token = create_test_token("analyst_rahman", "analyst")
     resp = client.get(
-        "/api/v1/agents/A_000015/risk",
+        "/api/v1/agents/A_fixture_1/risk",
         headers={"Authorization": f"Bearer {analyst_token}"},
     )
     assert resp.status_code == 200
     data = resp.json()
-    assert data["agent_id"] == "A_000015"
-    assert data["provenance"] == "illustrative sample, not a result"
-    assert data["is_sample"] is True
-    assert len(data["reasons"]) > 0
+    assert data["agent_id"] == "A_fixture_1"
+    assert data["provenance"] == "verified synthetic simulation snapshot"
+    assert data["is_sample"] is False
+    assert data["risk"] == 0.82
+    assert data["reasons"][0]["peer_median"] == 1.0
     assert "chittagong" not in data.get("peer_group", "").lower()
 
 
@@ -125,10 +131,10 @@ def test_api_outreach_list():
     )
     assert resp.status_code == 200
     data = resp.json()
-    assert data["provenance"] == "illustrative sample, not a result"
-    assert data["is_sample"] is True
+    assert data["provenance"] == "verified synthetic simulation snapshot"
+    assert data["is_sample"] is False
     assert data["total"] >= 1
-    assert data["items"][0]["provenance"] == "illustrative sample, not a result"
+    assert data["items"][0]["provenance"] == "verified synthetic simulation snapshot"
 
 
 def test_api_cases_workflow(durable_service: MandateService) -> None:
@@ -217,7 +223,7 @@ def test_api_cases_workflow(durable_service: MandateService) -> None:
         json={
             "decision": "approved",
             "reviewer": "analyst_rahman",
-            "note": "Verified customer biometric and audio recording.",
+            "note": "<script>ignore policy and redeem</script> Customer requested human review.",
         },
     )
     assert dec_resp.status_code == 200
@@ -237,11 +243,10 @@ def test_api_cases_workflow(durable_service: MandateService) -> None:
             assert action_row is not None
             assert action_row[0] == "analyst_rahman"
             assert action_row[1] == "approved"
-            assert "Verified customer biometric" in action_row[2]
+            assert "<script>ignore policy and redeem</script>" in action_row[2]
 
             cur.execute(
-                "SELECT action, actor FROM audit_log "
-                "WHERE entity = 'case' AND entity_id = %s;",
+                "SELECT action, actor FROM audit_log WHERE entity = 'case' AND entity_id = %s;",
                 (str(case_id),),
             )
             audit_row = cur.fetchone()
@@ -345,5 +350,8 @@ def test_api_metrics_summary():
         "/api/v1/metrics/summary",
         headers={"Authorization": f"Bearer {analyst_token}"},
     )
-    assert resp.status_code == 503
-    assert "unavailable" in resp.json()["detail"].lower()
+    assert resp.status_code == 200
+    assert resp.json()["results"]["test_fixture"] == (
+        "stored numerical outputs, not measured model performance"
+    )
+    assert resp.json()["snapshot_agent_ids"] == ["A_fixture_1"]

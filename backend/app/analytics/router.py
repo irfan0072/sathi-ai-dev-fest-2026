@@ -17,6 +17,7 @@ from typing import Annotated, Any
 from app.analytics.service import AnalyticsService
 from app.auth.dependencies import require_roles
 from app.auth.models import AuthenticatedPrincipal
+from app.evaluation.artifacts import ArtifactError
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
@@ -45,6 +46,15 @@ class CaseDecisionRequest(BaseModel):
     note: str = Field(default="", description="Review note explaining reasoning")
 
 
+def _artifact_query(operation, *args) -> dict[str, Any]:
+    try:
+        return operation(*args)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Subject absent from synthetic snapshot")
+    except (ArtifactError, OSError, ValueError, TypeError):
+        raise HTTPException(status_code=503, detail="Verified synthetic artifacts unavailable")
+
+
 @router.get("/users/{user_id}/assisted-score")
 def get_user_assisted_score(
     user_id: str,
@@ -52,7 +62,7 @@ def get_user_assisted_score(
     service: Annotated[AnalyticsService, Depends(get_analytics_service)],
 ) -> dict[str, Any]:
     """Retrieve calibrated assisted score and local SHAP explanations for customer."""
-    return service.get_user_assisted_score(user_id)
+    return _artifact_query(service.get_user_assisted_score, user_id)
 
 
 @router.get("/agents/{agent_id}/risk")
@@ -62,7 +72,7 @@ def get_agent_risk(
     service: Annotated[AnalyticsService, Depends(get_analytics_service)],
 ) -> dict[str, Any]:
     """Retrieve agent anomaly risk, risk level, and peer cohort comparison."""
-    return service.get_agent_risk(agent_id)
+    return _artifact_query(service.get_agent_risk, agent_id)
 
 
 @router.get("/outreach")
@@ -71,7 +81,7 @@ def get_outreach_list(
     service: Annotated[AnalyticsService, Depends(get_analytics_service)],
 ) -> dict[str, Any]:
     """Retrieve ranked list of likely assisted beneficiaries for proactive onboarding."""
-    return service.get_outreach_list()
+    return _artifact_query(service.get_outreach_list)
 
 
 @router.get("/cases")
@@ -82,10 +92,10 @@ def list_cases(
     """Retrieve analyst review queue cases."""
     try:
         return service.list_cases()
-    except Exception as exc:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=str(exc) or "Cases unavailable",
+            detail="Cases unavailable",
         )
 
 
@@ -128,10 +138,10 @@ def get_receipt(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Transaction {txn_id} not found in database ledger",
         )
-    except Exception as exc:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=str(exc) or "Receipt lookup unavailable",
+            detail="Receipt lookup unavailable",
         )
 
     # Ownership checks
@@ -161,7 +171,4 @@ def get_metrics_summary(
     service: Annotated[AnalyticsService, Depends(get_analytics_service)],
 ) -> dict[str, Any]:
     """Retrieve comprehensive evaluation metrics and fairness audit summary."""
-    raise HTTPException(
-        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-        detail="Evaluation metrics unavailable until model evaluation artifacts are wired",
-    )
+    return _artifact_query(service.get_metrics_summary)
