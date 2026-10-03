@@ -1,0 +1,1626 @@
+{
+  "experiment_1_assisted_detection": {
+    "held_out_test": {
+      "assisted_classifier": {
+        "brier_score": 0.08981577993603708,
+        "classification_threshold": 0.5,
+        "pr_auc": 0.8091013575659469,
+        "precision": 0.8314457028647568,
+        "recall": 0.8914285714285715,
+        "recall_at_80p_precision": 0.8964285714285715,
+        "roc_auc": 0.9031831043956043
+      },
+      "denominators": {
+        "negatives_independent": 2600,
+        "positives_assisted": 1400,
+        "total_users": 4000
+      },
+      "disclosure": "Held-out independent estimate.",
+      "is_calibration_cohort_diagnostic": false,
+      "rule_baseline": {
+        "brier_score": 0.29825,
+        "pr_auc": 0.6966976134055518,
+        "precision": 0.5545023696682464,
+        "recall": 0.7521428571428571,
+        "recall_at_80p_precision": 0.0,
+        "roc_auc": 0.7133791208791209
+      },
+      "split": "held_out_test_seed2026"
+    },
+    "noise_comparison": {
+      "lightgbm_baseline_noise": {
+        "brier_score": 0.08981577993603708,
+        "noise_description": "Configured 10% baseline label noise (not claimed pristine)",
+        "pr_auc": 0.8091013575659469,
+        "recall_at_80p_precision": 0.8964285714285715,
+        "roc_auc": 0.9031831043956043
+      },
+      "lightgbm_extra_5pct_label_flips": {
+        "brier_score": 0.0902267498769609,
+        "noise_description": "Extra 5% independent label flips beyond baseline 10% noise",
+        "pr_auc": 0.8119022371270758,
+        "recall_at_80p_precision": 0.9,
+        "roc_auc": 0.9033462912087913
+      }
+    },
+    "pr_auc_convention": "sklearn.metrics.auc(recall, precision)",
+    "validation_diagnostic": {
+      "assisted_classifier": {
+        "brier_score": 0.09385761360597887,
+        "classification_threshold": 0.5,
+        "pr_auc": 0.8145244763259412,
+        "precision": 0.8177049180327869,
+        "recall": 0.8907142857142857,
+        "recall_at_80p_precision": 0.8942857142857142,
+        "roc_auc": 0.8975118131868132
+      },
+      "denominators": {
+        "negatives_independent": 2600,
+        "positives_assisted": 1400,
+        "total_users": 4000
+      },
+      "disclosure": "Validation classifier metrics are calibration-cohort diagnostics, not independent calibrated generalization; test cohort is final estimate.",
+      "is_calibration_cohort_diagnostic": true,
+      "rule_baseline": {
+        "brier_score": 0.29875,
+        "pr_auc": 0.696813601424822,
+        "precision": 0.5538057742782152,
+        "recall": 0.7535714285714286,
+        "recall_at_80p_precision": 0.0,
+        "roc_auc": 0.713324175824176
+      },
+      "split": "validation"
+    }
+  },
+  "experiment_2_agent_anomaly": {
+    "baseline_rule": {
+      "false_flag_rate_honest_high_volume": 0.0,
+      "flagged_count": 0,
+      "precision_at_k": 0.13333333333333333,
+      "recall_on_skimmers": 0.0
+    },
+    "combined_ensemble": {
+      "false_flag_rate_honest_high_volume": 0.0,
+      "flagged_high_risk_count": 2,
+      "method": "combined_ensemble",
+      "precision_at_k": 0.13333333333333333,
+      "recall_on_skimmers": 1.0
+    },
+    "held_out_test": {
+      "baseline_rule": {
+        "false_flag_rate_honest_high_volume": 0.0,
+        "flagged_count": 0,
+        "precision_at_k": 0.13333333333333333,
+        "recall_on_skimmers": 0.0
+      },
+      "cohort": "held_out_test_seed2026",
+      "combined_ensemble": {
+        "false_flag_rate_honest_high_volume": 0.0,
+        "flagged_high_risk_count": 2,
+        "method": "combined_ensemble",
+        "precision_at_k": 0.13333333333333333,
+        "recall_on_skimmers": 1.0
+      },
+      "denominators": {
+        "total_agents": 60,
+        "total_honest_high_volume": 4,
+        "total_skimmers": 2
+      },
+      "isolation_forest": {
+        "false_flag_rate_honest_high_volume": 0.0,
+        "flagged_high_risk_count": 2,
+        "method": "isolation_forest",
+        "precision_at_k": 0.13333333333333333,
+        "recall_on_skimmers": 1.0
+      },
+      "peer_robust_zscore": {
+        "false_flag_rate_honest_high_volume": 0.0,
+        "flagged_high_risk_count": 2,
+        "method": "peer_robust_zscore",
+        "precision_at_k": 0.13333333333333333,
+        "recall_on_skimmers": 1.0
+      },
+      "review_top_k_clipped": 15,
+      "review_top_k_configured": 15
+    },
+    "validation": {
+      "baseline_rule": {
+        "false_flag_rate_honest_high_volume": 0.0,
+        "flagged_count": 0,
+        "precision_at_k": 0.13333333333333333,
+        "recall_on_skimmers": 0.0
+      },
+      "cohort": "validation",
+      "combined_ensemble": {
+        "false_flag_rate_honest_high_volume": 0.0,
+        "flagged_high_risk_count": 2,
+        "method": "combined_ensemble",
+        "precision_at_k": 0.13333333333333333,
+        "recall_on_skimmers": 1.0
+      },
+      "denominators": {
+        "total_agents": 60,
+        "total_honest_high_volume": 4,
+        "total_skimmers": 2
+      },
+      "isolation_forest": {
+        "false_flag_rate_honest_high_volume": 0.0,
+        "flagged_high_risk_count": 2,
+        "method": "isolation_forest",
+        "precision_at_k": 0.13333333333333333,
+        "recall_on_skimmers": 1.0
+      },
+      "peer_robust_zscore": {
+        "false_flag_rate_honest_high_volume": 0.0,
+        "flagged_high_risk_count": 2,
+        "method": "peer_robust_zscore",
+        "precision_at_k": 0.13333333333333333,
+        "recall_on_skimmers": 1.0
+      },
+      "review_top_k_clipped": 15,
+      "review_top_k_configured": 15
+    }
+  },
+  "experiment_3_skimming_sweep": {
+    "moderate": {
+      "honest_agent_count": 58,
+      "honest_false_flag_rate": 0.0,
+      "honest_mean_risk_score": 0.07336932148645181,
+      "intensity": "moderate",
+      "skimmer_count": 2,
+      "skimmer_detection_rate": 1.0,
+      "skimmer_mean_risk_score": 0.9163562539005341
+    },
+    "obvious": {
+      "honest_agent_count": 58,
+      "honest_false_flag_rate": 0.0,
+      "honest_mean_risk_score": 0.07394568134580258,
+      "intensity": "obvious",
+      "skimmer_count": 2,
+      "skimmer_detection_rate": 1.0,
+      "skimmer_mean_risk_score": 0.9999999998739033
+    },
+    "subtle": {
+      "honest_agent_count": 58,
+      "honest_false_flag_rate": 0.0,
+      "honest_mean_risk_score": 0.07385880238347295,
+      "intensity": "subtle",
+      "skimmer_count": 2,
+      "skimmer_detection_rate": 0.0,
+      "skimmer_mean_risk_score": 0.26689849620548056
+    }
+  },
+  "experiment_4_signal_ablations": {
+    "agent_detector_ablation": {
+      "full_detector_with_cash_gap": {
+        "features_count": 9,
+        "precision_at_k": 0.13333333333333333,
+        "recall_on_skimmers": 1.0
+      },
+      "no_cash_gap_signal": {
+        "delta_precision_at_k": 0.0,
+        "delta_recall_on_skimmers": 0.0,
+        "dropped_columns": [
+          "agent_cash_gap_rate",
+          "cash_gap_reported_count",
+          "agent_cash_report_count",
+          "agent_cash_report_coverage",
+          "agent_cash_gap_missing",
+          "agent_cash_gap_has_reports"
+        ],
+        "features_dropped_count": 6,
+        "precision_at_k": 0.13333333333333333,
+        "recall_on_skimmers": 1.0
+      }
+    },
+    "assisted_classifier_ablation": {
+      "full_model": {
+        "features_count": 36,
+        "pr_auc": 0.8145244763259412
+      },
+      "no_session_signals": {
+        "delta_pr_auc": -0.013134239626537925,
+        "dropped_columns": [
+          "pin_retries_total",
+          "pin_retries_mean",
+          "pin_retries_max",
+          "pin_entry_seconds_mean",
+          "pin_entry_seconds_median",
+          "pin_entry_seconds_std",
+          "session_steps_mean",
+          "session_steps_max"
+        ],
+        "features_dropped_count": 8,
+        "pr_auc": 0.8013902366994032
+      }
+    }
+  },
+  "experiment_5_adoption_sensitivity": {
+    "disclaimer": "Idealized simulation assumption: counterfactual cashouts restricted to assisted simulated behavior users under hypothetical perfect mandate compliance. No claim of observed field impact.",
+    "eligible_assisted_skimmer_actions": 244,
+    "eligible_assisted_skimming_loss_bdt": 14802.26,
+    "scenarios": {
+      "adoption_30pct": {
+        "adoption_rate": 0.3,
+        "loss_prevented_bdt": 4440.68,
+        "pct_eligible_assisted_loss_prevented": 30,
+        "pct_total_injected_loss_prevented": 23.71
+      },
+      "adoption_50pct": {
+        "adoption_rate": 0.5,
+        "loss_prevented_bdt": 7401.13,
+        "pct_eligible_assisted_loss_prevented": 50,
+        "pct_total_injected_loss_prevented": 39.52
+      },
+      "adoption_70pct": {
+        "adoption_rate": 0.7,
+        "loss_prevented_bdt": 10361.58,
+        "pct_eligible_assisted_loss_prevented": 70,
+        "pct_total_injected_loss_prevented": 55.33
+      }
+    },
+    "total_eligible_assisted_cashouts": 8810,
+    "total_injected_skimming_loss_bdt": 18727.58,
+    "total_test_fee_overcharge_bdt": 2485.21,
+    "total_test_payout_reduction_bdt": 16242.37,
+    "total_test_skimmer_actions": 326
+  },
+  "experiment_6_distribution_shift": {
+    "agent_detector": {
+      "canonical_test": {
+        "baseline_rule": {
+          "false_flag_rate_honest_high_volume": 0.0,
+          "flagged_count": 0,
+          "precision_at_k": 0.13333333333333333,
+          "recall_on_skimmers": 0.0
+        },
+        "combined_ensemble": {
+          "false_flag_rate_honest_high_volume": 0.0,
+          "flagged_count": 2,
+          "method": "combined_ensemble",
+          "precision_at_k": 0.13333333333333333,
+          "recall_on_skimmers": 1.0
+        },
+        "denominators": {
+          "review_top_k_clipped": 15,
+          "total_agents": 60,
+          "total_honest_high_volume": 4,
+          "total_skimmers": 2
+        },
+        "isolation_forest": {
+          "false_flag_rate_honest_high_volume": 0.0,
+          "flagged_count": 2,
+          "method": "isolation_forest",
+          "precision_at_k": 0.13333333333333333,
+          "recall_on_skimmers": 1.0
+        },
+        "peer_robust_zscore": {
+          "false_flag_rate_honest_high_volume": 0.0,
+          "flagged_count": 2,
+          "method": "peer_robust_zscore",
+          "precision_at_k": 0.13333333333333333,
+          "recall_on_skimmers": 1.0
+        }
+      },
+      "delta_combined_recall_on_skimmers": 0.0,
+      "shifted_test": {
+        "baseline_rule": {
+          "false_flag_rate_honest_high_volume": 0.0,
+          "flagged_count": 2,
+          "precision_at_k": 0.13333333333333333,
+          "recall_on_skimmers": 1.0
+        },
+        "combined_ensemble": {
+          "false_flag_rate_honest_high_volume": 0.0,
+          "flagged_count": 2,
+          "method": "combined_ensemble",
+          "precision_at_k": 0.13333333333333333,
+          "recall_on_skimmers": 1.0
+        },
+        "denominators": {
+          "review_top_k_clipped": 15,
+          "total_agents": 60,
+          "total_honest_high_volume": 4,
+          "total_skimmers": 2
+        },
+        "isolation_forest": {
+          "false_flag_rate_honest_high_volume": 0.75,
+          "flagged_count": 5,
+          "method": "isolation_forest",
+          "precision_at_k": 0.13333333333333333,
+          "recall_on_skimmers": 1.0
+        },
+        "peer_robust_zscore": {
+          "false_flag_rate_honest_high_volume": 0.0,
+          "flagged_count": 2,
+          "method": "peer_robust_zscore",
+          "precision_at_k": 0.13333333333333333,
+          "recall_on_skimmers": 1.0
+        }
+      }
+    },
+    "assisted_classifier": {
+      "canonical_test": {
+        "brier_score": 0.08981577993603708,
+        "classification_threshold": 0.5,
+        "pr_auc": 0.8091013575659469,
+        "precision_at_threshold": 0.8314457028647568,
+        "recall_at_80p_precision": 0.8964285714285715,
+        "recall_at_threshold": 0.8914285714285715,
+        "roc_auc": 0.9031831043956043
+      },
+      "measured_delta_pr_auc": 0.009429051108030384,
+      "rule_baseline_canonical": {
+        "operating_recall": null,
+        "operating_recall_valid": false,
+        "precision": 0.5545023696682464,
+        "recall": 0.7521428571428571
+      },
+      "rule_baseline_shifted": {
+        "operating_recall": null,
+        "operating_recall_valid": false,
+        "precision": 0.6727605118829981,
+        "recall": 0.736
+      },
+      "shifted_test": {
+        "brier_score": 0.13624476750106773,
+        "classification_threshold": 0.5,
+        "pr_auc": 0.8185304086739773,
+        "precision_at_threshold": 0.8403361344537815,
+        "recall_at_80p_precision": 0.865,
+        "recall_at_threshold": 0.85,
+        "roc_auc": 0.8507893750000001
+      }
+    }
+  },
+  "fairness_evaluation": {
+    "global_max_tpr_gap": 0.09204575685022609,
+    "held_out_canonical": {
+      "cohort": "held_out_canonical",
+      "global_max_tpr_gap": 0.056038047973531846,
+      "max_tpr_gaps": {
+        "age_band": 0.019524364140015127,
+        "gender": 0.0144810838445808,
+        "region": 0.056038047973531846,
+        "urban_rural": 0.01745309684305474
+      },
+      "satisfies_fairness_target": true,
+      "slices": {
+        "age_band": {
+          "18-25": {
+            "count": 994,
+            "fpr": 0.10124610591900311,
+            "model": {
+              "fpr": 0.10124610591900311,
+              "review_rate": 0.3782696177062374,
+              "tpr": 0.8835227272727273
+            },
+            "negatives": 642,
+            "positives": 352,
+            "review_rate": 0.3782696177062374,
+            "rule_baseline": {
+              "fpr": 0.32866043613707163,
+              "tpr": 0.7443181818181818
+            },
+            "tpr": 0.8835227272727273
+          },
+          "26-40": {
+            "count": 965,
+            "fpr": 0.09003215434083602,
+            "model": {
+              "fpr": 0.09003215434083602,
+              "review_rate": 0.37512953367875645,
+              "tpr": 0.892128279883382
+            },
+            "negatives": 622,
+            "positives": 343,
+            "review_rate": 0.37512953367875645,
+            "rule_baseline": {
+              "fpr": 0.3135048231511254,
+              "tpr": 0.7667638483965015
+            },
+            "tpr": 0.892128279883382
+          },
+          "41-60": {
+            "count": 1009,
+            "fpr": 0.10225563909774436,
+            "model": {
+              "fpr": 0.10225563909774436,
+              "review_rate": 0.36967294350842417,
+              "tpr": 0.8866279069767442
+            },
+            "negatives": 665,
+            "positives": 344,
+            "review_rate": 0.36967294350842417,
+            "rule_baseline": {
+              "fpr": 0.324812030075188,
+              "tpr": 0.7645348837209303
+            },
+            "tpr": 0.8866279069767442
+          },
+          "60+": {
+            "count": 1032,
+            "fpr": 0.09538002980625931,
+            "model": {
+              "fpr": 0.09538002980625931,
+              "review_rate": 0.37790697674418605,
+              "tpr": 0.9030470914127424
+            },
+            "negatives": 671,
+            "positives": 361,
+            "review_rate": 0.37790697674418605,
+            "rule_baseline": {
+              "fpr": 0.33383010432190763,
+              "tpr": 0.7340720221606648
+            },
+            "tpr": 0.9030470914127424
+          }
+        },
+        "gender": {
+          "female": {
+            "count": 1283,
+            "fpr": 0.09154929577464789,
+            "model": {
+              "fpr": 0.09154929577464789,
+              "review_rate": 0.36087295401402963,
+              "tpr": 0.8932714617169374
+            },
+            "negatives": 852,
+            "positives": 431,
+            "review_rate": 0.36087295401402963,
+            "rule_baseline": {
+              "fpr": 0.31338028169014087,
+              "tpr": 0.7819025522041764
+            },
+            "tpr": 0.8932714617169374
+          },
+          "male": {
+            "count": 1352,
+            "fpr": 0.10435779816513761,
+            "model": {
+              "fpr": 0.10435779816513761,
+              "review_rate": 0.386094674556213,
+              "tpr": 0.8979166666666667
+            },
+            "negatives": 872,
+            "positives": 480,
+            "review_rate": 0.386094674556213,
+            "rule_baseline": {
+              "fpr": 0.3451834862385321,
+              "tpr": 0.7208333333333333
+            },
+            "tpr": 0.8979166666666667
+          },
+          "other": {
+            "count": 1365,
+            "fpr": 0.0958904109589041,
+            "model": {
+              "fpr": 0.0958904109589041,
+              "review_rate": 0.378021978021978,
+              "tpr": 0.8834355828220859
+            },
+            "negatives": 876,
+            "positives": 489,
+            "review_rate": 0.378021978021978,
+            "rule_baseline": {
+              "fpr": 0.317351598173516,
+              "tpr": 0.7566462167689162
+            },
+            "tpr": 0.8834355828220859
+          }
+        },
+        "region": {
+          "barishal": {
+            "count": 512,
+            "fpr": 0.102803738317757,
+            "model": {
+              "fpr": 0.102803738317757,
+              "review_rate": 0.390625,
+              "tpr": 0.8743455497382199
+            },
+            "negatives": 321,
+            "positives": 191,
+            "review_rate": 0.390625,
+            "rule_baseline": {
+              "fpr": 0.3333333333333333,
+              "tpr": 0.7696335078534031
+            },
+            "tpr": 0.8743455497382199
+          },
+          "chittagong": {
+            "count": 485,
+            "fpr": 0.10802469135802469,
+            "model": {
+              "fpr": 0.10802469135802469,
+              "review_rate": 0.3731958762886598,
+              "tpr": 0.906832298136646
+            },
+            "negatives": 324,
+            "positives": 161,
+            "review_rate": 0.3731958762886598,
+            "rule_baseline": {
+              "fpr": 0.3271604938271605,
+              "tpr": 0.7515527950310559
+            },
+            "tpr": 0.906832298136646
+          },
+          "dhaka": {
+            "count": 464,
+            "fpr": 0.06168831168831169,
+            "model": {
+              "fpr": 0.06168831168831169,
+              "review_rate": 0.3275862068965517,
+              "tpr": 0.8525641025641025
+            },
+            "negatives": 308,
+            "positives": 156,
+            "review_rate": 0.3275862068965517,
+            "rule_baseline": {
+              "fpr": 0.32792207792207795,
+              "tpr": 0.75
+            },
+            "tpr": 0.8525641025641025
+          },
+          "khulna": {
+            "count": 518,
+            "fpr": 0.09337349397590361,
+            "model": {
+              "fpr": 0.09337349397590361,
+              "review_rate": 0.3861003861003861,
+              "tpr": 0.9086021505376344
+            },
+            "negatives": 332,
+            "positives": 186,
+            "review_rate": 0.3861003861003861,
+            "rule_baseline": {
+              "fpr": 0.35240963855421686,
+              "tpr": 0.7634408602150538
+            },
+            "tpr": 0.9086021505376344
+          },
+          "mymensingh": {
+            "count": 502,
+            "fpr": 0.10204081632653061,
+            "model": {
+              "fpr": 0.10204081632653061,
+              "review_rate": 0.3565737051792829,
+              "tpr": 0.9056603773584906
+            },
+            "negatives": 343,
+            "positives": 159,
+            "review_rate": 0.3565737051792829,
+            "rule_baseline": {
+              "fpr": 0.34402332361516036,
+              "tpr": 0.6918238993710691
+            },
+            "tpr": 0.9056603773584906
+          },
+          "rajshahi": {
+            "count": 472,
+            "fpr": 0.11072664359861592,
+            "model": {
+              "fpr": 0.11072664359861592,
+              "review_rate": 0.4088983050847458,
+              "tpr": 0.8797814207650273
+            },
+            "negatives": 289,
+            "positives": 183,
+            "review_rate": 0.4088983050847458,
+            "rule_baseline": {
+              "fpr": 0.328719723183391,
+              "tpr": 0.7431693989071039
+            },
+            "tpr": 0.8797814207650273
+          },
+          "rangpur": {
+            "count": 516,
+            "fpr": 0.08955223880597014,
+            "model": {
+              "fpr": 0.08955223880597014,
+              "review_rate": 0.375968992248062,
+              "tpr": 0.9060773480662984
+            },
+            "negatives": 335,
+            "positives": 181,
+            "review_rate": 0.375968992248062,
+            "rule_baseline": {
+              "fpr": 0.27761194029850744,
+              "tpr": 0.7624309392265194
+            },
+            "tpr": 0.9060773480662984
+          },
+          "sylhet": {
+            "count": 531,
+            "fpr": 0.10919540229885058,
+            "model": {
+              "fpr": 0.10919540229885058,
+              "review_rate": 0.3804143126177024,
+              "tpr": 0.8961748633879781
+            },
+            "negatives": 348,
+            "positives": 183,
+            "review_rate": 0.3804143126177024,
+            "rule_baseline": {
+              "fpr": 0.3132183908045977,
+              "tpr": 0.7759562841530054
+            },
+            "tpr": 0.8961748633879781
+          }
+        },
+        "urban_rural": {
+          "rural": {
+            "count": 1699,
+            "fpr": 0.114,
+            "model": {
+              "fpr": 0.114,
+              "review_rate": 0.43025309005297235,
+              "tpr": 0.882689556509299
+            },
+            "negatives": 1000,
+            "positives": 699,
+            "review_rate": 0.43025309005297235,
+            "rule_baseline": {
+              "fpr": 0.344,
+              "tpr": 0.7453505007153076
+            },
+            "tpr": 0.882689556509299
+          },
+          "urban": {
+            "count": 2301,
+            "fpr": 0.086875,
+            "model": {
+              "fpr": 0.086875,
+              "review_rate": 0.33463711429813126,
+              "tpr": 0.9001426533523538
+            },
+            "negatives": 1600,
+            "positives": 701,
+            "review_rate": 0.33463711429813126,
+            "rule_baseline": {
+              "fpr": 0.31375,
+              "tpr": 0.7589158345221113
+            },
+            "tpr": 0.9001426533523538
+          }
+        }
+      },
+      "target_max_tpr_gap": 0.1,
+      "unmet_targets": []
+    },
+    "held_out_shifted": {
+      "cohort": "held_out_shifted",
+      "global_max_tpr_gap": 0.05386522425061979,
+      "max_tpr_gaps": {
+        "age_band": 0.010834500700420246,
+        "gender": 0.024525946298038614,
+        "region": 0.05386522425061979,
+        "urban_rural": 0.0009035863341603223
+      },
+      "satisfies_fairness_target": true,
+      "slices": {
+        "age_band": {
+          "18-25": {
+            "count": 1033,
+            "fpr": 0.15976331360946747,
+            "model": {
+              "fpr": 0.15976331360946747,
+              "review_rate": 0.5091965150048403,
+              "tpr": 0.8460076045627376
+            },
+            "negatives": 507,
+            "positives": 526,
+            "review_rate": 0.5091965150048403,
+            "rule_baseline": {
+              "fpr": 0.3431952662721893,
+              "tpr": 0.7376425855513308
+            },
+            "tpr": 0.8460076045627376
+          },
+          "26-40": {
+            "count": 971,
+            "fpr": 0.15768463073852296,
+            "model": {
+              "fpr": 0.15768463073852296,
+              "review_rate": 0.49124613800205974,
+              "tpr": 0.8468085106382979
+            },
+            "negatives": 501,
+            "positives": 470,
+            "review_rate": 0.49124613800205974,
+            "rule_baseline": {
+              "fpr": 0.3712574850299401,
+              "tpr": 0.7319148936170212
+            },
+            "tpr": 0.8468085106382979
+          },
+          "41-60": {
+            "count": 994,
+            "fpr": 0.14408602150537633,
+            "model": {
+              "fpr": 0.14408602150537633,
+              "review_rate": 0.5201207243460765,
+              "tpr": 0.8506616257088847
+            },
+            "negatives": 465,
+            "positives": 529,
+            "review_rate": 0.5201207243460765,
+            "rule_baseline": {
+              "fpr": 0.3634408602150538,
+              "tpr": 0.7448015122873346
+            },
+            "tpr": 0.8506616257088847
+          },
+          "60+": {
+            "count": 1002,
+            "fpr": 0.18216318785578747,
+            "model": {
+              "fpr": 0.18216318785578747,
+              "review_rate": 0.501996007984032,
+              "tpr": 0.8568421052631578
+            },
+            "negatives": 527,
+            "positives": 475,
+            "review_rate": 0.501996007984032,
+            "rule_baseline": {
+              "fpr": 0.3548387096774194,
+              "tpr": 0.728421052631579
+            },
+            "tpr": 0.8568421052631578
+          }
+        },
+        "gender": {
+          "female": {
+            "count": 1331,
+            "fpr": 0.1308980213089802,
+            "model": {
+              "fpr": 0.1308980213089802,
+              "review_rate": 0.48910593538692715,
+              "tpr": 0.8382789317507419
+            },
+            "negatives": 657,
+            "positives": 674,
+            "review_rate": 0.48910593538692715,
+            "rule_baseline": {
+              "fpr": 0.3607305936073059,
+              "tpr": 0.7492581602373887
+            },
+            "tpr": 0.8382789317507419
+          },
+          "male": {
+            "count": 1330,
+            "fpr": 0.17062314540059348,
+            "model": {
+              "fpr": 0.17062314540059348,
+              "review_rate": 0.51203007518797,
+              "tpr": 0.8628048780487805
+            },
+            "negatives": 674,
+            "positives": 656,
+            "review_rate": 0.51203007518797,
+            "rule_baseline": {
+              "fpr": 0.34421364985163205,
+              "tpr": 0.7317073170731707
+            },
+            "tpr": 0.8628048780487805
+          },
+          "other": {
+            "count": 1339,
+            "fpr": 0.18236173393124067,
+            "model": {
+              "fpr": 0.18236173393124067,
+              "review_rate": 0.5160567587752054,
+              "tpr": 0.8492537313432836
+            },
+            "negatives": 669,
+            "positives": 670,
+            "review_rate": 0.5160567587752054,
+            "rule_baseline": {
+              "fpr": 0.3692077727952167,
+              "tpr": 0.7268656716417911
+            },
+            "tpr": 0.8492537313432836
+          }
+        },
+        "region": {
+          "barishal": {
+            "count": 497,
+            "fpr": 0.11983471074380166,
+            "model": {
+              "fpr": 0.11983471074380166,
+              "review_rate": 0.48088531187122735,
+              "tpr": 0.8235294117647058
+            },
+            "negatives": 242,
+            "positives": 255,
+            "review_rate": 0.48088531187122735,
+            "rule_baseline": {
+              "fpr": 0.32231404958677684,
+              "tpr": 0.7764705882352941
+            },
+            "tpr": 0.8235294117647058
+          },
+          "chittagong": {
+            "count": 524,
+            "fpr": 0.17490494296577946,
+            "model": {
+              "fpr": 0.17490494296577946,
+              "review_rate": 0.517175572519084,
+              "tpr": 0.8620689655172413
+            },
+            "negatives": 263,
+            "positives": 261,
+            "review_rate": 0.517175572519084,
+            "rule_baseline": {
+              "fpr": 0.3916349809885932,
+              "tpr": 0.7318007662835249
+            },
+            "tpr": 0.8620689655172413
+          },
+          "dhaka": {
+            "count": 504,
+            "fpr": 0.14814814814814814,
+            "model": {
+              "fpr": 0.14814814814814814,
+              "review_rate": 0.5257936507936508,
+              "tpr": 0.8773946360153256
+            },
+            "negatives": 243,
+            "positives": 261,
+            "review_rate": 0.5257936507936508,
+            "rule_baseline": {
+              "fpr": 0.3045267489711934,
+              "tpr": 0.7318007662835249
+            },
+            "tpr": 0.8773946360153256
+          },
+          "khulna": {
+            "count": 526,
+            "fpr": 0.2029520295202952,
+            "model": {
+              "fpr": 0.2029520295202952,
+              "review_rate": 0.5190114068441065,
+              "tpr": 0.8549019607843137
+            },
+            "negatives": 271,
+            "positives": 255,
+            "review_rate": 0.5190114068441065,
+            "rule_baseline": {
+              "fpr": 0.42066420664206644,
+              "tpr": 0.6941176470588235
+            },
+            "tpr": 0.8549019607843137
+          },
+          "mymensingh": {
+            "count": 478,
+            "fpr": 0.1934156378600823,
+            "model": {
+              "fpr": 0.1934156378600823,
+              "review_rate": 0.5209205020920502,
+              "tpr": 0.8595744680851064
+            },
+            "negatives": 243,
+            "positives": 235,
+            "review_rate": 0.5209205020920502,
+            "rule_baseline": {
+              "fpr": 0.3786008230452675,
+              "tpr": 0.7489361702127659
+            },
+            "tpr": 0.8595744680851064
+          },
+          "rajshahi": {
+            "count": 496,
+            "fpr": 0.13545816733067728,
+            "model": {
+              "fpr": 0.13545816733067728,
+              "review_rate": 0.47580645161290325,
+              "tpr": 0.8244897959183674
+            },
+            "negatives": 251,
+            "positives": 245,
+            "review_rate": 0.47580645161290325,
+            "rule_baseline": {
+              "fpr": 0.3705179282868526,
+              "tpr": 0.763265306122449
+            },
+            "tpr": 0.8244897959183674
+          },
+          "rangpur": {
+            "count": 477,
+            "fpr": 0.15789473684210525,
+            "model": {
+              "fpr": 0.15789473684210525,
+              "review_rate": 0.49266247379454925,
+              "tpr": 0.8521739130434782
+            },
+            "negatives": 247,
+            "positives": 230,
+            "review_rate": 0.49266247379454925,
+            "rule_baseline": {
+              "fpr": 0.30364372469635625,
+              "tpr": 0.7130434782608696
+            },
+            "tpr": 0.8521739130434782
+          },
+          "sylhet": {
+            "count": 498,
+            "fpr": 0.15416666666666667,
+            "model": {
+              "fpr": 0.15416666666666667,
+              "review_rate": 0.5120481927710844,
+              "tpr": 0.8449612403100775
+            },
+            "negatives": 240,
+            "positives": 258,
+            "review_rate": 0.5120481927710844,
+            "rule_baseline": {
+              "fpr": 0.3625,
+              "tpr": 0.7286821705426356
+            },
+            "tpr": 0.8449612403100775
+          }
+        },
+        "urban_rural": {
+          "rural": {
+            "count": 1863,
+            "fpr": 0.145,
+            "model": {
+              "fpr": 0.145,
+              "review_rate": 0.5475040257648953,
+              "tpr": 0.8504233301975541
+            },
+            "negatives": 800,
+            "positives": 1063,
+            "review_rate": 0.5475040257648953,
+            "rule_baseline": {
+              "fpr": 0.375,
+              "tpr": 0.7469426152398871
+            },
+            "tpr": 0.8504233301975541
+          },
+          "urban": {
+            "count": 2137,
+            "fpr": 0.1725,
+            "model": {
+              "fpr": 0.1725,
+              "review_rate": 0.4693495554515676,
+              "tpr": 0.8495197438633938
+            },
+            "negatives": 1200,
+            "positives": 937,
+            "review_rate": 0.4693495554515676,
+            "rule_baseline": {
+              "fpr": 0.3466666666666667,
+              "tpr": 0.7235859124866596
+            },
+            "tpr": 0.8495197438633938
+          }
+        }
+      },
+      "target_max_tpr_gap": 0.1,
+      "unmet_targets": []
+    },
+    "max_tpr_gaps": {
+      "age_band": 0.044642857142857095,
+      "gender": 0.030423432761334412,
+      "region": 0.09204575685022609,
+      "urban_rural": 0.015763830347465646
+    },
+    "satisfies_fairness_target": true,
+    "slices": {
+      "age_band": {
+        "18-25": {
+          "count": 1042,
+          "fpr": 0.1282798833819242,
+          "model": {
+            "fpr": 0.1282798833819242,
+            "review_rate": 0.3867562380038388,
+            "tpr": 0.8848314606741573
+          },
+          "negatives": 686,
+          "positives": 356,
+          "review_rate": 0.3867562380038388,
+          "rule_baseline": {
+            "fpr": 0.32215743440233235,
+            "tpr": 0.7303370786516854
+          },
+          "tpr": 0.8848314606741573
+        },
+        "26-40": {
+          "count": 989,
+          "fpr": 0.09188361408882083,
+          "model": {
+            "fpr": 0.09188361408882083,
+            "review_rate": 0.35591506572295245,
+            "tpr": 0.8690476190476191
+          },
+          "negatives": 653,
+          "positives": 336,
+          "review_rate": 0.35591506572295245,
+          "rule_baseline": {
+            "fpr": 0.30474732006125577,
+            "tpr": 0.7351190476190477
+          },
+          "tpr": 0.8690476190476191
+        },
+        "41-60": {
+          "count": 1008,
+          "fpr": 0.09748427672955975,
+          "model": {
+            "fpr": 0.09748427672955975,
+            "review_rate": 0.39186507936507936,
+            "tpr": 0.8951612903225806
+          },
+          "negatives": 636,
+          "positives": 372,
+          "review_rate": 0.39186507936507936,
+          "rule_baseline": {
+            "fpr": 0.3411949685534591,
+            "tpr": 0.7526881720430108
+          },
+          "tpr": 0.8951612903225806
+        },
+        "60+": {
+          "count": 961,
+          "fpr": 0.1088,
+          "model": {
+            "fpr": 0.1088,
+            "review_rate": 0.39021852237252863,
+            "tpr": 0.9136904761904762
+          },
+          "negatives": 625,
+          "positives": 336,
+          "review_rate": 0.39021852237252863,
+          "rule_baseline": {
+            "fpr": 0.3408,
+            "tpr": 0.7976190476190477
+          },
+          "tpr": 0.9136904761904762
+        }
+      },
+      "gender": {
+        "female": {
+          "count": 1294,
+          "fpr": 0.10859188544152745,
+          "model": {
+            "fpr": 0.10859188544152745,
+            "review_rate": 0.38871715610510044,
+            "tpr": 0.9035087719298246
+          },
+          "negatives": 838,
+          "positives": 456,
+          "review_rate": 0.38871715610510044,
+          "rule_baseline": {
+            "fpr": 0.31861575178997614,
+            "tpr": 0.7456140350877193
+          },
+          "tpr": 0.9035087719298246
+        },
+        "male": {
+          "count": 1392,
+          "fpr": 0.10497237569060773,
+          "model": {
+            "fpr": 0.10497237569060773,
+            "review_rate": 0.38146551724137934,
+            "tpr": 0.8952772073921971
+          },
+          "negatives": 905,
+          "positives": 487,
+          "review_rate": 0.38146551724137934,
+          "rule_baseline": {
+            "fpr": 0.3392265193370166,
+            "tpr": 0.757700205338809
+          },
+          "tpr": 0.8952772073921971
+        },
+        "other": {
+          "count": 1314,
+          "fpr": 0.1073512252042007,
+          "model": {
+            "fpr": 0.1073512252042007,
+            "review_rate": 0.3736681887366819,
+            "tpr": 0.8730853391684902
+          },
+          "negatives": 857,
+          "positives": 457,
+          "review_rate": 0.3736681887366819,
+          "rule_baseline": {
+            "fpr": 0.3220536756126021,
+            "tpr": 0.7571115973741794
+          },
+          "tpr": 0.8730853391684902
+        }
+      },
+      "region": {
+        "barishal": {
+          "count": 480,
+          "fpr": 0.11949685534591195,
+          "model": {
+            "fpr": 0.11949685534591195,
+            "review_rate": 0.38125,
+            "tpr": 0.8950617283950617
+          },
+          "negatives": 318,
+          "positives": 162,
+          "review_rate": 0.38125,
+          "rule_baseline": {
+            "fpr": 0.32075471698113206,
+            "tpr": 0.7530864197530864
+          },
+          "tpr": 0.8950617283950617
+        },
+        "chittagong": {
+          "count": 502,
+          "fpr": 0.09230769230769231,
+          "model": {
+            "fpr": 0.09230769230769231,
+            "review_rate": 0.36852589641434264,
+            "tpr": 0.8757062146892656
+          },
+          "negatives": 325,
+          "positives": 177,
+          "review_rate": 0.36852589641434264,
+          "rule_baseline": {
+            "fpr": 0.3507692307692308,
+            "tpr": 0.751412429378531
+          },
+          "tpr": 0.8757062146892656
+        },
+        "dhaka": {
+          "count": 519,
+          "fpr": 0.10638297872340426,
+          "model": {
+            "fpr": 0.10638297872340426,
+            "review_rate": 0.394990366088632,
+            "tpr": 0.8947368421052632
+          },
+          "negatives": 329,
+          "positives": 190,
+          "review_rate": 0.394990366088632,
+          "rule_baseline": {
+            "fpr": 0.3191489361702128,
+            "tpr": 0.7842105263157895
+          },
+          "tpr": 0.8947368421052632
+        },
+        "khulna": {
+          "count": 528,
+          "fpr": 0.1268882175226586,
+          "model": {
+            "fpr": 0.1268882175226586,
+            "review_rate": 0.4071969696969697,
+            "tpr": 0.8781725888324873
+          },
+          "negatives": 331,
+          "positives": 197,
+          "review_rate": 0.4071969696969697,
+          "rule_baseline": {
+            "fpr": 0.3323262839879154,
+            "tpr": 0.7106598984771574
+          },
+          "tpr": 0.8781725888324873
+        },
+        "mymensingh": {
+          "count": 483,
+          "fpr": 0.09868421052631579,
+          "model": {
+            "fpr": 0.09868421052631579,
+            "review_rate": 0.38095238095238093,
+            "tpr": 0.8603351955307262
+          },
+          "negatives": 304,
+          "positives": 179,
+          "review_rate": 0.38095238095238093,
+          "rule_baseline": {
+            "fpr": 0.29276315789473684,
+            "tpr": 0.7877094972067039
+          },
+          "tpr": 0.8603351955307262
+        },
+        "rajshahi": {
+          "count": 512,
+          "fpr": 0.0872093023255814,
+          "model": {
+            "fpr": 0.0872093023255814,
+            "review_rate": 0.37109375,
+            "tpr": 0.9523809523809523
+          },
+          "negatives": 344,
+          "positives": 168,
+          "review_rate": 0.37109375,
+          "rule_baseline": {
+            "fpr": 0.3313953488372093,
+            "tpr": 0.7321428571428571
+          },
+          "tpr": 0.9523809523809523
+        },
+        "rangpur": {
+          "count": 471,
+          "fpr": 0.1180327868852459,
+          "model": {
+            "fpr": 0.1180327868852459,
+            "review_rate": 0.386411889596603,
+            "tpr": 0.8795180722891566
+          },
+          "negatives": 305,
+          "positives": 166,
+          "review_rate": 0.386411889596603,
+          "rule_baseline": {
+            "fpr": 0.3344262295081967,
+            "tpr": 0.7590361445783133
+          },
+          "tpr": 0.8795180722891566
+        },
+        "sylhet": {
+          "count": 505,
+          "fpr": 0.10755813953488372,
+          "model": {
+            "fpr": 0.10755813953488372,
+            "review_rate": 0.3584158415841584,
+            "tpr": 0.8944099378881988
+          },
+          "negatives": 344,
+          "positives": 161,
+          "review_rate": 0.3584158415841584,
+          "rule_baseline": {
+            "fpr": 0.3313953488372093,
+            "tpr": 0.7515527950310559
+          },
+          "tpr": 0.8944099378881988
+        }
+      },
+      "urban_rural": {
+        "rural": {
+          "count": 1691,
+          "fpr": 0.111,
+          "model": {
+            "fpr": 0.111,
+            "review_rate": 0.43287995269071555,
+            "tpr": 0.8986975397973951
+          },
+          "negatives": 1000,
+          "positives": 691,
+          "review_rate": 0.43287995269071555,
+          "rule_baseline": {
+            "fpr": 0.35,
+            "tpr": 0.7568740955137482
+          },
+          "tpr": 0.8986975397973951
+        },
+        "urban": {
+          "count": 2309,
+          "fpr": 0.104375,
+          "model": {
+            "fpr": 0.104375,
+            "review_rate": 0.3434387180597661,
+            "tpr": 0.8829337094499294
+          },
+          "negatives": 1600,
+          "positives": 709,
+          "review_rate": 0.3434387180597661,
+          "rule_baseline": {
+            "fpr": 0.3125,
+            "tpr": 0.7503526093088858
+          },
+          "tpr": 0.8829337094499294
+        }
+      }
+    },
+    "target_max_tpr_gap": 0.1,
+    "unmet_targets": [],
+    "validation_diagnostic": {
+      "cohort": "validation_diagnostic",
+      "global_max_tpr_gap": 0.09204575685022609,
+      "max_tpr_gaps": {
+        "age_band": 0.044642857142857095,
+        "gender": 0.030423432761334412,
+        "region": 0.09204575685022609,
+        "urban_rural": 0.015763830347465646
+      },
+      "satisfies_fairness_target": true,
+      "slices": {
+        "age_band": {
+          "18-25": {
+            "count": 1042,
+            "fpr": 0.1282798833819242,
+            "model": {
+              "fpr": 0.1282798833819242,
+              "review_rate": 0.3867562380038388,
+              "tpr": 0.8848314606741573
+            },
+            "negatives": 686,
+            "positives": 356,
+            "review_rate": 0.3867562380038388,
+            "rule_baseline": {
+              "fpr": 0.32215743440233235,
+              "tpr": 0.7303370786516854
+            },
+            "tpr": 0.8848314606741573
+          },
+          "26-40": {
+            "count": 989,
+            "fpr": 0.09188361408882083,
+            "model": {
+              "fpr": 0.09188361408882083,
+              "review_rate": 0.35591506572295245,
+              "tpr": 0.8690476190476191
+            },
+            "negatives": 653,
+            "positives": 336,
+            "review_rate": 0.35591506572295245,
+            "rule_baseline": {
+              "fpr": 0.30474732006125577,
+              "tpr": 0.7351190476190477
+            },
+            "tpr": 0.8690476190476191
+          },
+          "41-60": {
+            "count": 1008,
+            "fpr": 0.09748427672955975,
+            "model": {
+              "fpr": 0.09748427672955975,
+              "review_rate": 0.39186507936507936,
+              "tpr": 0.8951612903225806
+            },
+            "negatives": 636,
+            "positives": 372,
+            "review_rate": 0.39186507936507936,
+            "rule_baseline": {
+              "fpr": 0.3411949685534591,
+              "tpr": 0.7526881720430108
+            },
+            "tpr": 0.8951612903225806
+          },
+          "60+": {
+            "count": 961,
+            "fpr": 0.1088,
+            "model": {
+              "fpr": 0.1088,
+              "review_rate": 0.39021852237252863,
+              "tpr": 0.9136904761904762
+            },
+            "negatives": 625,
+            "positives": 336,
+            "review_rate": 0.39021852237252863,
+            "rule_baseline": {
+              "fpr": 0.3408,
+              "tpr": 0.7976190476190477
+            },
+            "tpr": 0.9136904761904762
+          }
+        },
+        "gender": {
+          "female": {
+            "count": 1294,
+            "fpr": 0.10859188544152745,
+            "model": {
+              "fpr": 0.10859188544152745,
+              "review_rate": 0.38871715610510044,
+              "tpr": 0.9035087719298246
+            },
+            "negatives": 838,
+            "positives": 456,
+            "review_rate": 0.38871715610510044,
+            "rule_baseline": {
+              "fpr": 0.31861575178997614,
+              "tpr": 0.7456140350877193
+            },
+            "tpr": 0.9035087719298246
+          },
+          "male": {
+            "count": 1392,
+            "fpr": 0.10497237569060773,
+            "model": {
+              "fpr": 0.10497237569060773,
+              "review_rate": 0.38146551724137934,
+              "tpr": 0.8952772073921971
+            },
+            "negatives": 905,
+            "positives": 487,
+            "review_rate": 0.38146551724137934,
+            "rule_baseline": {
+              "fpr": 0.3392265193370166,
+              "tpr": 0.757700205338809
+            },
+            "tpr": 0.8952772073921971
+          },
+          "other": {
+            "count": 1314,
+            "fpr": 0.1073512252042007,
+            "model": {
+              "fpr": 0.1073512252042007,
+              "review_rate": 0.3736681887366819,
+              "tpr": 0.8730853391684902
+            },
+            "negatives": 857,
+            "positives": 457,
+            "review_rate": 0.3736681887366819,
+            "rule_baseline": {
+              "fpr": 0.3220536756126021,
+              "tpr": 0.7571115973741794
+            },
+            "tpr": 0.8730853391684902
+          }
+        },
+        "region": {
+          "barishal": {
+            "count": 480,
+            "fpr": 0.11949685534591195,
+            "model": {
+              "fpr": 0.11949685534591195,
+              "review_rate": 0.38125,
+              "tpr": 0.8950617283950617
+            },
+            "negatives": 318,
+            "positives": 162,
+            "review_rate": 0.38125,
+            "rule_baseline": {
+              "fpr": 0.32075471698113206,
+              "tpr": 0.7530864197530864
+            },
+            "tpr": 0.8950617283950617
+          },
+          "chittagong": {
+            "count": 502,
+            "fpr": 0.09230769230769231,
+            "model": {
+              "fpr": 0.09230769230769231,
+              "review_rate": 0.36852589641434264,
+              "tpr": 0.8757062146892656
+            },
+            "negatives": 325,
+            "positives": 177,
+            "review_rate": 0.36852589641434264,
+            "rule_baseline": {
+              "fpr": 0.3507692307692308,
+              "tpr": 0.751412429378531
+            },
+            "tpr": 0.8757062146892656
+          },
+          "dhaka": {
+            "count": 519,
+            "fpr": 0.10638297872340426,
+            "model": {
+              "fpr": 0.10638297872340426,
+              "review_rate": 0.394990366088632,
+              "tpr": 0.8947368421052632
+            },
+            "negatives": 329,
+            "positives": 190,
+            "review_rate": 0.394990366088632,
+            "rule_baseline": {
+              "fpr": 0.3191489361702128,
+              "tpr": 0.7842105263157895
+            },
+            "tpr": 0.8947368421052632
+          },
+          "khulna": {
+            "count": 528,
+            "fpr": 0.1268882175226586,
+            "model": {
+              "fpr": 0.1268882175226586,
+              "review_rate": 0.4071969696969697,
+              "tpr": 0.8781725888324873
+            },
+            "negatives": 331,
+            "positives": 197,
+            "review_rate": 0.4071969696969697,
+            "rule_baseline": {
+              "fpr": 0.3323262839879154,
+              "tpr": 0.7106598984771574
+            },
+            "tpr": 0.8781725888324873
+          },
+          "mymensingh": {
+            "count": 483,
+            "fpr": 0.09868421052631579,
+            "model": {
+              "fpr": 0.09868421052631579,
+              "review_rate": 0.38095238095238093,
+              "tpr": 0.8603351955307262
+            },
+            "negatives": 304,
+            "positives": 179,
+            "review_rate": 0.38095238095238093,
+            "rule_baseline": {
+              "fpr": 0.29276315789473684,
+              "tpr": 0.7877094972067039
+            },
+            "tpr": 0.8603351955307262
+          },
+          "rajshahi": {
+            "count": 512,
+            "fpr": 0.0872093023255814,
+            "model": {
+              "fpr": 0.0872093023255814,
+              "review_rate": 0.37109375,
+              "tpr": 0.9523809523809523
+            },
+            "negatives": 344,
+            "positives": 168,
+            "review_rate": 0.37109375,
+            "rule_baseline": {
+              "fpr": 0.3313953488372093,
+              "tpr": 0.7321428571428571
+            },
+            "tpr": 0.9523809523809523
+          },
+          "rangpur": {
+            "count": 471,
+            "fpr": 0.1180327868852459,
+            "model": {
+              "fpr": 0.1180327868852459,
+              "review_rate": 0.386411889596603,
+              "tpr": 0.8795180722891566
+            },
+            "negatives": 305,
+            "positives": 166,
+            "review_rate": 0.386411889596603,
+            "rule_baseline": {
+              "fpr": 0.3344262295081967,
+              "tpr": 0.7590361445783133
+            },
+            "tpr": 0.8795180722891566
+          },
+          "sylhet": {
+            "count": 505,
+            "fpr": 0.10755813953488372,
+            "model": {
+              "fpr": 0.10755813953488372,
+              "review_rate": 0.3584158415841584,
+              "tpr": 0.8944099378881988
+            },
+            "negatives": 344,
+            "positives": 161,
+            "review_rate": 0.3584158415841584,
+            "rule_baseline": {
+              "fpr": 0.3313953488372093,
+              "tpr": 0.7515527950310559
+            },
+            "tpr": 0.8944099378881988
+          }
+        },
+        "urban_rural": {
+          "rural": {
+            "count": 1691,
+            "fpr": 0.111,
+            "model": {
+              "fpr": 0.111,
+              "review_rate": 0.43287995269071555,
+              "tpr": 0.8986975397973951
+            },
+            "negatives": 1000,
+            "positives": 691,
+            "review_rate": 0.43287995269071555,
+            "rule_baseline": {
+              "fpr": 0.35,
+              "tpr": 0.7568740955137482
+            },
+            "tpr": 0.8986975397973951
+          },
+          "urban": {
+            "count": 2309,
+            "fpr": 0.104375,
+            "model": {
+              "fpr": 0.104375,
+              "review_rate": 0.3434387180597661,
+              "tpr": 0.8829337094499294
+            },
+            "negatives": 1600,
+            "positives": 709,
+            "review_rate": 0.3434387180597661,
+            "rule_baseline": {
+              "fpr": 0.3125,
+              "tpr": 0.7503526093088858
+            },
+            "tpr": 0.8829337094499294
+          }
+        }
+      },
+      "target_max_tpr_gap": 0.1,
+      "unmet_targets": []
+    }
+  },
+  "final_run_timestamp": "2026-10-03T02:36:49.864260+00:00",
+  "schema_version": 1,
+  "synthetic": true
+}

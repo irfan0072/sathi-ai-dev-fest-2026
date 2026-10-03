@@ -2,7 +2,7 @@
 
 AI DEV FEST2026, DIU CPC × upay, Track07 Open Innovation. Team: Runtime Terrors.
 
-**Synthetic prototype, local work in progress.** Durable authenticated mandate API verifiedT024:307backend tests/zero skips,17frontend tests, lint/build, actual HTTP flow and restart persistence. Rule baselines and train-only model repairs are verifiedT023. Corrected final evaluation/artifacts and authenticated console wiring remain pendingT023b/T025. No public runtime or final model scores are claimed. Latest evaluation check:317backend passed/15failed, with10lint findings; paused for the required human retry gate. Frontend remains17passed from the preceding unchanged check. See [handoff](docs/handoff.md) for current state.
+**Synthetic prototype, verified local API and evaluation.** T023b:335backend tests/zero skips,17frontend tests,lint/build and final reproduction pass. Held-out assisted PR-AUC0.8091 versus rule0.6967; anomaly recall2/2 injected skimmers,0/4 honest high-volume false flags (small denominators). Durable authenticated API verifiedT024. Console authentication/artifact wiring and public deployment remain pendingT025/T026. See [handoff](docs/handoff.md).
 
 ## Overview and features
 
@@ -11,8 +11,8 @@ Sathi explores scoped, expiring, one-time cash-out authority instead of sharing 
 | Feature | Verified status |
 |---|---|
 | Synthetic users/agents/transactions/sessions; deterministic disjoint agent/seed splits | Implemented and tested; original development dataset preserved |
-| Assisted rule/LightGBM with disjoint calibration and faithful SHAP | T023 fitting/explanation tests pass; final held-out results pending |
-| Agent fee rule, train-derived volume peers and Isolation Forest | T023 tests pass; final evaluation/report signals pending |
+| Assisted rule/LightGBM with disjoint calibration and faithful SHAP | T023b verified results and saved models |
+| Agent fee rule, train-derived volume peers and Isolation Forest | T023b verified rules/model/report-signal comparisons |
 | Scoped synthetic JWT, durable mandates/attempts/locks/ledger/audit | T024 local API verified |
 | Keypad/Bangla digits, terminal-only code, cash reports, real receipts/cases | T024 actual API flow verified; console integration pending |
 | React console | Existing layout retained; illustrative cards labelled and missing metrics unavailable |
@@ -90,7 +90,13 @@ Config/assumptions live in [config](data/config.yaml) and [assumptions](data/ass
 
 Approved placeholders:1.5% fee,5,000BDT mandate cap,25,000BDT Dhaka-calendar daily limit,15-minute TTL, verification2 attempts, wrong-code3 attempts and cash-gap tolerance `max(50BDT,2% of amount)`. Generation preserves overlap/noise; no tuning to a score.
 
-Final single-command evaluation/artifact reproduction is being verifiedT023b. Inherited numerical reports are provisional and must not be presented as results. New generated runs must preserve older datasets; raw generated data/weights remain ignored except a reviewed small deployment bundle. Training/test data are not seeded on API startup. The namespace777 runtime ledger is separate from offline model snapshots.
+Run the full frozen-config evaluation in a new directory:
+
+```sh
+make reproduce REPRODUCE_DIR=data/generated/my-reproduction
+```
+
+This generates disjoint train/validation/test and separate shifted data, checks provenance, fits train-only models with disjoint validation calibration, enforces the validation sanity ceiling, and saves results/Markdown/models/manifests plus a bounded deployment bundle. Default training sample is4,000users; complete test cohorts are scored. The final verified run is `data/generated/final-20261003`; raw data remain ignored. Reviewed small artifacts are committed in `data/artifacts/deployment`, with full source/data/dependency provenance in `data/artifacts/evaluation-manifest.json`. Numerical results are [here](docs/evaluation-results.md), including baselines, shifted results, ablations, fairness denominators and idealized adoption30/50/70. Use a fresh directory; retain older datasets. The namespace777 runtime ledger is separate from the offline30-day simulation snapshot at2026-12-30. Synthetic results do not establish real accuracy or fraud reduction.
 
 ## Deployment and disclosures
 

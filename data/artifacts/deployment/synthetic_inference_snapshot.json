@@ -1,0 +1,1624 @@
+{
+  "agents": [
+    {
+      "agent_id": "A_000239",
+      "features": {
+        "agent_allowance_day_volume_ratio": 0.1815856777493606,
+        "agent_cash_gap_has_reports": 1.0,
+        "agent_cash_gap_missing": 0.0,
+        "agent_cash_gap_rate": 0.1575091575091575,
+        "agent_cash_report_count": 273.0,
+        "agent_cash_report_coverage": 0.6438679245283019,
+        "agent_fee_ratio_over_official": 1.0719275394965617,
+        "agent_volume_daily_mean": 5.372093023255814,
+        "cash_gap_reported_count": 43.0
+      },
+      "reasons": [
+        {
+          "feature": "fee_ratio_vs_official",
+          "peer_median": 1.0,
+          "value": 1.072
+        }
+      ],
+      "risk_level": "HIGH",
+      "risk_score": 0.9350620376174807
+    },
+    {
+      "agent_id": "A_000011",
+      "features": {
+        "agent_allowance_day_volume_ratio": 0.215625,
+        "agent_cash_gap_has_reports": 1.0,
+        "agent_cash_gap_missing": 0.0,
+        "agent_cash_gap_rate": 0.14285714285714285,
+        "agent_cash_report_count": 203.0,
+        "agent_cash_report_coverage": 0.5734463276836158,
+        "agent_fee_ratio_over_official": 1.0720266834503254,
+        "agent_volume_daily_mean": 4.8625,
+        "cash_gap_reported_count": 29.0
+      },
+      "reasons": [
+        {
+          "feature": "fee_ratio_vs_official",
+          "peer_median": 1.0,
+          "value": 1.072
+        }
+      ],
+      "risk_level": "HIGH",
+      "risk_score": 0.9212624317387581
+    },
+    {
+      "agent_id": "A_000201",
+      "features": {
+        "agent_allowance_day_volume_ratio": 0.22762148337595908,
+        "agent_cash_gap_has_reports": 1.0,
+        "agent_cash_gap_missing": 0.0,
+        "agent_cash_gap_rate": 0.022988505747126436,
+        "agent_cash_report_count": 261.0,
+        "agent_cash_report_coverage": 0.5588865096359743,
+        "agent_fee_ratio_over_official": 1.000001795510683,
+        "agent_volume_daily_mean": 6.0,
+        "cash_gap_reported_count": 6.0
+      },
+      "reasons": [
+        {
+          "feature": "fee_ratio_vs_official",
+          "peer_median": 1.0,
+          "value": 1.0
+        }
+      ],
+      "risk_level": "LOW",
+      "risk_score": 0.23834627100950545
+    },
+    {
+      "agent_id": "A_000058",
+      "features": {
+        "agent_allowance_day_volume_ratio": 0.24130879345603273,
+        "agent_cash_gap_has_reports": 1.0,
+        "agent_cash_gap_missing": 0.0,
+        "agent_cash_gap_rate": 0.0,
+        "agent_cash_report_count": 338.0,
+        "agent_cash_report_coverage": 0.5847750865051903,
+        "agent_fee_ratio_over_official": 0.999999504559239,
+        "agent_volume_daily_mean": 6.8977272727272725,
+        "cash_gap_reported_count": 0.0
+      },
+      "reasons": [
+        {
+          "feature": "fee_ratio_vs_official",
+          "peer_median": 1.0,
+          "value": 1.0
+        }
+      ],
+      "risk_level": "LOW",
+      "risk_score": 0.22274601849369643
+    },
+    {
+      "agent_id": "A_000072",
+      "features": {
+        "agent_allowance_day_volume_ratio": 0.1934156378600823,
+        "agent_cash_gap_has_reports": 1.0,
+        "agent_cash_gap_missing": 0.0,
+        "agent_cash_gap_rate": 0.003125,
+        "agent_cash_report_count": 320.0,
+        "agent_cash_report_coverage": 0.5828779599271403,
+        "agent_fee_ratio_over_official": 0.9999975387754193,
+        "agent_volume_daily_mean": 6.666666666666667,
+        "cash_gap_reported_count": 1.0
+      },
+      "reasons": [
+        {
+          "feature": "fee_ratio_vs_official",
+          "peer_median": 1.0,
+          "value": 1.0
+        }
+      ],
+      "risk_level": "LOW",
+      "risk_score": 0.21275294363695332
+    },
+    {
+      "agent_id": "A_000267",
+      "features": {
+        "agent_allowance_day_volume_ratio": 0.21779859484777517,
+        "agent_cash_gap_has_reports": 1.0,
+        "agent_cash_gap_missing": 0.0,
+        "agent_cash_gap_rate": 0.007042253521126761,
+        "agent_cash_report_count": 284.0,
+        "agent_cash_report_coverage": 0.5668662674650699,
+        "agent_fee_ratio_over_official": 0.9999998422611508,
+        "agent_volume_daily_mean": 6.666666666666667,
+        "cash_gap_reported_count": 2.0
+      },
+      "reasons": [
+        {
+          "feature": "fee_ratio_vs_official",
+          "peer_median": 1.0,
+          "value": 1.0
+        }
+      ],
+      "risk_level": "LOW",
+      "risk_score": 0.1764134359747146
+    },
+    {
+      "agent_id": "A_000198",
+      "features": {
+        "agent_allowance_day_volume_ratio": 0.1963470319634703,
+        "agent_cash_gap_has_reports": 1.0,
+        "agent_cash_gap_missing": 0.0,
+        "agent_cash_gap_rate": 0.03125,
+        "agent_cash_report_count": 128.0,
+        "agent_cash_report_coverage": 0.5311203319502075,
+        "agent_fee_ratio_over_official": 1.0,
+        "agent_volume_daily_mean": 3.6901408450704225,
+        "cash_gap_reported_count": 4.0
+      },
+      "reasons": [
+        {
+          "feature": "fee_ratio_vs_official",
+          "peer_median": 1.0,
+          "value": 1.0
+        }
+      ],
+      "risk_level": "LOW",
+      "risk_score": 0.14318127835955566
+    },
+    {
+      "agent_id": "A_000207",
+      "features": {
+        "agent_allowance_day_volume_ratio": 0.16730038022813687,
+        "agent_cash_gap_has_reports": 1.0,
+        "agent_cash_gap_missing": 0.0,
+        "agent_cash_gap_rate": 0.02040816326530612,
+        "agent_cash_report_count": 196.0,
+        "agent_cash_report_coverage": 0.6621621621621622,
+        "agent_fee_ratio_over_official": 1.0,
+        "agent_volume_daily_mean": 4.514705882352941,
+        "cash_gap_reported_count": 4.0
+      },
+      "reasons": [
+        {
+          "feature": "fee_ratio_vs_official",
+          "peer_median": 1.0,
+          "value": 1.0
+        }
+      ],
+      "risk_level": "LOW",
+      "risk_score": 0.13586360183453497
+    },
+    {
+      "agent_id": "A_000045",
+      "features": {
+        "agent_allowance_day_volume_ratio": 0.2857142857142857,
+        "agent_cash_gap_has_reports": 1.0,
+        "agent_cash_gap_missing": 0.0,
+        "agent_cash_gap_rate": 0.0,
+        "agent_cash_report_count": 130.0,
+        "agent_cash_report_coverage": 0.5652173913043478,
+        "agent_fee_ratio_over_official": 1.0,
+        "agent_volume_daily_mean": 4.2631578947368425,
+        "cash_gap_reported_count": 0.0
+      },
+      "reasons": [
+        {
+          "feature": "fee_ratio_vs_official",
+          "peer_median": 1.0,
+          "value": 1.0
+        }
+      ],
+      "risk_level": "LOW",
+      "risk_score": 0.1337959695982549
+    },
+    {
+      "agent_id": "A_000012",
+      "features": {
+        "agent_allowance_day_volume_ratio": 0.1836734693877551,
+        "agent_cash_gap_has_reports": 1.0,
+        "agent_cash_gap_missing": 0.0,
+        "agent_cash_gap_rate": 0.03205128205128205,
+        "agent_cash_report_count": 156.0,
+        "agent_cash_report_coverage": 0.5799256505576208,
+        "agent_fee_ratio_over_official": 1.0,
+        "agent_volume_daily_mean": 4.202898550724638,
+        "cash_gap_reported_count": 5.0
+      },
+      "reasons": [
+        {
+          "feature": "fee_ratio_vs_official",
+          "peer_median": 1.0,
+          "value": 1.0
+        }
+      ],
+      "risk_level": "LOW",
+      "risk_score": 0.1329792594380994
+    }
+  ],
+  "as_of": "2026-12-30T00:00:00+00:00",
+  "customers": [
+    {
+      "explanations": [
+        {
+          "attribution": 2.220431497755537,
+          "attribution_unit": "log_odds",
+          "feature": "session_steps_mean",
+          "value": 7.0
+        },
+        {
+          "attribution": 0.5668160683056114,
+          "attribution_unit": "log_odds",
+          "feature": "agent_assisted_tx_ratio",
+          "value": 0.5
+        },
+        {
+          "attribution": 0.3909453796526033,
+          "attribution_unit": "log_odds",
+          "feature": "credit_to_cashout_hours_min",
+          "value": 24.218106488611113
+        },
+        {
+          "attribution": 0.2931548900446219,
+          "attribution_unit": "log_odds",
+          "feature": "credit_to_cashout_hours_median",
+          "value": 24.218106488611113
+        }
+      ],
+      "features": {
+        "agent_assisted_tx_ratio": 0.5,
+        "balance_end": 667.5,
+        "balance_mean": 3458.75,
+        "balance_min": 667.5,
+        "bill_pay_total_amount": 0.0,
+        "bill_pay_tx_count": 0.0,
+        "cash_out_amount_max": 5500.0,
+        "cash_out_amount_mean": 5500.0,
+        "cash_out_amount_median": 5500.0,
+        "cash_out_amount_min": 5500.0,
+        "cash_out_amount_std": 0.0,
+        "cash_out_total_amount": 5500.0,
+        "cash_out_tx_count": 1.0,
+        "credit_amount_mean": 4900.0,
+        "credit_to_cashout_hours_mean": 24.218106488611113,
+        "credit_to_cashout_hours_median": 24.218106488611113,
+        "credit_to_cashout_hours_min": 24.218106488611113,
+        "credit_total_amount": 4900.0,
+        "credit_tx_count": 1.0,
+        "fee_to_amount_ratio": 0.007932692307692307,
+        "fee_total_paid": 82.5,
+        "pin_entry_seconds_mean": 19.131,
+        "pin_entry_seconds_median": 19.131,
+        "pin_entry_seconds_std": 0.0,
+        "pin_retries_max": 0.0,
+        "pin_retries_mean": 0.0,
+        "pin_retries_total": 0.0,
+        "send_total_amount": 0.0,
+        "send_tx_count": 0.0,
+        "service_diversity_count": 2.0,
+        "session_steps_max": 7.0,
+        "session_steps_mean": 7.0,
+        "top_agent_concentration": 1.0,
+        "top_agent_share": 1.0,
+        "withdrawn_balance_ratio_max": 0.88,
+        "withdrawn_balance_ratio_mean": 0.88
+      },
+      "predicted_class": 1,
+      "predicted_probability": 0.9559679358727503,
+      "user_id": "U_2026_001399"
+    },
+    {
+      "explanations": [
+        {
+          "attribution": 2.273118373186409,
+          "attribution_unit": "log_odds",
+          "feature": "session_steps_mean",
+          "value": 7.0
+        },
+        {
+          "attribution": 0.5719341114134562,
+          "attribution_unit": "log_odds",
+          "feature": "agent_assisted_tx_ratio",
+          "value": 0.5
+        },
+        {
+          "attribution": 0.3010421765875381,
+          "attribution_unit": "log_odds",
+          "feature": "pin_entry_seconds_mean",
+          "value": 125.548
+        },
+        {
+          "attribution": 0.23115537946685724,
+          "attribution_unit": "log_odds",
+          "feature": "credit_to_cashout_hours_median",
+          "value": 22.97519190361111
+        }
+      ],
+      "features": {
+        "agent_assisted_tx_ratio": 0.5,
+        "balance_end": 535.5,
+        "balance_mean": 2590.875,
+        "balance_min": 535.5,
+        "bill_pay_total_amount": 0.0,
+        "bill_pay_tx_count": 0.0,
+        "cash_out_amount_max": 4050.0,
+        "cash_out_amount_mean": 4050.0,
+        "cash_out_amount_median": 4050.0,
+        "cash_out_amount_min": 4050.0,
+        "cash_out_amount_std": 0.0,
+        "cash_out_total_amount": 4050.0,
+        "cash_out_tx_count": 1.0,
+        "credit_amount_mean": 4250.0,
+        "credit_to_cashout_hours_mean": 22.97519190361111,
+        "credit_to_cashout_hours_median": 22.97519190361111,
+        "credit_to_cashout_hours_min": 22.97519190361111,
+        "credit_total_amount": 4250.0,
+        "credit_tx_count": 1.0,
+        "fee_to_amount_ratio": 0.007319277108433735,
+        "fee_total_paid": 60.75,
+        "pin_entry_seconds_mean": 125.548,
+        "pin_entry_seconds_median": 125.548,
+        "pin_entry_seconds_std": 0.0,
+        "pin_retries_max": 1.0,
+        "pin_retries_mean": 1.0,
+        "pin_retries_total": 1.0,
+        "send_total_amount": 0.0,
+        "send_tx_count": 0.0,
+        "service_diversity_count": 2.0,
+        "session_steps_max": 7.0,
+        "session_steps_mean": 7.0,
+        "top_agent_concentration": 1.0,
+        "top_agent_share": 1.0,
+        "withdrawn_balance_ratio_max": 0.8716707021791767,
+        "withdrawn_balance_ratio_mean": 0.8716707021791767
+      },
+      "predicted_class": 1,
+      "predicted_probability": 0.9465744717970453,
+      "user_id": "U_2026_001833"
+    },
+    {
+      "explanations": [
+        {
+          "attribution": 2.2443443399514105,
+          "attribution_unit": "log_odds",
+          "feature": "session_steps_mean",
+          "value": 7.0
+        },
+        {
+          "attribution": 0.48449970552565236,
+          "attribution_unit": "log_odds",
+          "feature": "agent_assisted_tx_ratio",
+          "value": 0.5
+        },
+        {
+          "attribution": 0.2779672330365709,
+          "attribution_unit": "log_odds",
+          "feature": "credit_to_cashout_hours_min",
+          "value": 24.586400314722223
+        },
+        {
+          "attribution": 0.262435414936412,
+          "attribution_unit": "log_odds",
+          "feature": "credit_to_cashout_hours_median",
+          "value": 24.586400314722223
+        }
+      ],
+      "features": {
+        "agent_assisted_tx_ratio": 0.5,
+        "balance_end": 172.75,
+        "balance_mean": 2481.875,
+        "balance_min": 172.75,
+        "bill_pay_total_amount": 0.0,
+        "bill_pay_tx_count": 0.0,
+        "cash_out_amount_max": 4550.0,
+        "cash_out_amount_mean": 4550.0,
+        "cash_out_amount_median": 4550.0,
+        "cash_out_amount_min": 4550.0,
+        "cash_out_amount_std": 0.0,
+        "cash_out_total_amount": 4550.0,
+        "cash_out_tx_count": 1.0,
+        "credit_amount_mean": 4550.0,
+        "credit_to_cashout_hours_mean": 24.586400314722223,
+        "credit_to_cashout_hours_median": 24.586400314722223,
+        "credit_to_cashout_hours_min": 24.586400314722223,
+        "credit_total_amount": 4550.0,
+        "credit_tx_count": 1.0,
+        "fee_to_amount_ratio": 0.0075,
+        "fee_total_paid": 68.25,
+        "pin_entry_seconds_mean": 13.013,
+        "pin_entry_seconds_median": 13.013,
+        "pin_entry_seconds_std": 0.0,
+        "pin_retries_max": 0.0,
+        "pin_retries_mean": 0.0,
+        "pin_retries_total": 0.0,
+        "send_total_amount": 0.0,
+        "send_tx_count": 0.0,
+        "service_diversity_count": 2.0,
+        "session_steps_max": 7.0,
+        "session_steps_mean": 7.0,
+        "top_agent_concentration": 1.0,
+        "top_agent_share": 1.0,
+        "withdrawn_balance_ratio_max": 0.9496973491964099,
+        "withdrawn_balance_ratio_mean": 0.9496973491964099
+      },
+      "predicted_class": 1,
+      "predicted_probability": 0.945889934775509,
+      "user_id": "U_2026_003945"
+    },
+    {
+      "explanations": [
+        {
+          "attribution": 2.3131313530832283,
+          "attribution_unit": "log_odds",
+          "feature": "session_steps_mean",
+          "value": 7.0
+        },
+        {
+          "attribution": 0.63758916240884,
+          "attribution_unit": "log_odds",
+          "feature": "agent_assisted_tx_ratio",
+          "value": 0.5
+        },
+        {
+          "attribution": 0.36757871356507155,
+          "attribution_unit": "log_odds",
+          "feature": "credit_to_cashout_hours_min",
+          "value": 33.24156047611111
+        },
+        {
+          "attribution": 0.2577040472134737,
+          "attribution_unit": "log_odds",
+          "feature": "credit_to_cashout_hours_median",
+          "value": 33.24156047611111
+        }
+      ],
+      "features": {
+        "agent_assisted_tx_ratio": 0.5,
+        "balance_end": 1270.5,
+        "balance_mean": 4061.75,
+        "balance_min": 1270.5,
+        "bill_pay_total_amount": 0.0,
+        "bill_pay_tx_count": 0.0,
+        "cash_out_amount_max": 5500.0,
+        "cash_out_amount_mean": 5500.0,
+        "cash_out_amount_median": 5500.0,
+        "cash_out_amount_min": 5500.0,
+        "cash_out_amount_std": 0.0,
+        "cash_out_total_amount": 5500.0,
+        "cash_out_tx_count": 1.0,
+        "credit_amount_mean": 4700.0,
+        "credit_to_cashout_hours_mean": 33.24156047611111,
+        "credit_to_cashout_hours_median": 33.24156047611111,
+        "credit_to_cashout_hours_min": 33.24156047611111,
+        "credit_total_amount": 4700.0,
+        "credit_tx_count": 1.0,
+        "fee_to_amount_ratio": 0.008088235294117648,
+        "fee_total_paid": 82.5,
+        "pin_entry_seconds_mean": 15.856,
+        "pin_entry_seconds_median": 15.856,
+        "pin_entry_seconds_std": 0.0,
+        "pin_retries_max": 1.0,
+        "pin_retries_mean": 1.0,
+        "pin_retries_total": 1.0,
+        "send_total_amount": 0.0,
+        "send_tx_count": 0.0,
+        "service_diversity_count": 2.0,
+        "session_steps_max": 7.0,
+        "session_steps_mean": 7.0,
+        "top_agent_concentration": 1.0,
+        "top_agent_share": 1.0,
+        "withdrawn_balance_ratio_max": 0.8025682182985554,
+        "withdrawn_balance_ratio_mean": 0.8025682182985554
+      },
+      "predicted_class": 1,
+      "predicted_probability": 0.9430689975358948,
+      "user_id": "U_2026_003949"
+    },
+    {
+      "explanations": [
+        {
+          "attribution": 2.262132436995012,
+          "attribution_unit": "log_odds",
+          "feature": "session_steps_mean",
+          "value": 7.0
+        },
+        {
+          "attribution": 0.5684293220674638,
+          "attribution_unit": "log_odds",
+          "feature": "agent_assisted_tx_ratio",
+          "value": 0.5
+        },
+        {
+          "attribution": 0.31596217734640986,
+          "attribution_unit": "log_odds",
+          "feature": "pin_entry_seconds_mean",
+          "value": 64.487
+        },
+        {
+          "attribution": 0.23450567300827552,
+          "attribution_unit": "log_odds",
+          "feature": "credit_to_cashout_hours_median",
+          "value": 35.0395147725
+        }
+      ],
+      "features": {
+        "agent_assisted_tx_ratio": 0.5,
+        "balance_end": 426.5,
+        "balance_mean": 2405.75,
+        "balance_min": 426.5,
+        "bill_pay_total_amount": 0.0,
+        "bill_pay_tx_count": 0.0,
+        "cash_out_amount_max": 3900.0,
+        "cash_out_amount_mean": 3900.0,
+        "cash_out_amount_median": 3900.0,
+        "cash_out_amount_min": 3900.0,
+        "cash_out_amount_std": 0.0,
+        "cash_out_total_amount": 3900.0,
+        "cash_out_tx_count": 1.0,
+        "credit_amount_mean": 4150.0,
+        "credit_to_cashout_hours_mean": 35.0395147725,
+        "credit_to_cashout_hours_median": 35.0395147725,
+        "credit_to_cashout_hours_min": 35.0395147725,
+        "credit_total_amount": 4150.0,
+        "credit_tx_count": 1.0,
+        "fee_to_amount_ratio": 0.007267080745341615,
+        "fee_total_paid": 58.5,
+        "pin_entry_seconds_mean": 64.487,
+        "pin_entry_seconds_median": 64.487,
+        "pin_entry_seconds_std": 0.0,
+        "pin_retries_max": 1.0,
+        "pin_retries_mean": 1.0,
+        "pin_retries_total": 1.0,
+        "send_total_amount": 0.0,
+        "send_tx_count": 0.0,
+        "service_diversity_count": 2.0,
+        "session_steps_max": 7.0,
+        "session_steps_mean": 7.0,
+        "top_agent_concentration": 1.0,
+        "top_agent_share": 1.0,
+        "withdrawn_balance_ratio_max": 0.8893956670467503,
+        "withdrawn_balance_ratio_mean": 0.8893956670467503
+      },
+      "predicted_class": 1,
+      "predicted_probability": 0.9425063576874039,
+      "user_id": "U_2026_003947"
+    },
+    {
+      "explanations": [
+        {
+          "attribution": 2.218641665148232,
+          "attribution_unit": "log_odds",
+          "feature": "session_steps_mean",
+          "value": 7.0
+        },
+        {
+          "attribution": 0.5051614004536517,
+          "attribution_unit": "log_odds",
+          "feature": "agent_assisted_tx_ratio",
+          "value": 0.5
+        },
+        {
+          "attribution": 0.40172993794021694,
+          "attribution_unit": "log_odds",
+          "feature": "credit_to_cashout_hours_min",
+          "value": 29.204541165833334
+        },
+        {
+          "attribution": 0.23417087830857403,
+          "attribution_unit": "log_odds",
+          "feature": "withdrawn_balance_ratio_max",
+          "value": 0.9687065661458114
+        }
+      ],
+      "features": {
+        "agent_assisted_tx_ratio": 0.5,
+        "balance_end": 99.5,
+        "balance_mean": 3017.625,
+        "balance_min": 99.5,
+        "bill_pay_total_amount": 0.0,
+        "bill_pay_tx_count": 0.0,
+        "cash_out_amount_max": 5750.0,
+        "cash_out_amount_mean": 5750.0,
+        "cash_out_amount_median": 5750.0,
+        "cash_out_amount_min": 5750.0,
+        "cash_out_amount_std": 0.0,
+        "cash_out_total_amount": 5750.0,
+        "cash_out_tx_count": 1.0,
+        "credit_amount_mean": 4750.0,
+        "credit_to_cashout_hours_mean": 29.204541165833334,
+        "credit_to_cashout_hours_median": 29.204541165833334,
+        "credit_to_cashout_hours_min": 29.204541165833334,
+        "credit_total_amount": 4750.0,
+        "credit_tx_count": 1.0,
+        "fee_to_amount_ratio": 0.008214285714285714,
+        "fee_total_paid": 86.25,
+        "pin_entry_seconds_mean": 8.152,
+        "pin_entry_seconds_median": 8.152,
+        "pin_entry_seconds_std": 0.0,
+        "pin_retries_max": 0.0,
+        "pin_retries_mean": 0.0,
+        "pin_retries_total": 0.0,
+        "send_total_amount": 0.0,
+        "send_tx_count": 0.0,
+        "service_diversity_count": 2.0,
+        "session_steps_max": 7.0,
+        "session_steps_mean": 7.0,
+        "top_agent_concentration": 1.0,
+        "top_agent_share": 1.0,
+        "withdrawn_balance_ratio_max": 0.9687065661458114,
+        "withdrawn_balance_ratio_mean": 0.9687065661458114
+      },
+      "predicted_class": 1,
+      "predicted_probability": 0.9417115757681722,
+      "user_id": "U_2026_002637"
+    },
+    {
+      "explanations": [
+        {
+          "attribution": 2.2140540802458055,
+          "attribution_unit": "log_odds",
+          "feature": "session_steps_mean",
+          "value": 7.0
+        },
+        {
+          "attribution": 0.5433548023975456,
+          "attribution_unit": "log_odds",
+          "feature": "agent_assisted_tx_ratio",
+          "value": 0.5
+        },
+        {
+          "attribution": 0.3528603046402818,
+          "attribution_unit": "log_odds",
+          "feature": "credit_to_cashout_hours_min",
+          "value": 23.490618025555555
+        },
+        {
+          "attribution": 0.272930721674286,
+          "attribution_unit": "log_odds",
+          "feature": "pin_entry_seconds_median",
+          "value": 11.538
+        }
+      ],
+      "features": {
+        "agent_assisted_tx_ratio": 0.5,
+        "balance_end": 1250.25,
+        "balance_mean": 3407.125,
+        "balance_min": 1250.25,
+        "bill_pay_total_amount": 0.0,
+        "bill_pay_tx_count": 0.0,
+        "cash_out_amount_max": 4250.0,
+        "cash_out_amount_mean": 4250.0,
+        "cash_out_amount_median": 4250.0,
+        "cash_out_amount_min": 4250.0,
+        "cash_out_amount_std": 0.0,
+        "cash_out_total_amount": 4250.0,
+        "cash_out_tx_count": 1.0,
+        "credit_amount_mean": 4850.0,
+        "credit_to_cashout_hours_mean": 23.490618025555555,
+        "credit_to_cashout_hours_median": 23.490618025555555,
+        "credit_to_cashout_hours_min": 23.490618025555555,
+        "credit_total_amount": 4850.0,
+        "credit_tx_count": 1.0,
+        "fee_to_amount_ratio": 0.007005494505494506,
+        "fee_total_paid": 63.75,
+        "pin_entry_seconds_mean": 11.538,
+        "pin_entry_seconds_median": 11.538,
+        "pin_entry_seconds_std": 0.0,
+        "pin_retries_max": 0.0,
+        "pin_retries_mean": 0.0,
+        "pin_retries_total": 0.0,
+        "send_total_amount": 0.0,
+        "send_tx_count": 0.0,
+        "service_diversity_count": 2.0,
+        "session_steps_max": 7.0,
+        "session_steps_mean": 7.0,
+        "top_agent_concentration": 1.0,
+        "top_agent_share": 1.0,
+        "withdrawn_balance_ratio_max": 0.7638389647735442,
+        "withdrawn_balance_ratio_mean": 0.7638389647735442
+      },
+      "predicted_class": 1,
+      "predicted_probability": 0.9415491850870533,
+      "user_id": "U_2026_002514"
+    },
+    {
+      "explanations": [
+        {
+          "attribution": 2.191463336961866,
+          "attribution_unit": "log_odds",
+          "feature": "session_steps_mean",
+          "value": 7.0
+        },
+        {
+          "attribution": 0.5085262424083283,
+          "attribution_unit": "log_odds",
+          "feature": "agent_assisted_tx_ratio",
+          "value": 0.5
+        },
+        {
+          "attribution": 0.32536066469568814,
+          "attribution_unit": "log_odds",
+          "feature": "withdrawn_balance_ratio_max",
+          "value": 0.8979282739222156
+        },
+        {
+          "attribution": 0.2664865877321395,
+          "attribution_unit": "log_odds",
+          "feature": "credit_to_cashout_hours_min",
+          "value": 53.47882293638889
+        }
+      ],
+      "features": {
+        "agent_assisted_tx_ratio": 0.5,
+        "balance_end": 409.5,
+        "balance_mean": 2515.625,
+        "balance_min": 409.5,
+        "bill_pay_total_amount": 0.0,
+        "bill_pay_tx_count": 0.0,
+        "cash_out_amount_max": 4150.0,
+        "cash_out_amount_mean": 4150.0,
+        "cash_out_amount_median": 4150.0,
+        "cash_out_amount_min": 4150.0,
+        "cash_out_amount_std": 0.0,
+        "cash_out_total_amount": 4150.0,
+        "cash_out_tx_count": 1.0,
+        "credit_amount_mean": 4050.0,
+        "credit_to_cashout_hours_mean": 53.47882293638889,
+        "credit_to_cashout_hours_median": 53.47882293638889,
+        "credit_to_cashout_hours_min": 53.47882293638889,
+        "credit_total_amount": 4050.0,
+        "credit_tx_count": 1.0,
+        "fee_to_amount_ratio": 0.007591463414634146,
+        "fee_total_paid": 62.25,
+        "pin_entry_seconds_mean": 8.434,
+        "pin_entry_seconds_median": 8.434,
+        "pin_entry_seconds_std": 0.0,
+        "pin_retries_max": 0.0,
+        "pin_retries_mean": 0.0,
+        "pin_retries_total": 0.0,
+        "send_total_amount": 0.0,
+        "send_tx_count": 0.0,
+        "service_diversity_count": 2.0,
+        "session_steps_max": 7.0,
+        "session_steps_mean": 7.0,
+        "top_agent_concentration": 1.0,
+        "top_agent_share": 1.0,
+        "withdrawn_balance_ratio_max": 0.8979282739222156,
+        "withdrawn_balance_ratio_mean": 0.8979282739222156
+      },
+      "predicted_class": 1,
+      "predicted_probability": 0.9406635784129879,
+      "user_id": "U_2026_002486"
+    },
+    {
+      "explanations": [
+        {
+          "attribution": 2.2954528628412483,
+          "attribution_unit": "log_odds",
+          "feature": "session_steps_mean",
+          "value": 7.0
+        },
+        {
+          "attribution": 0.6392681521340426,
+          "attribution_unit": "log_odds",
+          "feature": "agent_assisted_tx_ratio",
+          "value": 0.5
+        },
+        {
+          "attribution": 0.3876469635301662,
+          "attribution_unit": "log_odds",
+          "feature": "pin_entry_seconds_mean",
+          "value": 62.629
+        },
+        {
+          "attribution": 0.19226967301087966,
+          "attribution_unit": "log_odds",
+          "feature": "credit_to_cashout_hours_min",
+          "value": 25.95757278972222
+        }
+      ],
+      "features": {
+        "agent_assisted_tx_ratio": 0.5,
+        "balance_end": 1269.25,
+        "balance_mean": 1954.375,
+        "balance_min": 1269.25,
+        "bill_pay_total_amount": 0.0,
+        "bill_pay_tx_count": 0.0,
+        "cash_out_amount_max": 1350.0,
+        "cash_out_amount_mean": 1350.0,
+        "cash_out_amount_median": 1350.0,
+        "cash_out_amount_min": 1350.0,
+        "cash_out_amount_std": 0.0,
+        "cash_out_total_amount": 1350.0,
+        "cash_out_tx_count": 1.0,
+        "credit_amount_mean": 2350.0,
+        "credit_to_cashout_hours_mean": 25.95757278972222,
+        "credit_to_cashout_hours_median": 25.95757278972222,
+        "credit_to_cashout_hours_min": 25.95757278972222,
+        "credit_total_amount": 2350.0,
+        "credit_tx_count": 1.0,
+        "fee_to_amount_ratio": 0.005472972972972973,
+        "fee_total_paid": 20.25,
+        "pin_entry_seconds_mean": 62.629,
+        "pin_entry_seconds_median": 62.629,
+        "pin_entry_seconds_std": 0.0,
+        "pin_retries_max": 0.0,
+        "pin_retries_mean": 0.0,
+        "pin_retries_total": 0.0,
+        "send_total_amount": 0.0,
+        "send_tx_count": 0.0,
+        "service_diversity_count": 2.0,
+        "session_steps_max": 7.0,
+        "session_steps_mean": 7.0,
+        "top_agent_concentration": 1.0,
+        "top_agent_share": 1.0,
+        "withdrawn_balance_ratio_max": 0.5114605038833112,
+        "withdrawn_balance_ratio_mean": 0.5114605038833112
+      },
+      "predicted_class": 1,
+      "predicted_probability": 0.9404378477006801,
+      "user_id": "U_2026_000066"
+    },
+    {
+      "explanations": [
+        {
+          "attribution": 2.3471531876590035,
+          "attribution_unit": "log_odds",
+          "feature": "session_steps_mean",
+          "value": 7.0
+        },
+        {
+          "attribution": 0.6403689531322972,
+          "attribution_unit": "log_odds",
+          "feature": "agent_assisted_tx_ratio",
+          "value": 0.5
+        },
+        {
+          "attribution": 0.22944495932680456,
+          "attribution_unit": "log_odds",
+          "feature": "credit_to_cashout_hours_min",
+          "value": 27.230782368611113
+        },
+        {
+          "attribution": 0.2099294022696745,
+          "attribution_unit": "log_odds",
+          "feature": "pin_entry_seconds_median",
+          "value": 20.002
+        }
+      ],
+      "features": {
+        "agent_assisted_tx_ratio": 0.5,
+        "balance_end": 535.75,
+        "balance_mean": 2471.375,
+        "balance_min": 535.75,
+        "bill_pay_total_amount": 0.0,
+        "bill_pay_tx_count": 0.0,
+        "cash_out_amount_max": 3800.0,
+        "cash_out_amount_mean": 3800.0,
+        "cash_out_amount_median": 3800.0,
+        "cash_out_amount_min": 3800.0,
+        "cash_out_amount_std": 0.0,
+        "cash_out_total_amount": 3800.0,
+        "cash_out_tx_count": 1.0,
+        "credit_amount_mean": 4150.0,
+        "credit_to_cashout_hours_mean": 27.230782368611113,
+        "credit_to_cashout_hours_median": 27.230782368611113,
+        "credit_to_cashout_hours_min": 27.230782368611113,
+        "credit_total_amount": 4150.0,
+        "credit_tx_count": 1.0,
+        "fee_to_amount_ratio": 0.008962264150943396,
+        "fee_total_paid": 71.25,
+        "pin_entry_seconds_mean": 20.002,
+        "pin_entry_seconds_median": 20.002,
+        "pin_entry_seconds_std": 0.0,
+        "pin_retries_max": 1.0,
+        "pin_retries_mean": 1.0,
+        "pin_retries_total": 1.0,
+        "send_total_amount": 0.0,
+        "send_tx_count": 0.0,
+        "service_diversity_count": 2.0,
+        "session_steps_max": 7.0,
+        "session_steps_mean": 7.0,
+        "top_agent_concentration": 1.0,
+        "top_agent_share": 1.0,
+        "withdrawn_balance_ratio_max": 0.8622645790787383,
+        "withdrawn_balance_ratio_mean": 0.8622645790787383
+      },
+      "predicted_class": 1,
+      "predicted_probability": 0.9385180661684986,
+      "user_id": "U_2026_003798"
+    },
+    {
+      "explanations": [
+        {
+          "attribution": 2.176599764862387,
+          "attribution_unit": "log_odds",
+          "feature": "session_steps_mean",
+          "value": 7.0
+        },
+        {
+          "attribution": 0.658356969883857,
+          "attribution_unit": "log_odds",
+          "feature": "agent_assisted_tx_ratio",
+          "value": 0.5
+        },
+        {
+          "attribution": 0.4060660622149077,
+          "attribution_unit": "log_odds",
+          "feature": "pin_entry_seconds_mean",
+          "value": 56.299
+        },
+        {
+          "attribution": 0.23851044356113082,
+          "attribution_unit": "log_odds",
+          "feature": "credit_to_cashout_hours_mean",
+          "value": 0.20274328861111113
+        }
+      ],
+      "features": {
+        "agent_assisted_tx_ratio": 0.5,
+        "balance_end": 1150.5,
+        "balance_mean": 2647.625,
+        "balance_min": 1150.5,
+        "bill_pay_total_amount": 0.0,
+        "bill_pay_tx_count": 0.0,
+        "cash_out_amount_max": 2950.0,
+        "cash_out_amount_mean": 2950.0,
+        "cash_out_amount_median": 2950.0,
+        "cash_out_amount_min": 2950.0,
+        "cash_out_amount_std": 0.0,
+        "cash_out_total_amount": 2950.0,
+        "cash_out_tx_count": 1.0,
+        "credit_amount_mean": 3350.0,
+        "credit_to_cashout_hours_mean": 0.20274328861111113,
+        "credit_to_cashout_hours_median": 0.20274328861111113,
+        "credit_to_cashout_hours_min": 0.20274328861111113,
+        "credit_total_amount": 3350.0,
+        "credit_tx_count": 1.0,
+        "fee_to_amount_ratio": 0.007023809523809524,
+        "fee_total_paid": 44.25,
+        "pin_entry_seconds_mean": 56.299,
+        "pin_entry_seconds_median": 56.299,
+        "pin_entry_seconds_std": 0.0,
+        "pin_retries_max": 0.0,
+        "pin_retries_mean": 0.0,
+        "pin_retries_total": 0.0,
+        "send_total_amount": 0.0,
+        "send_tx_count": 0.0,
+        "service_diversity_count": 2.0,
+        "session_steps_max": 7.0,
+        "session_steps_mean": 7.0,
+        "top_agent_concentration": 1.0,
+        "top_agent_share": 1.0,
+        "withdrawn_balance_ratio_max": 0.7117437722419929,
+        "withdrawn_balance_ratio_mean": 0.7117437722419929
+      },
+      "predicted_class": 1,
+      "predicted_probability": 0.9382576611874,
+      "user_id": "U_2026_002901"
+    },
+    {
+      "explanations": [
+        {
+          "attribution": 2.2500555752871185,
+          "attribution_unit": "log_odds",
+          "feature": "session_steps_mean",
+          "value": 7.0
+        },
+        {
+          "attribution": 0.5525186631832512,
+          "attribution_unit": "log_odds",
+          "feature": "agent_assisted_tx_ratio",
+          "value": 0.5
+        },
+        {
+          "attribution": 0.26642392411715393,
+          "attribution_unit": "log_odds",
+          "feature": "balance_mean",
+          "value": 2766.125
+        },
+        {
+          "attribution": 0.2622313325209223,
+          "attribution_unit": "log_odds",
+          "feature": "credit_to_cashout_hours_min",
+          "value": 23.92428023361111
+        }
+      ],
+      "features": {
+        "agent_assisted_tx_ratio": 0.5,
+        "balance_end": 51.0,
+        "balance_mean": 2766.125,
+        "balance_min": 51.0,
+        "bill_pay_total_amount": 0.0,
+        "bill_pay_tx_count": 0.0,
+        "cash_out_amount_max": 5350.0,
+        "cash_out_amount_mean": 5350.0,
+        "cash_out_amount_median": 5350.0,
+        "cash_out_amount_min": 5350.0,
+        "cash_out_amount_std": 0.0,
+        "cash_out_total_amount": 5350.0,
+        "cash_out_tx_count": 1.0,
+        "credit_amount_mean": 3950.0,
+        "credit_to_cashout_hours_mean": 23.92428023361111,
+        "credit_to_cashout_hours_median": 23.92428023361111,
+        "credit_to_cashout_hours_min": 23.92428023361111,
+        "credit_total_amount": 3950.0,
+        "credit_tx_count": 1.0,
+        "fee_to_amount_ratio": 0.008629032258064516,
+        "fee_total_paid": 80.25,
+        "pin_entry_seconds_mean": 18.712,
+        "pin_entry_seconds_median": 18.712,
+        "pin_entry_seconds_std": 0.0,
+        "pin_retries_max": 0.0,
+        "pin_retries_mean": 0.0,
+        "pin_retries_total": 0.0,
+        "send_total_amount": 0.0,
+        "send_tx_count": 0.0,
+        "service_diversity_count": 2.0,
+        "session_steps_max": 7.0,
+        "session_steps_mean": 7.0,
+        "top_agent_concentration": 1.0,
+        "top_agent_share": 1.0,
+        "withdrawn_balance_ratio_max": 0.976054732041049,
+        "withdrawn_balance_ratio_mean": 0.976054732041049
+      },
+      "predicted_class": 1,
+      "predicted_probability": 0.9336929526280664,
+      "user_id": "U_2026_003044"
+    },
+    {
+      "explanations": [
+        {
+          "attribution": 2.259560333295554,
+          "attribution_unit": "log_odds",
+          "feature": "session_steps_mean",
+          "value": 7.0
+        },
+        {
+          "attribution": 0.5933299166240884,
+          "attribution_unit": "log_odds",
+          "feature": "agent_assisted_tx_ratio",
+          "value": 0.5
+        },
+        {
+          "attribution": 0.3675320584110965,
+          "attribution_unit": "log_odds",
+          "feature": "credit_to_cashout_hours_min",
+          "value": 27.646976907777777
+        },
+        {
+          "attribution": 0.2708254030553004,
+          "attribution_unit": "log_odds",
+          "feature": "credit_to_cashout_hours_median",
+          "value": 27.646976907777777
+        }
+      ],
+      "features": {
+        "agent_assisted_tx_ratio": 0.5,
+        "balance_end": 1334.0,
+        "balance_mean": 3440.125,
+        "balance_min": 1334.0,
+        "bill_pay_total_amount": 0.0,
+        "bill_pay_tx_count": 0.0,
+        "cash_out_amount_max": 4150.0,
+        "cash_out_amount_mean": 4150.0,
+        "cash_out_amount_median": 4150.0,
+        "cash_out_amount_min": 4150.0,
+        "cash_out_amount_std": 0.0,
+        "cash_out_total_amount": 4150.0,
+        "cash_out_tx_count": 1.0,
+        "credit_amount_mean": 4350.0,
+        "credit_to_cashout_hours_mean": 27.646976907777777,
+        "credit_to_cashout_hours_median": 27.646976907777777,
+        "credit_to_cashout_hours_min": 27.646976907777777,
+        "credit_total_amount": 4350.0,
+        "credit_tx_count": 1.0,
+        "fee_to_amount_ratio": 0.007323529411764706,
+        "fee_total_paid": 62.25,
+        "pin_entry_seconds_mean": 46.38,
+        "pin_entry_seconds_median": 46.38,
+        "pin_entry_seconds_std": 0.0,
+        "pin_retries_max": 1.0,
+        "pin_retries_mean": 1.0,
+        "pin_retries_total": 1.0,
+        "send_total_amount": 0.0,
+        "send_tx_count": 0.0,
+        "service_diversity_count": 2.0,
+        "session_steps_max": 7.0,
+        "session_steps_mean": 7.0,
+        "top_agent_concentration": 1.0,
+        "top_agent_share": 1.0,
+        "withdrawn_balance_ratio_max": 0.748253324318233,
+        "withdrawn_balance_ratio_mean": 0.748253324318233
+      },
+      "predicted_class": 1,
+      "predicted_probability": 0.932047328564017,
+      "user_id": "U_2026_000055"
+    },
+    {
+      "explanations": [
+        {
+          "attribution": 2.2562822864919285,
+          "attribution_unit": "log_odds",
+          "feature": "session_steps_mean",
+          "value": 7.0
+        },
+        {
+          "attribution": 0.59857836187438,
+          "attribution_unit": "log_odds",
+          "feature": "agent_assisted_tx_ratio",
+          "value": 0.5
+        },
+        {
+          "attribution": 0.24672864172920975,
+          "attribution_unit": "log_odds",
+          "feature": "fee_to_amount_ratio",
+          "value": 0.005405405405405406
+        },
+        {
+          "attribution": 0.2184222485336189,
+          "attribution_unit": "log_odds",
+          "feature": "credit_to_cashout_hours_mean",
+          "value": 0.30615711638888893
+        }
+      ],
+      "features": {
+        "agent_assisted_tx_ratio": 0.5,
+        "balance_end": 1520.01,
+        "balance_mean": 2535.01,
+        "balance_min": 1520.01,
+        "bill_pay_total_amount": 0.0,
+        "bill_pay_tx_count": 0.0,
+        "cash_out_amount_max": 2000.0,
+        "cash_out_amount_mean": 2000.0,
+        "cash_out_amount_median": 2000.0,
+        "cash_out_amount_min": 2000.0,
+        "cash_out_amount_std": 0.0,
+        "cash_out_total_amount": 2000.0,
+        "cash_out_tx_count": 1.0,
+        "credit_amount_mean": 3550.0,
+        "credit_to_cashout_hours_mean": 0.30615711638888893,
+        "credit_to_cashout_hours_median": 0.30615711638888893,
+        "credit_to_cashout_hours_min": 0.30615711638888893,
+        "credit_total_amount": 3550.0,
+        "credit_tx_count": 1.0,
+        "fee_to_amount_ratio": 0.005405405405405406,
+        "fee_total_paid": 30.0,
+        "pin_entry_seconds_mean": 21.983,
+        "pin_entry_seconds_median": 21.983,
+        "pin_entry_seconds_std": 0.0,
+        "pin_retries_max": 1.0,
+        "pin_retries_mean": 1.0,
+        "pin_retries_total": 1.0,
+        "send_total_amount": 0.0,
+        "send_tx_count": 0.0,
+        "service_diversity_count": 2.0,
+        "session_steps_max": 7.0,
+        "session_steps_mean": 7.0,
+        "top_agent_concentration": 1.0,
+        "top_agent_share": 1.0,
+        "withdrawn_balance_ratio_max": 0.5633786947079023,
+        "withdrawn_balance_ratio_mean": 0.5633786947079023
+      },
+      "predicted_class": 1,
+      "predicted_probability": 0.9308993956049386,
+      "user_id": "U_2026_002832"
+    },
+    {
+      "explanations": [
+        {
+          "attribution": 2.1421516861047794,
+          "attribution_unit": "log_odds",
+          "feature": "session_steps_mean",
+          "value": 7.0
+        },
+        {
+          "attribution": 0.5179711820065137,
+          "attribution_unit": "log_odds",
+          "feature": "agent_assisted_tx_ratio",
+          "value": 0.5
+        },
+        {
+          "attribution": 0.3122403552137254,
+          "attribution_unit": "log_odds",
+          "feature": "withdrawn_balance_ratio_max",
+          "value": 0.9034552357153155
+        },
+        {
+          "attribution": 0.23486278313021097,
+          "attribution_unit": "log_odds",
+          "feature": "balance_mean",
+          "value": 2817.0
+        }
+      ],
+      "features": {
+        "agent_assisted_tx_ratio": 0.5,
+        "balance_end": 431.75,
+        "balance_mean": 2817.0,
+        "balance_min": 431.75,
+        "bill_pay_total_amount": 0.0,
+        "bill_pay_tx_count": 0.0,
+        "cash_out_amount_max": 4700.0,
+        "cash_out_amount_mean": 4700.0,
+        "cash_out_amount_median": 4700.0,
+        "cash_out_amount_min": 4700.0,
+        "cash_out_amount_std": 0.0,
+        "cash_out_total_amount": 4700.0,
+        "cash_out_tx_count": 1.0,
+        "credit_amount_mean": 1500.0,
+        "credit_to_cashout_hours_mean": 0.2770032797222222,
+        "credit_to_cashout_hours_median": 0.2770032797222222,
+        "credit_to_cashout_hours_min": 0.2770032797222222,
+        "credit_total_amount": 1500.0,
+        "credit_tx_count": 1.0,
+        "fee_to_amount_ratio": 0.011370967741935484,
+        "fee_total_paid": 70.5,
+        "pin_entry_seconds_mean": 3.25,
+        "pin_entry_seconds_median": 3.25,
+        "pin_entry_seconds_std": 0.0,
+        "pin_retries_max": 1.0,
+        "pin_retries_mean": 1.0,
+        "pin_retries_total": 1.0,
+        "send_total_amount": 0.0,
+        "send_tx_count": 0.0,
+        "service_diversity_count": 2.0,
+        "session_steps_max": 7.0,
+        "session_steps_mean": 7.0,
+        "top_agent_concentration": 1.0,
+        "top_agent_share": 1.0,
+        "withdrawn_balance_ratio_max": 0.9034552357153155,
+        "withdrawn_balance_ratio_mean": 0.9034552357153155
+      },
+      "predicted_class": 1,
+      "predicted_probability": 0.9304431975831082,
+      "user_id": "U_2026_000199"
+    },
+    {
+      "explanations": [
+        {
+          "attribution": 2.2056096704078856,
+          "attribution_unit": "log_odds",
+          "feature": "session_steps_mean",
+          "value": 7.0
+        },
+        {
+          "attribution": 0.5059081366773414,
+          "attribution_unit": "log_odds",
+          "feature": "agent_assisted_tx_ratio",
+          "value": 0.5
+        },
+        {
+          "attribution": 0.3863958993539126,
+          "attribution_unit": "log_odds",
+          "feature": "credit_to_cashout_hours_min",
+          "value": 27.733144836388888
+        },
+        {
+          "attribution": 0.267288264513083,
+          "attribution_unit": "log_odds",
+          "feature": "pin_entry_seconds_median",
+          "value": 14.926
+        }
+      ],
+      "features": {
+        "agent_assisted_tx_ratio": 0.5,
+        "balance_end": 453.63,
+        "balance_mean": 2991.13,
+        "balance_min": 453.63,
+        "bill_pay_total_amount": 0.0,
+        "bill_pay_tx_count": 0.0,
+        "cash_out_amount_max": 5000.0,
+        "cash_out_amount_mean": 5000.0,
+        "cash_out_amount_median": 5000.0,
+        "cash_out_amount_min": 5000.0,
+        "cash_out_amount_std": 0.0,
+        "cash_out_total_amount": 5000.0,
+        "cash_out_tx_count": 1.0,
+        "credit_amount_mean": 4100.0,
+        "credit_to_cashout_hours_mean": 27.733144836388888,
+        "credit_to_cashout_hours_median": 27.733144836388888,
+        "credit_to_cashout_hours_min": 27.733144836388888,
+        "credit_total_amount": 4100.0,
+        "credit_tx_count": 1.0,
+        "fee_to_amount_ratio": 0.008241758241758242,
+        "fee_total_paid": 75.0,
+        "pin_entry_seconds_mean": 14.926,
+        "pin_entry_seconds_median": 14.926,
+        "pin_entry_seconds_std": 0.0,
+        "pin_retries_max": 0.0,
+        "pin_retries_mean": 0.0,
+        "pin_retries_total": 0.0,
+        "send_total_amount": 0.0,
+        "send_tx_count": 0.0,
+        "service_diversity_count": 2.0,
+        "session_steps_max": 7.0,
+        "session_steps_mean": 7.0,
+        "top_agent_concentration": 1.0,
+        "top_agent_share": 1.0,
+        "withdrawn_balance_ratio_max": 0.904383183537332,
+        "withdrawn_balance_ratio_mean": 0.904383183537332
+      },
+      "predicted_class": 1,
+      "predicted_probability": 0.9303988156664085,
+      "user_id": "U_2026_002470"
+    },
+    {
+      "explanations": [
+        {
+          "attribution": 2.2466374936426337,
+          "attribution_unit": "log_odds",
+          "feature": "session_steps_mean",
+          "value": 7.0
+        },
+        {
+          "attribution": 0.5497992174115706,
+          "attribution_unit": "log_odds",
+          "feature": "agent_assisted_tx_ratio",
+          "value": 0.5
+        },
+        {
+          "attribution": 0.26137271575883464,
+          "attribution_unit": "log_odds",
+          "feature": "credit_to_cashout_hours_min",
+          "value": 23.391962317222223
+        },
+        {
+          "attribution": 0.247067175547469,
+          "attribution_unit": "log_odds",
+          "feature": "credit_to_cashout_hours_median",
+          "value": 23.391962317222223
+        }
+      ],
+      "features": {
+        "agent_assisted_tx_ratio": 0.5,
+        "balance_end": 581.75,
+        "balance_mean": 2484.875,
+        "balance_min": 581.75,
+        "bill_pay_total_amount": 0.0,
+        "bill_pay_tx_count": 0.0,
+        "cash_out_amount_max": 3750.0,
+        "cash_out_amount_mean": 3750.0,
+        "cash_out_amount_median": 3750.0,
+        "cash_out_amount_min": 3750.0,
+        "cash_out_amount_std": 0.0,
+        "cash_out_total_amount": 3750.0,
+        "cash_out_tx_count": 1.0,
+        "credit_amount_mean": 4100.0,
+        "credit_to_cashout_hours_mean": 23.391962317222223,
+        "credit_to_cashout_hours_median": 23.391962317222223,
+        "credit_to_cashout_hours_min": 23.391962317222223,
+        "credit_total_amount": 4100.0,
+        "credit_tx_count": 1.0,
+        "fee_to_amount_ratio": 0.007165605095541401,
+        "fee_total_paid": 56.25,
+        "pin_entry_seconds_mean": 12.91,
+        "pin_entry_seconds_median": 12.91,
+        "pin_entry_seconds_std": 0.0,
+        "pin_retries_max": 0.0,
+        "pin_retries_mean": 0.0,
+        "pin_retries_total": 0.0,
+        "send_total_amount": 0.0,
+        "send_tx_count": 0.0,
+        "service_diversity_count": 2.0,
+        "session_steps_max": 7.0,
+        "session_steps_mean": 7.0,
+        "top_agent_concentration": 1.0,
+        "top_agent_share": 1.0,
+        "withdrawn_balance_ratio_max": 0.8546034639927074,
+        "withdrawn_balance_ratio_mean": 0.8546034639927074
+      },
+      "predicted_class": 1,
+      "predicted_probability": 0.9286902719307522,
+      "user_id": "U_2026_002434"
+    },
+    {
+      "explanations": [
+        {
+          "attribution": 2.1769361810931107,
+          "attribution_unit": "log_odds",
+          "feature": "session_steps_mean",
+          "value": 7.0
+        },
+        {
+          "attribution": 0.5582219037968773,
+          "attribution_unit": "log_odds",
+          "feature": "agent_assisted_tx_ratio",
+          "value": 0.5
+        },
+        {
+          "attribution": 0.2995510544664497,
+          "attribution_unit": "log_odds",
+          "feature": "pin_entry_seconds_mean",
+          "value": 57.813
+        },
+        {
+          "attribution": 0.23512385027291183,
+          "attribution_unit": "log_odds",
+          "feature": "credit_to_cashout_hours_median",
+          "value": 22.347791746666665
+        }
+      ],
+      "features": {
+        "agent_assisted_tx_ratio": 0.5,
+        "balance_end": 75.0,
+        "balance_mean": 2105.0,
+        "balance_min": 75.0,
+        "bill_pay_total_amount": 0.0,
+        "bill_pay_tx_count": 0.0,
+        "cash_out_amount_max": 4000.0,
+        "cash_out_amount_mean": 4000.0,
+        "cash_out_amount_median": 4000.0,
+        "cash_out_amount_min": 4000.0,
+        "cash_out_amount_std": 0.0,
+        "cash_out_total_amount": 4000.0,
+        "cash_out_tx_count": 1.0,
+        "credit_amount_mean": 3950.0,
+        "credit_to_cashout_hours_mean": 22.347791746666665,
+        "credit_to_cashout_hours_median": 22.347791746666665,
+        "credit_to_cashout_hours_min": 22.347791746666665,
+        "credit_total_amount": 3950.0,
+        "credit_tx_count": 1.0,
+        "fee_to_amount_ratio": 0.007547169811320755,
+        "fee_total_paid": 60.0,
+        "pin_entry_seconds_mean": 57.813,
+        "pin_entry_seconds_median": 57.813,
+        "pin_entry_seconds_std": 0.0,
+        "pin_retries_max": 0.0,
+        "pin_retries_mean": 0.0,
+        "pin_retries_total": 0.0,
+        "send_total_amount": 0.0,
+        "send_tx_count": 0.0,
+        "service_diversity_count": 2.0,
+        "session_steps_max": 7.0,
+        "session_steps_mean": 7.0,
+        "top_agent_concentration": 1.0,
+        "top_agent_share": 1.0,
+        "withdrawn_balance_ratio_max": 0.9673518742442564,
+        "withdrawn_balance_ratio_mean": 0.9673518742442564
+      },
+      "predicted_class": 1,
+      "predicted_probability": 0.9277312488608747,
+      "user_id": "U_2026_003756"
+    },
+    {
+      "explanations": [
+        {
+          "attribution": 2.2195292851844743,
+          "attribution_unit": "log_odds",
+          "feature": "session_steps_mean",
+          "value": 7.0
+        },
+        {
+          "attribution": 0.6128162115317769,
+          "attribution_unit": "log_odds",
+          "feature": "agent_assisted_tx_ratio",
+          "value": 0.5
+        },
+        {
+          "attribution": 0.2388094552541956,
+          "attribution_unit": "log_odds",
+          "feature": "credit_to_cashout_hours_min",
+          "value": 26.15681005333333
+        },
+        {
+          "attribution": 0.22554992759593775,
+          "attribution_unit": "log_odds",
+          "feature": "credit_to_cashout_hours_median",
+          "value": 26.15681005333333
+        }
+      ],
+      "features": {
+        "agent_assisted_tx_ratio": 0.5,
+        "balance_end": 3384.0,
+        "balance_mean": 5287.125,
+        "balance_min": 3384.0,
+        "bill_pay_total_amount": 0.0,
+        "bill_pay_tx_count": 0.0,
+        "cash_out_amount_max": 3750.0,
+        "cash_out_amount_mean": 3750.0,
+        "cash_out_amount_median": 3750.0,
+        "cash_out_amount_min": 3750.0,
+        "cash_out_amount_std": 0.0,
+        "cash_out_total_amount": 3750.0,
+        "cash_out_tx_count": 1.0,
+        "credit_amount_mean": 5000.0,
+        "credit_to_cashout_hours_mean": 26.15681005333333,
+        "credit_to_cashout_hours_median": 26.15681005333333,
+        "credit_to_cashout_hours_min": 26.15681005333333,
+        "credit_total_amount": 5000.0,
+        "credit_tx_count": 1.0,
+        "fee_to_amount_ratio": 0.0064285714285714285,
+        "fee_total_paid": 56.25,
+        "pin_entry_seconds_mean": 17.734,
+        "pin_entry_seconds_median": 17.734,
+        "pin_entry_seconds_std": 0.0,
+        "pin_retries_max": 1.0,
+        "pin_retries_mean": 1.0,
+        "pin_retries_total": 1.0,
+        "send_total_amount": 0.0,
+        "send_tx_count": 0.0,
+        "service_diversity_count": 2.0,
+        "session_steps_max": 7.0,
+        "session_steps_mean": 7.0,
+        "top_agent_concentration": 1.0,
+        "top_agent_share": 1.0,
+        "withdrawn_balance_ratio_max": 0.5215395848544905,
+        "withdrawn_balance_ratio_mean": 0.5215395848544905
+      },
+      "predicted_class": 1,
+      "predicted_probability": 0.9246663495996371,
+      "user_id": "U_2026_002546"
+    },
+    {
+      "explanations": [
+        {
+          "attribution": 2.1983422087328472,
+          "attribution_unit": "log_odds",
+          "feature": "session_steps_mean",
+          "value": 7.0
+        },
+        {
+          "attribution": 0.42011750964545524,
+          "attribution_unit": "log_odds",
+          "feature": "agent_assisted_tx_ratio",
+          "value": 0.6666666666666666
+        },
+        {
+          "attribution": 0.31727966557775994,
+          "attribution_unit": "log_odds",
+          "feature": "withdrawn_balance_ratio_max",
+          "value": 0.9052729818012133
+        },
+        {
+          "attribution": 0.23068932947610213,
+          "attribution_unit": "log_odds",
+          "feature": "credit_to_cashout_hours_min",
+          "value": 36.55641665222222
+        }
+      ],
+      "features": {
+        "agent_assisted_tx_ratio": 0.6666666666666666,
+        "balance_end": 284.75,
+        "balance_mean": 2025.6666666666667,
+        "balance_min": 284.75,
+        "bill_pay_total_amount": 150.0,
+        "bill_pay_tx_count": 1.0,
+        "cash_out_amount_max": 4850.0,
+        "cash_out_amount_mean": 4850.0,
+        "cash_out_amount_median": 4850.0,
+        "cash_out_amount_min": 4850.0,
+        "cash_out_amount_std": 0.0,
+        "cash_out_total_amount": 4850.0,
+        "cash_out_tx_count": 1.0,
+        "credit_amount_mean": 4950.0,
+        "credit_to_cashout_hours_mean": 36.55641665222222,
+        "credit_to_cashout_hours_median": 36.55641665222222,
+        "credit_to_cashout_hours_min": 36.55641665222222,
+        "credit_total_amount": 4950.0,
+        "credit_tx_count": 1.0,
+        "fee_to_amount_ratio": 0.0073115577889447236,
+        "fee_total_paid": 72.75,
+        "pin_entry_seconds_mean": 8.478,
+        "pin_entry_seconds_median": 8.478,
+        "pin_entry_seconds_std": 2.308,
+        "pin_retries_max": 1.0,
+        "pin_retries_mean": 0.5,
+        "pin_retries_total": 1.0,
+        "send_total_amount": 0.0,
+        "send_tx_count": 0.0,
+        "service_diversity_count": 3.0,
+        "session_steps_max": 7.0,
+        "session_steps_mean": 7.0,
+        "top_agent_concentration": 1.0,
+        "top_agent_share": 1.0,
+        "withdrawn_balance_ratio_max": 0.9052729818012133,
+        "withdrawn_balance_ratio_mean": 0.9052729818012133
+      },
+      "predicted_class": 1,
+      "predicted_probability": 0.9242653253602096,
+      "user_id": "U_2026_003330"
+    }
+  ],
+  "cutoff": "2026-11-30T00:00:00+00:00",
+  "disclaimer": "Synthetic simulation snapshot for offline demo and verification; never present artifact subjects as live customer records or runtime demo ledger.",
+  "schema_version": 1,
+  "selection": "Top predicted probability/risk, stable ID ties; no truth labels",
+  "snapshot_type": "curated_synthetic_inference_snapshot",
+  "synthetic": true,
+  "window_days": 30
+}
