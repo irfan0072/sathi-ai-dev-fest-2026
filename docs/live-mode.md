@@ -13,6 +13,29 @@ and each external service is switched on only by setting environment variables.
 | 05 Merchant & Agent | 7-day agent cash-out demand forecast with P90 and an opening-cash recommendation | `backend/app/intelligence/liquidity.py`, console "Liquidity Forecast" |
 | 04 Growth & Campaign | Uplift (T-learner) targeting for Sathi enrollment and a fixed-budget channel optimizer | `backend/app/intelligence/uplift.py`, console "Adoption Uplift" |
 
+## 0. Main flow: confirm every cash-out afterwards (current console)
+
+1. The agent gives the cash and records it on **Cash-out** (customer + amount). The ledger is
+   debited (amount + assumed fee), a receipt SMS goes to the customer, and a check opens.
+2. Sathi immediately calls the customer's registered phone (simulated phone, Twilio or the
+   Bangladesh gateway). The Bangla prompt never says the amount. The customer types the cash
+   they received and presses `#`.
+3. Same amount → **Verified**. A different amount twice (one retry for typos), `#` alone
+   ("I didn't do this"), or the secret help signal (`0` first) → **Suspicious**, with a
+   plain-language AI recommendation and a case for the supervisor. The AI never says
+   "fraud"; the supervisor decides (AI summary, decision, extra checks on the agent).
+4. No answer → **No answer**; the supervisor can press **Call the customer again**.
+
+Who sees what: agents see their cash-outs with a neutral "Confirmation done / waiting /
+missed call"; customers see balance, history, the incoming call and SMS; only supervisors see
+Verified / Suspicious (Transactions page, Dashboard, Cases to review).
+
+API: `POST /api/v1/cashouts` (agent), `GET /api/v1/transactions` (agent/customer, neutral),
+`GET /api/v1/transaction-checks[?status=]`, `GET /api/v1/transaction-checks/{id}`,
+`POST /api/v1/transaction-checks/{id}/call` (supervisor). Migration 007 adds `txn_checks` and
+lets `voice_calls` belong to a check. The earlier request → confirm → one-time-code flow
+(sections 1–2) is still in the API and tested, but no longer shown in the console.
+
 ## 1. Verification call (Track 07)
 
 Flow:

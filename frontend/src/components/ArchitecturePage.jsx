@@ -1,12 +1,12 @@
 import Icon from './Icon';
 
 const lifecycle = [
-  { step: '1. Request', desc: 'The agent types how much cash the customer wants.', tone: 'badge-info' },
-  { step: '2. Confirm', desc: 'The customer types the same amount on their own phone (in Bangla).', tone: 'badge-secondary' },
-  { step: '3. Code', desc: 'If the amounts match, the agent gets a code that works only once.', tone: 'badge-primary' },
-  { step: '4. Cash', desc: 'The agent types the code and gives the cash.', tone: 'badge-success' },
-  { step: 'Problem?', desc: 'If anything looks wrong, a supervisor checks it.', tone: 'badge-warning' },
-  { step: 'Stopped', desc: 'Requests expire after 15 minutes, and the customer can cancel any time.', tone: 'badge-neutral' },
+  { step: '1. Cash-out', desc: 'The agent gives the cash and records it. The money leaves the account.', tone: 'badge-info' },
+  { step: '2. Call', desc: 'Sathi calls the customer right away. The call never says the amount.', tone: 'badge-secondary' },
+  { step: '3. Customer types', desc: 'The customer types the cash they got and presses #.', tone: 'badge-primary' },
+  { step: 'Verified', desc: 'Same amount as the transaction: marked verified.', tone: 'badge-success' },
+  { step: 'Suspicious', desc: 'Different amount, “I didn’t do this”, or the secret help signal: marked suspicious with reasons, and a supervisor reviews it.', tone: 'badge-warning' },
+  { step: 'No answer', desc: 'A supervisor can call the customer again.', tone: 'badge-neutral' },
 ];
 
 const principles = [
@@ -103,19 +103,19 @@ export default function ArchitecturePage() {
           <div className="panel-body">
             <h3 className="flex items-center gap-2 font-semibold text-success">
               <Icon name="check" />
-              Our answer: confirm without a PIN
+              Our answer: check every cash-out with the customer
             </h3>
             <p className="text-sm text-base-content/80">
-              Rahima never shares her PIN. She types the amount on her own phone, in Bangla. If it matches what the
-              agent asked for, the agent gets a code that works only once.
+              Right after the agent gives Rahima cash, Sathi calls her. She types the amount she actually got, in
+              Bangla. If it is less than the transaction, the cash-out is marked suspicious for a supervisor.
             </p>
             <ul className="flex flex-col gap-2 text-sm">
               {[
-                'The code works once, for 15 minutes, only at that agent',
+                'Every cash-out is checked, not only risky ones',
                 'We call her registered phone; the call never says the amount',
                 'Secret help: if forced, she types 0 first (like 03000). It looks normal, but the cash is stopped and a supervisor is alerted',
-                'A wrong amount goes to a supervisor',
-                'Risky requests need a phone call; people make the final decision',
+                'A different amount is marked suspicious, never “fraud”',
+                'Agents never see the result, so they cannot pressure the customer',
               ].map((item) => (
                 <li key={item} className="flex gap-2">
                   <Icon name="check" className="mt-0.5 size-4 shrink-0 text-success" />

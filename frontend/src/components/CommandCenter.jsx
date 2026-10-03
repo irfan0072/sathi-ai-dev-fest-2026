@@ -62,7 +62,7 @@ export function WatchButton({ agentId, watchlisted, caseId, onChange }) {
   );
 }
 
-export default function CommandCenter({ onOpenCases }) {
+export default function CommandCenter({ onOpenCases, onOpenTransactions }) {
   const [data, setData] = useState(null);
   const [config, setConfig] = useState(null);
   const [costs, setCosts] = useState(null);
@@ -83,7 +83,6 @@ export default function CommandCenter({ onOpenCases }) {
     return () => clearInterval(timer);
   }, [load]);
 
-  const bands = data?.risk_bands || {};
   const calls = data?.calls || {};
   return (
     <div className="flex flex-col gap-6">
@@ -118,16 +117,16 @@ export default function CommandCenter({ onOpenCases }) {
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <Kpi
               icon="flow"
-              label="Cash-out requests today"
-              value={data.totals.mandates}
-              note={`${pct(data.totals.confirmation_rate)} confirmed`}
+              label="Cash-outs today"
+              value={data.check_totals?.cashouts ?? 0}
+              note={`${bdt(data.check_totals?.cashout_bdt)} given out`}
               tone="bg-primary/15 text-primary"
             />
             <Kpi
-              icon="receipt"
-              label="Cash paid today"
-              value={bdt(data.totals.redeemed_bdt)}
-              note={`${bdt(data.totals.held_bdt)} stopped`}
+              icon="check"
+              label="Verified by customer"
+              value={data.check_totals?.verified ?? 0}
+              note={`${pct(data.check_totals?.verified_rate)} of answered calls`}
               tone="bg-secondary/15 text-secondary"
             />
             <Kpi
@@ -138,10 +137,10 @@ export default function CommandCenter({ onOpenCases }) {
               tone={data.cases.urgent ? 'bg-error/15 text-error' : 'bg-base-200'}
             />
             <Kpi
-              icon="phone"
-              label="Confirmation calls today"
-              value={Object.values(calls).reduce((a, b) => a + b, 0)}
-              note={`${calls.verified || 0} confirmed · ${(calls.duress || 0) + (calls.rejected || 0) + (calls.mismatch || 0)} problems`}
+              icon="shield"
+              label="Marked suspicious"
+              value={data.check_totals?.suspicious ?? 0}
+              note={`${data.check_totals?.waiting ?? 0} waiting · ${data.check_totals?.no_answer ?? 0} no answer`}
               tone="bg-accent/20 text-accent-content"
             />
           </div>
@@ -162,19 +161,23 @@ export default function CommandCenter({ onOpenCases }) {
           <div className="grid gap-5 lg:grid-cols-3">
             <div className="panel shadow-sm lg:col-span-2">
               <div className="panel-body">
-                <h3 className="font-semibold">Cash-out requests per hour</h3>
+                <h3 className="font-semibold">Cash-outs per hour</h3>
                 <HourlyBars hours={data.hourly} />
               </div>
             </div>
             <div className="panel shadow-sm">
               <div className="panel-body gap-4">
                 <div>
-                  <h3 className="mb-2 font-semibold">How risky were the requests?</h3>
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <h3 className="font-semibold">Customer confirmations</h3>
+                    {onOpenTransactions && <button className="btn btn-ghost btn-xs" onClick={onOpenTransactions}>See all</button>}
+                  </div>
                   <StateBar
                     parts={[
-                      { label: 'Low', value: bands.low || 0, color: 'var(--status-good)' },
-                      { label: 'Medium', value: bands.medium || 0, color: 'var(--status-warning)' },
-                      { label: 'High', value: bands.high || 0, color: 'var(--status-critical)' },
+                      { label: 'Verified', value: data.check_totals?.verified || 0, color: 'var(--status-good)' },
+                      { label: 'Waiting', value: data.check_totals?.waiting || 0, color: 'var(--status-warning)' },
+                      { label: 'No answer', value: data.check_totals?.no_answer || 0, color: 'var(--status-serious)' },
+                      { label: 'Suspicious', value: data.check_totals?.suspicious || 0, color: 'var(--status-critical)' },
                     ]}
                   />
                 </div>

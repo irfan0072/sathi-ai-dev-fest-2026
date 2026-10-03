@@ -90,6 +90,7 @@ from app.mandates.router import router as mandates_router  # noqa: E402
 from app.notify.router import router as notify_router  # noqa: E402
 from app.ops.router import router as ops_router  # noqa: E402
 from app.settings.router import router as settings_router  # noqa: E402
+from app.txn.router import router as txn_router  # noqa: E402
 from app.voice.router import router as voice_router  # noqa: E402
 
 app.include_router(auth_router)
@@ -101,6 +102,7 @@ app.include_router(intelligence_router)
 app.include_router(notify_router)
 app.include_router(ops_router)
 app.include_router(settings_router)
+app.include_router(txn_router)
 
 
 @app.get("/health")

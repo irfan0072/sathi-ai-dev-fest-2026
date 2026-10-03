@@ -3,7 +3,8 @@ import { renderToString } from 'react-dom/server';
 import App from './App';
 import Header from './components/Header';
 import MetricsPage from './components/MetricsPage';
-import LiveSimulation from './components/LiveSimulation';
+import AgentCashout from './components/AgentCashout';
+import CustomerAccount from './components/CustomerAccount';
 import { UserReasons } from './components/OutreachList';
 import { evidenceFixture } from './components/evidenceFixture';
 import OutreachList from './components/OutreachList';
@@ -115,19 +116,20 @@ describe('Screen Labels & Provenance', () => {
 
 
 describe('Verified role and evidence boundaries', () => {
-  it('customer has keypad but no terminal code or issuance/redemption controls', () => {
-    const html = renderToString(<LiveSimulation session={{role: 'customer_channel', subject: 'U_fixture'}} flow={{mandateId: 'fixture-id'}} />);
-    expect(html).toContain('Confirm amount');
-    expect(html).toContain('গ্রাহকের নিশ্চিতকরণ');
-    expect(html).not.toContain('Get one-time code');
-    expect(html).not.toContain('Type the one-time code');
-    expect(html).not.toContain('849201');
+  it('customer sees balance, history and phone but never the check result', () => {
+    const html = renderToString(<CustomerAccount />);
+    expect(html).toContain('My account');
+    expect(html).toContain('Balance');
+    expect(html).toContain('My phone');
+    expect(html).not.toContain('Suspicious');
+    expect(html).not.toContain('Verified');
   });
-  it('agent cannot render customer verification controls', () => {
-    const html = renderToString(<LiveSimulation session={{role: 'agent', subject: 'A_fixture', allowed_users: ['U_fixture']}} />);
-    expect(html).toContain('Get one-time code');
-    expect(html).not.toContain('Confirm amount');
-    expect(html).not.toContain('Send cash amount');
+  it('agent only records cash-outs and sees neutral confirmation status', () => {
+    const html = renderToString(<AgentCashout session={{ role: 'agent', subject: 'A_fixture', allowed_users: ['U_fixture'] }} />);
+    expect(html).toContain('Record cash-out');
+    expect(html).toContain('U_fixture');
+    expect(html).not.toContain('Suspicious');
+    expect(html).not.toContain('one-time code');
   });
   it('renders exact saved metrics, denominators, target misses and adoption result', () => {
     const html = renderToString(<MetricsPage initialData={evidenceFixture} />).replace(/<!-- -->/g, '');
@@ -189,8 +191,9 @@ describe('Role-scoped navigation', () => {
     api.__setSessionForTests({ role: 'customer_channel', subject: 'U_fixture', allowed_users: [] });
     try {
       const html = renderToString(<App />);
-      // Customer sees only the customer-facing simulator + Architecture.
-      expect(html).toContain('Cash-out');
+      // Customer sees only their own account + How it works.
+      expect(html).toContain('My account');
+      expect(html).not.toContain('Transactions');
       expect(html).toContain('How it works');
       expect(html).not.toContain('Cases to review');
       expect(html).not.toContain('Cash planning');

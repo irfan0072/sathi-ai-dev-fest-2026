@@ -82,5 +82,5 @@ def test_bootstrap_twice_after_spend_preserves_ledger(valid_bundle, test_db_url,
             "SELECT balance_after FROM transactions WHERE txn_id=%s", (redemption["txn_id"],)
         ).fetchone()[0]
         assert balance == Decimal("46955.00")
-        assert conn.execute("SELECT count(*) FROM schema_migrations").fetchone()[0] == 6
+        assert conn.execute("SELECT count(*) FROM schema_migrations").fetchone()[0] == 7
     assert bootstrap.database_ready(load_config(), test_db_url, test_schema)

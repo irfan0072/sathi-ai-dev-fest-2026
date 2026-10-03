@@ -3,7 +3,9 @@ import ThemeToggle from './ThemeToggle';
 
 export const tabs = [
   { id: 'command', label: 'Dashboard', icon: 'chart', group: 'Daily work', title: 'Today at a glance', roles: ['analyst'] },
-  { id: 'simulation', label: 'Cash-out', icon: 'flow', group: 'Daily work', title: 'Safe cash-out' },
+  { id: 'cashout', label: 'Cash-out', icon: 'flow', group: 'Daily work', title: 'Cash-out', roles: ['agent'] },
+  { id: 'account', label: 'My account', icon: 'phone', group: 'Daily work', title: 'My account', roles: ['customer_channel'] },
+  { id: 'transactions', label: 'Transactions', icon: 'receipt', group: 'Daily work', title: 'Cash-outs confirmed by customers', roles: ['analyst'] },
   { id: 'cases', label: 'Cases to review', icon: 'cases', group: 'Daily work', title: 'Cases to review', roles: ['analyst'] },
   { id: 'liquidity', label: 'Cash planning', icon: 'store', group: 'Agents', title: 'How much cash agents will need', roles: ['agent', 'analyst'] },
   { id: 'agents', label: 'Agent check', icon: 'radar', group: 'Agents', title: 'Agents with unusual activity', roles: ['analyst'] },

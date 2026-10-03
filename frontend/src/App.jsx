@@ -7,7 +7,9 @@ import LoginScreen, { landingTabForRole } from './components/LoginScreen';
 import NavTabs, { canOpen, tabs } from './components/NavTabs';
 import Icon from './components/Icon';
 import ErrorBoundary from './components/ErrorBoundary';
-import LiveSimulation from './components/LiveSimulation';
+import AgentCashout from './components/AgentCashout';
+import CustomerAccount from './components/CustomerAccount';
+import TransactionsPage from './components/TransactionsPage';
 import ReviewQueue from './components/ReviewQueue';
 import OutreachList from './components/OutreachList';
 import AgentRiskBoard from './components/AgentRiskBoard';
@@ -20,7 +22,7 @@ import SettingsPage from './components/SettingsPage';
 
 const TAB_KEY = 'sathi_tab';
 const savedTab = (session) => {
-  if (!session) return 'simulation';
+  if (!session) return 'architecture';
   try {
     const id = window.sessionStorage.getItem(TAB_KEY);
     const tab = tabs.find((t) => t.id === id);
@@ -35,7 +37,7 @@ const rememberTab = (id) => {
 export default function App() {
   const [session, setSession] = useState(api.getSession);
   const [activeTab, setActiveTab] = useState(() => savedTab(api.getSession()));
-  const [flow, setFlow] = useState({});
+  const [focusCase, setFocusCase] = useState(null);
   const [login, setLogin] = useState(null); // { role, nonce } for "Switch role" modal
 
   useEffect(() => {
@@ -47,7 +49,7 @@ export default function App() {
         rememberTab(landingTabForRole(next.role));
       } else {
         // Signed out — reset to a safe default so the next sign-in can reroute.
-        setActiveTab('simulation');
+        setActiveTab('architecture');
       }
     });
   }, []);
@@ -108,19 +110,13 @@ export default function App() {
   const content = () => {
     const id = showTab?.id;
     if (id === 'architecture') return <ArchitecturePage />;
-    if (id === 'simulation')
-      return (
-        <LiveSimulation
-          session={session}
-          flow={flow}
-          setFlow={setFlow}
-          onSwitchRole={openLogin}
-        />
-      );
-    if (id === 'command') return <CommandCenter onOpenCases={() => selectTab('cases')} />;
+    if (id === 'cashout') return <AgentCashout session={session} />;
+    if (id === 'account') return <CustomerAccount />;
+    if (id === 'transactions') return <TransactionsPage onOpenCases={(caseId) => { setFocusCase(caseId || null); selectTab('cases'); }} />;
+    if (id === 'command') return <CommandCenter onOpenCases={() => selectTab('cases')} onOpenTransactions={() => selectTab('transactions')} />;
     if (id === 'liquidity') return <LiquidityPage session={session} />;
     if (id === 'campaign') return <UpliftPage />;
-    if (id === 'cases') return <ReviewQueue />;
+    if (id === 'cases') return <ReviewQueue initialCaseId={focusCase} />;
     if (id === 'outreach') return <OutreachList />;
     if (id === 'agents') return <AgentRiskBoard />;
     if (id === 'metrics') return <MetricsPage />;
@@ -145,10 +141,7 @@ export default function App() {
           title={showTab?.title}
           session={session}
           onLogin={openLogin}
-          onLogout={() => {
-            api.logout();
-            setFlow({});
-          }}
+          onLogout={() => api.logout()}
         />
         <div
           className="border-b border-warning/40 bg-warning/15 px-4 py-2 text-center text-[11px] font-medium text-warning-content sm:text-xs"
@@ -172,7 +165,7 @@ export default function App() {
       </div>
       <div className="drawer-side z-40">
         <label htmlFor="sathi-drawer" aria-label="Close navigation" className="drawer-overlay" />
-        <NavTabs activeTab={showTab?.id} onSelectTab={selectTab} session={session} />
+        <NavTabs activeTab={showTab?.id} onSelectTab={(id) => { setFocusCase(null); selectTab(id); }} session={session} />
       </div>
 
       {login && (

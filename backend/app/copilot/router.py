@@ -102,6 +102,24 @@ def collect_case_evidence(service: MandateService, case_id: int) -> dict[str, An
                      "at": c[3].isoformat()}
                     for c in cur.fetchall()
                 ]
+            cur.execute(
+                "SELECT c.txn_id, c.amount, c.stated_amount, c.outcome, c.attempts, "
+                "c.recommendation, t.ts FROM txn_checks c JOIN transactions t USING (txn_id) "
+                "WHERE c.case_id = %s;",
+                (case_id,),
+            )
+            check = cur.fetchone()
+            if check:
+                evidence["transaction"] = {
+                    "txn_id": check[0], "ledger_amount_bdt": float(check[1]),
+                    "customer_typed_bdt": float(check[2]) if check[2] is not None else None,
+                    "call_outcome": check[3], "attempts": check[4],
+                    "completed_at": check[6].isoformat(),
+                }
+                rec = _json(check[5]) or {}
+                evidence["ai_recommendation"] = {
+                    "label": rec.get("label"), "reasons": [r.get("text") for r in
+                                                           rec.get("reasons", [])]}
             if agent_id:
                 cur.execute(
                     "SELECT count(*), count(*) FILTER (WHERE status = 'open') FROM cases "

@@ -47,10 +47,10 @@ function Timeline({ caseId }) {
   );
 }
 
-export default function ReviewQueue() {
+export default function ReviewQueue({ initialCaseId = null }) {
   const [cases, setCases] = useState(null);
   const [watch, setWatch] = useState(new Set());
-  const [filter, setFilter] = useState('open');
+  const [filter, setFilter] = useState(initialCaseId ? 'all' : 'open');
   const [selected, setSelected] = useState(null);
   const [note, setNote] = useState('');
   const [error, setError] = useState('');
@@ -63,9 +63,12 @@ export default function ReviewQueue() {
       const [result, list] = await Promise.all([api.getPrioritizedCases(), api.getWatchlist()]);
       setCases(result.cases);
       setWatch(new Set(list.agents.map((a) => a.agent_id)));
-      setSelected((prev) => (prev ? result.cases.find((c) => c.case_id === prev.case_id) || null : null));
+      setSelected((prev) => {
+        const want = prev?.case_id ?? initialCaseId;
+        return want ? result.cases.find((c) => c.case_id === want) || null : null;
+      });
     } catch (err) { setError(err.message); }
-  }, []);
+  }, [initialCaseId]);
   useEffect(() => { refresh(); }, [refresh]);
 
   const decide = async (decision) => {

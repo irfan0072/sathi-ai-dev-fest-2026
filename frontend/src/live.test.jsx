@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { renderToString } from 'react-dom/server';
-import LiveSimulation from './components/LiveSimulation';
+import TransactionsPage from './components/TransactionsPage';
 import { RiskCard } from './components/LiveCall';
 import { BriefView } from './components/CaseBrief';
 import { ForecastChart, QiniChart } from './components/Charts';
@@ -10,18 +10,10 @@ import App from './App';
 const clean = (html) => html.replace(/<!-- -->/g, '');
 
 describe('Live verification channel', () => {
-  it('agent sees the call action but never the customer amount controls', () => {
-    const html = clean(renderToString(<LiveSimulation session={{ role: 'agent', subject: 'A_1', allowed_users: ['U_1'] }} flow={{ mandateId: 'm1', status: 'requested' }} />));
-    expect(html).toContain('Call customer to confirm');
-    expect(html).toContain('registered');
-    expect(html).not.toContain('Confirm amount');
-  });
-
-  it('customer can choose phone call or in-app confirmation', () => {
-    const html = renderToString(<LiveSimulation session={{ role: 'customer_channel', subject: 'U_1' }} flow={{ mandateId: 'm1' }} />);
-    expect(html).toContain('Phone call');
-    expect(html).toContain('In app');
-    expect(html).not.toContain('Call customer to confirm');
+  it('supervisor transactions page offers result filters', () => {
+    const html = renderToString(<TransactionsPage />);
+    for (const label of ['Suspicious', 'Verified', 'No answer', 'the AI only recommends']) expect(html).toContain(label);
+    expect(html.toLowerCase()).not.toContain('fraud');
   });
 
   it('risk card states that risk never authorizes', () => {

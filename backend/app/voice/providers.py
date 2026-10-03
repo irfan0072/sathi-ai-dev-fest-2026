@@ -159,7 +159,7 @@ class BdHttpIvrProvider:
             "callback_url": answer_url,
             "status_url": status_url,
             "language": self.language,
-            "prompt": {"text": twiml.PROMPT},
+            "prompt": {"text": twiml.CHECK_PROMPT},
             "gather": {"max_digits": 8, "finish_on_key": "#", "timeout_seconds": 12},
             "client_ref": answer_url.rsplit("/calls/", 1)[-1].split("/", 1)[0],
         }

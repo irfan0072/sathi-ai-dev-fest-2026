@@ -128,6 +128,7 @@ export function IncomingCall({ onFinished }) {
       setSpoken(result.spoken_bn); setDigits('');
       if (result.call_ended) {
         setEnded(true);
+        if (!incoming.mandate_id) { onFinished(null); return; }
         try {
           const call = await api.getCall(incoming.mandate_id);
           onFinished(call.status);
@@ -143,7 +144,7 @@ export function IncomingCall({ onFinished }) {
   if (!incoming && !answered) {
     return (
       <p className="muted">
-        No call yet. When the agent asks for confirmation, this phone will ring here.
+        No call right now. After a cash-out, Sathi calls you here.
       </p>
     );
   }
@@ -201,7 +202,7 @@ export function IncomingCall({ onFinished }) {
                 ))}
               </div>
               <p className="muted mt-2">
-                Type the amount you want, then press #. If you did not ask for any money, just press #.
+                Type the cash you got, then press #. If you did not take any cash, just press #.
               </p>
             </>
           )}

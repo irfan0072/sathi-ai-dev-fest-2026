@@ -14,6 +14,8 @@ export const caseReason = {
   high_risk_request: 'Request looked risky',
   cash_gap_tolerance_exceeded: 'Customer got less cash than paid',
   repeated_code_failures_lockout: 'Too many wrong codes at the agent',
+  post_txn_amount_mismatch: 'Customer typed a different amount',
+  customer_denied_transaction: 'Customer says they did not cash out',
 };
 export const reasonLabel = (reason) => caseReason[reason] || String(reason || '').replaceAll('_', ' ');
 
@@ -57,6 +59,9 @@ export const checkNeeded = {
 
 // Audit log actions, as a person would say them.
 export const eventName = {
+  cashout_recorded: 'Agent recorded a cash-out',
+  txn_check_verified: 'Customer confirmed the amount',
+  txn_check_suspicious: 'AI marked a cash-out as suspicious',
   mandate_requested: 'Agent asked for a cash-out',
   mandate_verified: 'Customer confirmed the amount',
   mandate_code_issued: 'Agent got the one-time code',
@@ -97,3 +102,21 @@ export const featureName = {
   withdrawn_balance_ratio_max: 'Share of the balance withdrawn at once',
 };
 export const featureLabel = (f) => featureName[f] || String(f || '').replaceAll('_', ' ');
+
+// Supervisor view of a post-cash-out check.
+export const checkStatus = {
+  pending: { label: 'Waiting', tone: 'badge-ghost' },
+  calling: { label: 'Calling customer', tone: 'badge-info' },
+  verified: { label: 'Verified', tone: 'badge-success' },
+  suspicious: { label: 'Suspicious', tone: 'badge-error' },
+  no_answer: { label: 'No answer', tone: 'badge-warning' },
+};
+
+// What agents and customers see (never the result itself).
+export const publicCheck = {
+  waiting: { label: 'Confirming with customer…', tone: 'badge-info' },
+  done: { label: 'Confirmation done', tone: 'badge-success' },
+  missed: { label: 'Customer missed the call', tone: 'badge-warning' },
+};
+
+export const takaFmt = (v) => (v == null ? '—' : `৳${Number(v).toLocaleString('en-US', { maximumFractionDigits: 2 })}`);

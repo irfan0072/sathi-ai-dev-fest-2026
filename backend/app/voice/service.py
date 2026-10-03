@@ -112,8 +112,30 @@ class VoiceService:
                 409,
             )
 
+        return self._place_call(record.user_id, agent_id, "mandate_id", mandate_id, "mandate")
+
+    def start_check_call(self, check_id: int, actor: str) -> dict[str, Any]:
+        """Call the customer after a completed cash-out to confirm the amount."""
+        from app.txn.service import OPEN_STATUSES, TxnCheckService
+
+        checks = TxnCheckService(self.mandates)
+        check = checks.get(check_id)
+        if check is None:
+            raise VoiceError("CHECK_NOT_FOUND", "Transaction check not found.", 404)
+        if check["status"] not in OPEN_STATUSES:
+            raise VoiceError("CHECK_CLOSED", "This transaction is already confirmed.", 409)
+        try:
+            call = self._place_call(check["user_id"], actor, "check_id", check_id, "transaction")
+        except VoiceError as err:
+            checks.set_error(check_id, err.message)
+            raise
+        checks.set_calling(check_id)
+        return call
+
+    def _place_call(self, user_id: str, actor: str, target_col: str, target_id: Any,
+                    entity: str) -> dict[str, Any]:
         if self.provider.name != "simulated":
-            number = self.phone_book.get(record.user_id)
+            number = self.phone_book.get(user_id)
             if not number:
                 raise VoiceError(
                     "NO_REGISTERED_PHONE",
@@ -127,6 +149,7 @@ class VoiceService:
         else:
             number = ""
             to_masked = "simulated handset"
+        assert target_col in ("mandate_id", "check_id")
 
         call_id = str(uuid.uuid4())
         token = secrets.token_urlsafe(24)
@@ -135,21 +158,21 @@ class VoiceService:
             with conn.transaction():
                 with conn.cursor() as cur:
                     cur.execute(
-                        f"SELECT 1 FROM voice_calls WHERE mandate_id = %s "
+                        f"SELECT 1 FROM voice_calls WHERE {target_col} = %s "
                         f"AND status IN {LIVE_STATUSES} FOR UPDATE;",
-                        (mandate_id,),
+                        (target_id,),
                     )
                     if cur.fetchone():
                         raise VoiceError(
                             "CALL_IN_PROGRESS", "A verification call is already in progress.", 409,
                         )
                     cur.execute(
-                        """
+                        f"""
                         INSERT INTO voice_calls (
-                            call_id, mandate_id, user_id, provider, to_masked, token_hash, status
+                            call_id, {target_col}, user_id, provider, to_masked, token_hash, status
                         ) VALUES (%s, %s, %s, %s, %s, %s, 'queued');
                         """,
-                        (call_id, mandate_id, record.user_id, self.provider.name, to_masked,
+                        (call_id, target_id, user_id, self.provider.name, to_masked,
                          _hash_token(token)),
                     )
         finally:
@@ -165,12 +188,12 @@ class VoiceService:
             placed = self.provider.place_call(number, answer_url, status_url)
         except VoiceProviderError as exc:
             self._set_status(call_id, "failed")
-            self.mandates.log_audit(agent_id, "voice_call_failed", "mandate", mandate_id,
+            self.mandates.log_audit(actor, "voice_call_failed", entity, str(target_id),
                                     {"call_id": call_id, "reason": str(exc)})
             raise VoiceError("VOICE_PROVIDER_ERROR", str(exc), 502) from None
 
         self._set_status(call_id, placed.status, provider_call_sid=placed.provider_call_sid)
-        self.mandates.log_audit(agent_id, "voice_call_placed", "mandate", mandate_id,
+        self.mandates.log_audit(actor, "voice_call_placed", entity, str(target_id),
                                 {"call_id": call_id, "provider": self.provider.name,
                                  "to": to_masked})
         return self.get_call(call_id)
@@ -191,8 +214,11 @@ class VoiceService:
             with conn.cursor() as cur:
                 cur.execute(
                     f"""
-                    SELECT v.call_id, v.mandate_id, m.agent_id, v.status, v.created_at
-                    FROM voice_calls v JOIN mandates m USING (mandate_id)
+                    SELECT v.call_id, v.mandate_id, COALESCE(m.agent_id, c.agent_id), v.status,
+                           v.created_at, v.check_id
+                    FROM voice_calls v
+                    LEFT JOIN mandates m ON m.mandate_id = v.mandate_id
+                    LEFT JOIN txn_checks c ON c.check_id = v.check_id
                     WHERE v.user_id = %s AND v.provider = 'simulated'
                       AND v.status IN {LIVE_STATUSES}
                     ORDER BY v.created_at DESC;
@@ -203,8 +229,10 @@ class VoiceService:
         finally:
             conn.close()
         return [
-            {"call_id": str(r[0]), "mandate_id": str(r[1]), "agent_id": r[2], "status": r[3],
-             "created_at": r[4].isoformat(), "prompt_bn": twiml.PROMPT}
+            {"call_id": str(r[0]), "mandate_id": str(r[1]) if r[1] else None,
+             "check_id": r[5], "kind": "transaction" if r[5] else "request",
+             "agent_id": r[2], "status": r[3], "created_at": r[4].isoformat(),
+             "prompt_bn": twiml.CHECK_PROMPT if r[5] else twiml.PROMPT}
             for r in rows
         ]
 
@@ -214,7 +242,8 @@ class VoiceService:
             with conn.cursor() as cur:
                 cur.execute(
                     "SELECT call_id, mandate_id, user_id, provider, to_masked, status, "
-                    f"digit_attempts, created_at, updated_at FROM voice_calls {where};",
+                    "digit_attempts, created_at, updated_at, check_id "
+                    f"FROM voice_calls {where};",
                     params,
                 )
                 r = cur.fetchone()
@@ -223,7 +252,8 @@ class VoiceService:
         if not r:
             return None
         return {
-            "call_id": str(r[0]), "mandate_id": str(r[1]), "user_id": r[2], "provider": r[3],
+            "call_id": str(r[0]), "mandate_id": str(r[1]) if r[1] else None,
+            "check_id": r[9], "user_id": r[2], "provider": r[3],
             "to": r[4], "status": r[5], "digit_attempts": r[6],
             "created_at": r[7].isoformat(), "updated_at": r[8].isoformat(),
         }
@@ -250,12 +280,16 @@ class VoiceService:
         self._set_status(call_id, "in_progress")
         return True
 
+    @staticmethod
+    def prompt_for(call: dict[str, Any]) -> str:
+        return twiml.CHECK_PROMPT if call.get("check_id") else twiml.PROMPT
+
     def answer(self, call_id: str, gather_url: str) -> str:
         call = self.get_call(call_id)
         if call["status"] not in LIVE_STATUSES:
             return twiml.close()
         self._set_status(call_id, "in_progress")
-        return twiml.gather(gather_url, twiml.PROMPT)
+        return twiml.gather(gather_url, self.prompt_for(call))
 
     def provider_status(self, call_id: str, provider_status: str) -> dict[str, Any]:
         call = self.get_call(call_id)
@@ -264,12 +298,12 @@ class VoiceService:
             if call["status"] in LIVE_STATUSES:
                 # Hung up before answering the prompt.
                 self._set_status(call_id, "no_answer")
-                self._record_no_answer(call["mandate_id"])
+                self._no_answer(call)
             return self.get_call(call_id)
         if mapped and call["status"] in LIVE_STATUSES:
             self._set_status(call_id, mapped)
             if mapped == "no_answer":
-                self._record_no_answer(call["mandate_id"])
+                self._no_answer(call)
         return self.get_call(call_id)
 
     def handle_digits(self, call_id: str, digits: str | None, gather_url: str) -> DigitResult:
@@ -280,6 +314,9 @@ class VoiceService:
         mandate_id, user_id = call["mandate_id"], call["user_id"]
         attempts = call["digit_attempts"] + 1
         self._set_status(call_id, "in_progress", digit_attempts=attempts)
+
+        if call.get("check_id"):
+            return self._check_digits(call_id, call["check_id"], digits[:8], gather_url)
 
         if digits == "":
             status = self._reject(
@@ -323,6 +360,21 @@ class VoiceService:
         self._set_status(call_id, "mismatch")
         return DigitResult("mismatch", twiml.close(), [twiml.NEUTRAL_CLOSE], result["status"])
 
+    def _check_digits(self, call_id: str, check_id: int, digits: str,
+                      gather_url: str) -> DigitResult:
+        from app.txn.service import TxnCheckService
+
+        checks = TxnCheckService(self.mandates)
+        result = checks.handle_answer(check_id, digits)
+        if result == "retry":
+            return DigitResult("in_progress", twiml.gather(gather_url, twiml.CHECK_RETRY),
+                               [twiml.CHECK_RETRY], None)
+        check = checks.get(check_id) or {}
+        call_status = {"match": "verified", "mismatch": "mismatch", "denied": "rejected",
+                       "duress": "duress"}.get(check.get("outcome"), "failed")
+        self._set_status(call_id, call_status)
+        return DigitResult(call_status, twiml.close(), [twiml.NEUTRAL_CLOSE], check.get("status"))
+
     # ---------------------------------------------------------------- persistence helpers
     def _set_status(self, call_id: str, status: str, provider_call_sid: str | None = None,
                     digit_attempts: int | None = None) -> None:
@@ -342,6 +394,14 @@ class VoiceService:
                     )
         finally:
             conn.close()
+
+    def _no_answer(self, call: dict[str, Any]) -> None:
+        if call.get("check_id"):
+            from app.txn.service import TxnCheckService
+
+            TxnCheckService(self.mandates).set_no_answer(call["check_id"])
+        else:
+            self._record_no_answer(call["mandate_id"])
 
     def _record_no_answer(self, mandate_id: str) -> None:
         conn = self.mandates.get_connection()

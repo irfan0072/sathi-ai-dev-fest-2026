@@ -268,7 +268,8 @@ async def bd_ivr_event(call_id: str, request: Request) -> Any:
     kind = event.get("event")
     if kind == "answered":
         if service.mark_answered(call_id):
-            return {"action": "gather", "say": twiml.PROMPT, "language": provider.language,
+            prompt = service.prompt_for(service.get_call(call_id))
+            return {"action": "gather", "say": prompt, "language": provider.language,
                     "gather": gather}
         return {"action": "hangup", "say": twiml.NEUTRAL_CLOSE, "language": provider.language}
     if kind == "digits":

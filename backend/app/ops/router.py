@@ -23,6 +23,8 @@ router = APIRouter(prefix="/api/v1", tags=["fraud-ops"])
 # Case reason -> (priority, settings key for its response target in minutes).
 PRIORITY = {
     "duress_signal": ("urgent", "ops.sla_urgent_minutes"),
+    "customer_denied_transaction": ("high", "ops.sla_high_minutes"),
+    "post_txn_amount_mismatch": ("high", "ops.sla_cash_gap_minutes"),
     "customer_denied_request": ("high", "ops.sla_high_minutes"),
     "high_risk_request": ("high", "ops.sla_high_minutes"),
     "cash_gap_tolerance_exceeded": ("high", "ops.sla_cash_gap_minutes"),
@@ -55,6 +57,8 @@ REASON_TEXT = {
     "stated_amount_mismatch": "customer said a different amount",
     "high_risk_request": "request looked risky",
     "cash_gap_tolerance_exceeded": "customer got less cash than paid",
+    "post_txn_amount_mismatch": "customer typed a different amount after the cash-out",
+    "customer_denied_transaction": "customer says they did not make this cash-out",
     "repeated_code_failures_lockout": "too many wrong codes",
 }
 CALL_TEXT = {
@@ -92,6 +96,24 @@ def overview(
             "confirmation_rate": round(confirmed / total, 4) if total else None,
             "redeemed_bdt": by_status.get("redeemed", {}).get("amount_bdt", 0.0),
             "held_bdt": by_status.get("rejected", {}).get("amount_bdt", 0.0),
+        }
+
+        cur.execute(
+            "SELECT status, count(*), COALESCE(sum(amount), 0) FROM txn_checks "
+            "WHERE created_at > now() - interval '24 hours' GROUP BY status;"
+        )
+        checks = {r[0]: {"count": r[1], "amount_bdt": float(r[2])} for r in cur.fetchall()}
+        out["checks"] = checks
+        decided = sum(checks.get(s, {}).get("count", 0) for s in ("verified", "suspicious"))
+        out["check_totals"] = {
+            "cashouts": sum(v["count"] for v in checks.values()),
+            "cashout_bdt": sum(v["amount_bdt"] for v in checks.values()),
+            "verified": checks.get("verified", {}).get("count", 0),
+            "suspicious": checks.get("suspicious", {}).get("count", 0),
+            "waiting": sum(checks.get(s, {}).get("count", 0) for s in ("pending", "calling")),
+            "no_answer": checks.get("no_answer", {}).get("count", 0),
+            "verified_rate": round(checks.get("verified", {}).get("count", 0) / decided, 4)
+            if decided else None,
         }
 
         cur.execute(
@@ -142,8 +164,8 @@ def overview(
 
         cur.execute(
             "SELECT date_trunc('hour', created_at) AS h, count(*), "
-            "count(*) FILTER (WHERE status IN ('verified','active','redeemed')) "
-            "FROM mandates WHERE created_at > now() - interval '24 hours' "
+            "count(*) FILTER (WHERE status = 'verified') "
+            "FROM txn_checks WHERE created_at > now() - interval '24 hours' "
             "GROUP BY h ORDER BY h;"
         )
         out["hourly"] = [
@@ -239,6 +261,27 @@ def case_timeline(
         events += [{"at": r[0].isoformat(), "kind": "review",
                     "label": f"Supervisor decided: {r[2]}",
                     "actor": r[1], "detail": {"note": r[3]}} for r in cur.fetchall()]
+        cur.execute(
+            "SELECT c.check_id, c.txn_id, c.amount, c.created_at, c.status, c.updated_at, "
+            "t.agent_id FROM txn_checks c JOIN transactions t USING (txn_id) "
+            "WHERE c.case_id = %s;",
+            (case_id,),
+        )
+        check = cur.fetchone()
+        if check:
+            events.append({"at": check[3].isoformat(), "kind": "audit",
+                           "label": "cashout_recorded", "actor": check[6],
+                           "detail": {"amount": float(check[2]), "txn_id": check[1]}})
+            cur.execute(
+                "SELECT created_at, status, provider FROM voice_calls WHERE check_id = %s;",
+                (check[0],),
+            )
+            events += [{"at": r[0].isoformat(), "kind": "call",
+                        "label": f"Confirmation call: {CALL_TEXT.get(r[1], r[1])}",
+                        "actor": "Sathi"} for r in cur.fetchall()]
+            events.append({"at": check[5].isoformat(), "kind": "case",
+                           "label": "AI marked it suspicious" if check[4] == "suspicious"
+                           else f"Check: {check[4]}", "actor": "Sathi AI"})
     events.sort(key=lambda e: e["at"])
     return {"case_id": case_id, "events": events}
 

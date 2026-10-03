@@ -224,6 +224,20 @@ def template_brief(evidence: dict[str, Any], facts: list[dict[str, Any]]) -> dic
             "review_agent_history",
             "এজেন্ট টার্মিনালে বারবার ভুল কোড দেওয়ায় লেনদেনটি বন্ধ হয়েছে। এজেন্টের কার্যক্রম পর্যালোচনা করুন।",
         ),
+        "post_txn_amount_mismatch": (
+            "Customer typed a different amount after the cash-out",
+            "After the cash-out was completed, the customer was called and typed a different "
+            "amount than the transaction, twice.",
+            "call_customer_on_registered_number",
+            "ক্যাশ-আউটের পর গ্রাহক ভিন্ন পরিমাণ জানিয়েছেন। গ্রাহকের সাথে যোগাযোগ করে নিশ্চিত হোন।",
+        ),
+        "customer_denied_transaction": (
+            "Customer says they did not make this cash-out",
+            "On the confirmation call after the cash-out, the customer pressed # without an "
+            "amount, meaning they did not make it.",
+            "escalate_to_fraud_team",
+            "গ্রাহক জানিয়েছেন তিনি এই ক্যাশ-আউট করেননি। দ্রুত পর্যালোচনা করুন।",
+        ),
         "high_risk_request": (
             "Mandate request scored high on real-time risk signals",
             "The request triggered several risk signals at creation time, so a call and "

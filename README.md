@@ -23,6 +23,7 @@ Sathi explores scoped, expiring, one-time cash-out authority instead of sharing 
 | Agent liquidity forecast (Track05) | LightGBM point + P90; holdout WAPE 0.90 vs 1.35 moving average; P90 coverage 0.897 |
 | Uplift targeting and budget optimizer (Track04) | T-learner beats response model on holdout (278.5 vs 253 true extra enrollments, top 20%) |
 | Fraud Command Center, prioritized queue with response targets, case timeline, agent watchlist | Live runtime data; watchlist forces the call channel, never blocks |
+| Main flow: confirm every cash-out afterwards | Agent records cash-out → Sathi calls customer → same amount Verified, otherwise Suspicious (AI recommends, supervisor decides); agents/customers see neutral status only |
 | Settings page (analyst) | Runtime channels, risk bands, step-up, AI provider order, case targets, cost assumptions; audited; secrets and phone book env-only |
 | Bangladesh channels | `bd_http_ivr` JSON IVR adapter (vendor mapping pending) and Alpha SMS receipts; simulated outbox by default |
 | Public deployment | Pending human dashboard action; no live URL claimed |

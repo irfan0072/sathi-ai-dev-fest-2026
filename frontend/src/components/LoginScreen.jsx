@@ -7,18 +7,18 @@ import { roleMeta } from './DemoLogin';
 const features = [
   {
     icon: 'flow',
-    title: 'No PIN sharing',
-    body: 'The customer never tells their PIN to anyone. They confirm the amount themselves, and the agent gets a code that works only once.',
+    title: 'We call after every cash-out',
+    body: 'Right after an agent gives cash, Sathi calls the customer, who types the amount they got. Same amount: verified.',
   },
   {
     icon: 'shield',
     title: 'Secret help signal',
-    body: 'If someone forces the customer, they type 0 before the amount (like 03000). Everything looks normal, but the cash is stopped and a supervisor is alerted.',
+    body: 'If someone is forcing the customer, they type 0 before the amount (like 03000). The call sounds normal, but a supervisor is alerted.',
   },
   {
     icon: 'chart',
-    title: 'Extra checks when something looks wrong',
-    body: 'When a request looks risky, the customer is asked to confirm by phone. People, not the AI, make the final decision.',
+    title: 'Suspicious, not “fraud”',
+    body: 'A different amount is marked suspicious with clear reasons. The AI only recommends; a supervisor decides.',
   },
 ];
 
@@ -60,8 +60,8 @@ export default function LoginScreen({ onSuccess }) {
                 people who need help
               </h2>
               <p className="page-lead mt-3 max-w-md">
-                Many people ask an agent to help them withdraw money and end up sharing their PIN.
-                Sathi lets them get cash safely without ever sharing it.
+                Many people ask an agent to help them withdraw money. Sathi checks every cash-out with the customer
+                afterwards, so cheating agents get caught early.
               </p>
             </div>
 
@@ -155,12 +155,12 @@ export default function LoginScreen({ onSuccess }) {
 
 // Role helper — keep in sync with `tabs` array in NavTabs.jsx
 export const ROLE_LANDING = {
-  agent: 'simulation',
-  customer_channel: 'simulation',
+  agent: 'cashout',
+  customer_channel: 'account',
   analyst: 'command',
 };
 
-export const landingTabForRole = (role) => ROLE_LANDING[role] || 'simulation';
+export const landingTabForRole = (role) => ROLE_LANDING[role] || 'architecture';
 
 // Pure role listing for any future place that needs it
 export const roleOptions = Object.entries(roleMeta).map(([id, meta]) => ({ id, ...meta }));

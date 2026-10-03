@@ -181,7 +181,7 @@ export function HourlyBars({ hours }) {
   const y = (v) => pad.t + ih - (v / max) * ih;
   return (
     <div className="relative w-full" role="figure">
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label="Cash-out requests per hour, last 24 hours">
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label="Cash-outs per hour, last 24 hours">
         {[0, max].map((t) => (
           <g key={t}>
             <line x1={pad.l} x2={W - pad.r} y1={y(t)} y2={y(t)} stroke="var(--viz-grid)" />
@@ -203,7 +203,7 @@ export function HourlyBars({ hours }) {
       {hover !== null && (
         <Tooltip x={pad.l + slot * hover + slot / 2} y="30%" width={W}>
           <div className="font-semibold">{slots[hover].at.getHours()}:00</div>
-          <div>{slots[hover].mandates} requests · {slots[hover].confirmed} confirmed</div>
+          <div>{slots[hover].mandates} cash-outs · {slots[hover].confirmed} verified</div>
         </Tooltip>
       )}
     </div>
