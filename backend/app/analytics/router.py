@@ -57,8 +57,12 @@ def _artifact_query(operation, *args) -> dict[str, Any]:
 
 def _live_query(operation, *args) -> dict[str, Any]:
     """Live AI over the current database; 404 when the subject has no recent activity."""
+    from app.live.intelligence import WarmingUp
+
     try:
         return operation(*args)
+    except WarmingUp as exc:
+        raise HTTPException(status_code=503, detail=str(exc).strip("'\""))
     except KeyError as exc:
         raise HTTPException(status_code=404, detail=str(exc).strip("'"))
     except (ArtifactError, OSError) as exc:

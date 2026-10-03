@@ -454,3 +454,28 @@ T035 Claude Code (Opus 5.5), 4 October 2026: the human asked for every workflow 
 - **Frontend:** assistant chat with suggestion chips, call-language picker, and a handset with a speech box, "stay silent" and key hints.
 
 Verified: 549 backend tests pass (8 opt-in live tests skipped), 58 frontend tests pass, lint and build pass, Docker redeployed with 010, smoke test 19/19. Live checks: assistant answers in all 3 languages and blocks injection, other-customer and OTP requests; a live call went silence, then re-ask, then key 8 to English, then a spoken Bangla amount, and was verified.
+
+T036 Claude Code (Opus 5.5), 4 October 2026: the human asked for the case audit to live inside case details, for a solution to scams run through personal accounts (an anonymous community plus pattern detection), and for a full UI review.
+
+- **Audit reports page removed:** audits appear only in the case file, under "Case audit".
+- **Migration 011:** synthetic upay numbers for all 5 M wallets, `p2p_transfers`, `receiver_flags`, `community_reports`, `community_votes`.
+- **New `app/scam` package:**
+  - send money with a recipient check, where a high warning needs acknowledgement;
+  - a receiver-risk engine with seven explainable signals (fan-in, same amount, burst, strangers, pass-through, new account, community) and two outcomes (selling on a personal account vs possible scam);
+  - automatic and escalating cases;
+  - anonymous community reports with redaction, "me too" votes, rate limits and moderation;
+  - the assistant can answer "is this number safe?".
+- **Live scenarios:** a scam seller, a home bakery and family transfers, seeded and kept fresh by the simulator.
+- **UI review:** screenshots of every page per role were taken with headless Chromium. Fixed:
+  - labels sitting beside inputs (daisyUI 5 dropped `form-control`);
+  - Title Case reason text;
+  - nav group order for agents;
+  - truncated KPI labels;
+  - raw audit action names;
+  - dashes shown while the Control Center loads (now skeletons);
+  - a fat-bar hourly chart;
+  - mismatched page titles;
+  - added a demo-number hint.
+- **Performance:** live AI retraining now runs in a separate process. Pages wait up to 20 s for a cold model, then show "still training" and retry automatically.
+
+Verified: 553 backend tests pass (8 opt-in live tests skipped), 58 frontend tests pass, lint and build pass, Docker redeployed, screenshots re-checked.

@@ -24,6 +24,8 @@ def load_artifact(name: str) -> dict[str, Any]:
     live = get_live()
     try:
         return live.liquidity() if name == "liquidity" else live.uplift()
+    except KeyError as exc:
+        raise IntelligenceArtifactError(str(exc).strip("'\"")) from exc
     except Exception as exc:
         raise IntelligenceArtifactError(f"Live {name} model is not ready: {exc}") from exc
 

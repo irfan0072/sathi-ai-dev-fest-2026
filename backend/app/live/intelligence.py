@@ -49,6 +49,10 @@ def _artifact_dir() -> Path:
     return Path(os.getenv("SATHI_ARTIFACTS_DIR", "data/artifacts/deployment"))
 
 
+class WarmingUp(KeyError):
+    """Live model has not finished its first run after a restart."""
+
+
 class _Cache:
     def __init__(self) -> None:
         self._values: dict[str, tuple[float, Any]] = {}
@@ -62,6 +66,16 @@ class _Cache:
         hit = self._values.get(key)
         if hit and not force and (stale_ok or time.monotonic() - hit[0] < ttl):
             return hit[1]
+        if stale_ok and _thread is not None and _thread.is_alive():
+            # The background process owns training; wait for it instead of training twice.
+            deadline = time.monotonic() + 20
+            while time.monotonic() < deadline:
+                hit = self._values.get(key)
+                if hit:
+                    return hit[1]
+                time.sleep(0.5)
+            raise WarmingUp(f"The live {key.replace('_', ' ')} model is still training on "
+                            "today's data. Try again in a minute.")
         with self._guard:
             lock = self._locks.setdefault(key, threading.Lock())
         with lock:
@@ -458,17 +472,39 @@ def get_live() -> LiveIntelligence:
 _thread: threading.Thread | None = None
 
 
+COMPUTE = {"agent_risk": "_score_agents", "outreach": "_outreach",
+           "liquidity": "_liquidity", "uplift": "_uplift"}
+
+
+def _child_compute(name: str, db_url: str, schema: str | None) -> Any:
+    """Runs in a separate process so model training never stalls the API's requests."""
+    from app.data.database import get_connection
+
+    live = LiveIntelligence(lambda: get_connection(db_url, schema=schema))
+    return getattr(live, COMPUTE[name])()
+
+
 def _refresh_loop() -> None:
+    import multiprocessing
+    from concurrent.futures import ProcessPoolExecutor
+
+    from app.mandates.router import get_mandate_service
+
     time.sleep(5)
+    pool = ProcessPoolExecutor(max_workers=1, mp_context=multiprocessing.get_context("spawn"))
     while True:
-        live = get_live()
-        for name, fn in (("agent_risk", live.agent_board), ("outreach", live.outreach),
-                         ("liquidity", live.liquidity), ("uplift", live.uplift)):
+        service = get_mandate_service()
+        for name in COMPUTE:
+            hit = CACHE._values.get(name)
+            if hit and time.monotonic() - hit[0] < TTL[name]:
+                continue
             try:
-                fn(stale_ok=False)
+                value = pool.submit(_child_compute, name, service.db_url,
+                                    service.schema).result(timeout=600)
+                CACHE._values[name] = (time.monotonic(), value)
             except Exception as exc:
                 log.warning("live %s refresh failed: %s", name, exc)
-        time.sleep(30)
+        time.sleep(20)
 
 
 def start_refresh() -> None:

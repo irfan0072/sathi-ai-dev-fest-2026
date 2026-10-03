@@ -30,6 +30,8 @@ PRIORITY = {
     "cash_gap_tolerance_exceeded": ("high", "ops.sla_cash_gap_minutes"),
     "repeated_code_failures_lockout": ("normal", "ops.sla_normal_minutes"),
     "customer_help_request": ("high", "ops.sla_high_minutes"),
+    "p2p_scam_seller_suspected": ("urgent", "ops.sla_urgent_minutes"),
+    "p2p_merchant_misuse": ("normal", "ops.sla_normal_minutes"),
     "stated_amount_mismatch": ("normal", "ops.sla_normal_minutes"),
 }
 DEFAULT_TARGETS = {"ops.sla_urgent_minutes": 15, "ops.sla_high_minutes": 60,
@@ -62,6 +64,8 @@ REASON_TEXT = {
     "customer_denied_transaction": "customer says they did not make this cash-out",
     "repeated_code_failures_lockout": "too many wrong codes",
     "customer_help_request": "customer asked for help in the Sathi assistant",
+    "p2p_scam_seller_suspected": "personal account looks like a scam seller",
+    "p2p_merchant_misuse": "personal account is used like a shop",
 }
 CALL_TEXT = {
     "verified": "customer confirmed", "duress": "secret help signal",

@@ -22,8 +22,9 @@ import SettingsPage from './components/SettingsPage';
 import AdminDashboard from './components/ops/AdminDashboard';
 import CallCenter from './components/ops/CallCenter';
 import CaseWorkbench from './components/ops/CaseWorkbench';
+import { CommunityPage, ScamWatch, SendMoney } from './components/ScamProtection';
 import {
-  AgentsDirectory, AuditLogPage, LedgerPage, ReportsPage, StaffPage, SupervisorDesk, UsersPage,
+  AgentsDirectory, AuditLogPage, LedgerPage, StaffPage, SupervisorDesk, UsersPage,
 } from './components/ops/Directories';
 
 const TAB_KEY = 'sathi_tab';
@@ -132,7 +133,9 @@ export default function App() {
     if (id === 'callcenter') return <CallCenter session={session} />;
     if (id === 'casework') return <CaseWorkbench session={session} initialCaseId={focusCase} />;
     if (id === 'ledger') return <LedgerPage />;
-    if (id === 'reports') return <ReportsPage session={session} />;
+    if (id === 'send') return <SendMoney />;
+    if (id === 'community') return <CommunityPage />;
+    if (id === 'scamwatch') return <ScamWatch session={session} />;
     if (id === 'users') return <UsersPage />;
     if (id === 'agents-dir') return <AgentsDirectory />;
     if (id === 'staff') return <StaffPage />;

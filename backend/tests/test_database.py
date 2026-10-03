@@ -380,6 +380,7 @@ def test_integration_migrate_twice(test_db_schema):
         "008_operations_center.sql",
         "009_scale_indexes.sql",
         "010_language_assistant.sql",
+        "011_p2p_scam_protection.sql",
     ]
 
     # Second migration run: should no-op
@@ -394,7 +395,7 @@ def test_integration_migrate_twice(test_db_schema):
                 "SELECT version, checksum FROM schema_migrations ORDER BY version ASC;"
             )
             rows = cur.fetchall()
-            assert len(rows) == 10
+            assert len(rows) == 11
             assert rows[0][0] == "001_initial.sql"
             assert len(rows[0][1]) == 64
             assert rows[1][0] == "002_durable_mandates.sql"

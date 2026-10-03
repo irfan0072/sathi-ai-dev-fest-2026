@@ -130,9 +130,36 @@ class Worker:
             out["sim_cashouts"] = self._simulate_cashouts(mandates, int(
                 values.get("sim.rate_per_minute", 12)))
             out["sim_answers"] = self._simulate_answers(mandates, voice)
+            out["p2p"] = self._simulate_p2p(mandates)
         else:
             self._last_sim = time.monotonic()
+        self._rescore_receivers(mandates)
         return out
+
+    def _simulate_p2p(self, mandates: Any) -> int:
+        """Normal family transfers most ticks; a scam burst or shop orders now and then."""
+        from app.scam import seed
+
+        now = time.monotonic()
+        made = seed.family_transfers(mandates.get_connection, count=random.randint(0, 2))
+        if now - getattr(self, "_last_burst", 0) > 300:
+            self._last_burst = now
+            made += seed.scam_burst(mandates.get_connection, payments=random.randint(4, 8),
+                                    amount=random.choice((1250, 1250, 1490)))
+            made += seed.shop_orders(mandates.get_connection, orders=random.randint(2, 4))
+        return made
+
+    def _rescore_receivers(self, mandates: Any) -> None:
+        now = time.monotonic()
+        if now - getattr(self, "_last_rescore", 0) < 60:
+            return
+        self._last_rescore = now
+        from app.scam.service import ScamService
+
+        try:
+            ScamService(mandates.get_connection).evaluate()
+        except Exception as exc:
+            log.warning("receiver rescoring failed: %s", exc)
 
     # ------------------------------------------------------------------ simulator
     def _load_pool(self, mandates: Any) -> None:

@@ -73,8 +73,12 @@ export default function UpliftPage() {
   const [error, setError] = useState('');
   useEffect(() => {
     let live = true;
-    api.getUpliftSummary().then((v) => { if (live) setData(v); }).catch((err) => { if (live) setError(err.message); });
-    return () => { live = false; };
+    let timer;
+    const run = () => api.getUpliftSummary()
+      .then((v) => { if (live) { setData(v); setError(''); } })
+      .catch((err) => { if (live) { setError(err.message); timer = setTimeout(run, 20000); } });
+    run();
+    return () => { live = false; clearTimeout(timer); };
   }, []);
   const p = data?.policies;
   const gain = p ? (p.uplift_t_learner.true_incremental_top20 / p.response_model.true_incremental_top20 - 1) * 100 : 0;

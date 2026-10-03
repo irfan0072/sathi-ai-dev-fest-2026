@@ -278,7 +278,7 @@ describe('Super admin and supervisor navigation', () => {
     api.__setSessionForTests({ role: 'supervisor', subject: 'sup_nadia', allowed_users: [] });
     try {
       const html = renderToString(<App />);
-      for (const label of ['My desk', 'Call queue', 'My audit reports']) expect(html).toContain(label);
+      for (const label of ['My desk', 'Call queue', 'Scam watch']) expect(html).toContain(label);
       for (const label of ['Control center', 'All transactions', 'Settings', 'Audit log', 'Fraud dashboard']) {
         expect(html).not.toContain(label);
       }

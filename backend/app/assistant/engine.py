@@ -276,6 +276,9 @@ class Assistant:
             return self._log(user_id, message, Reply(t["rate"], language, "rate_limited",
                                                      guard="rate_limited"))
         self.prefs.learn(user_id, message, "chat")
+        checked = self._check_number(user_id, message, language)
+        if checked is not None:
+            return self._log(user_id, message, checked)
         screen = guard.screen_input(message, own_ids)
         if screen.kind in ("injection", "other_people", "secret", "too_long", "empty"):
             key = {"too_long": "unknown", "empty": "unknown",
@@ -329,6 +332,51 @@ class Assistant:
             reply = self._polish(reply, message, facts, own_ids)
         reply.text = guard.redact(reply.text, own_ids)
         return self._log(user_id, message, reply)
+
+    # ------------------------------------------------------------------ seller check
+    CHECK_WORDS = re.compile(
+        r"(safe|scam|fraud|trust|check|legit|real|fake|thik|nirapod|bishshash|bisshas|"
+        r"নিরাপদ|বিশ্বাস|ভুয়া|প্রতারক|ঠিক আছে|চেক|pay korbo|taka dibo|টাকা দেব)", re.I)
+    CHECK_TEXT = {
+        "bn": {"high": "সতর্কতা: {masked} নম্বরটি নিয়ে {reports}টি অভিযোগ আছে{verified}। এই নম্বরে টাকা "
+                       "পাঠাবেন না; ক্যাশ অন ডেলিভারি বা ভেরিফায়েড মার্চেন্ট ব্যবহার করুন।",
+               "caution": "সাবধান: {masked} নম্বরটি নিয়ে কিছু সন্দেহজনক তথ্য আছে। শুধু পরিচিত মানুষকে টাকা "
+                          "পাঠান।",
+               "none": "{masked} নম্বর নিয়ে কোনো অভিযোগ পাইনি। তবু অচেনা অনলাইন বিক্রেতাকে আগে টাকা "
+                       "পাঠাবেন না।"},
+        "banglish": {"high": "Sotorkota: {masked} number niye {reports} ta complaint "
+                             "ache{verified}. Ei number e taka pathaben na; cash on "
+                             "delivery ba verified merchant use korun.",
+                     "caution": "Sabdhan: {masked} number niye kichu sondehojonok tottho ache. "
+                                "Shudhu porichito manush ke taka pathan.",
+                     "none": "{masked} number niye kono complaint paini. Tobu ochena online "
+                             "seller ke age taka pathaben na."},
+        "en": {"high": "Warning: {masked} has {reports} scam report(s){verified}. Do not send "
+                       "money; use cash on delivery or a verified upay merchant.",
+               "caution": "Be careful: {masked} shows some warning signs. Only pay people you "
+                          "know.",
+               "none": "No reports found for {masked}. Still, never pay unknown online sellers "
+                       "in advance."},
+    }
+
+    def _check_number(self, user_id: str, message: str, language: str) -> Reply | None:
+        """'Is 017... safe?' -> community and payment-pattern warning, nothing private."""
+        match = guard.PHONE_RE.search(message.translate(guard.BANGLA_DIGITS))
+        if not match or not self.CHECK_WORDS.search(message):
+            return None
+        from app.scam.service import ScamService, TransferError
+
+        try:
+            check = ScamService(self._conn).check_recipient(user_id, match.group(0))
+        except TransferError:
+            return None
+        verified = {"bn": " (ইউপে যাচাই করেছে)", "banglish": " (upay verified)",
+                    "en": " (verified by upay)"}[language] if check["verified_reports"] else ""
+        text = self.CHECK_TEXT[language][check["warning_level"]].format(
+            masked=check["masked"], reports=check["community_reports"], verified=verified)
+        if language == "bn":
+            text = text.translate(BN_DIGITS)
+        return Reply(text, language, "check_number", action={"type": "check_number"})
 
     # ------------------------------------------------------------------ LLM (optional)
     def _polish(self, reply: Reply, message: str, facts: dict[str, Any],

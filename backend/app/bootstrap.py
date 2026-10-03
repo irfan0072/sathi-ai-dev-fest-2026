@@ -96,6 +96,12 @@ def prepare_runtime(db_url: str | None = None, schema: str | None = None) -> Non
         from app.live.rebase import rebase_ledger
 
         rebase_ledger(lambda: get_connection(url, schema=schema))
+        try:
+            from app.scam.seed import seed_scam_demo
+
+            seed_scam_demo(lambda: get_connection(url, schema=schema))
+        except Exception:
+            pass  # demo scenario is optional; never block startup
         if not database_ready(config, db_url=url, schema=schema):
             raise ValueError("Database not ready")
     except Exception as exc:

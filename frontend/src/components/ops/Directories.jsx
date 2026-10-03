@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from 'react';
 import { api } from '../../api';
 import Icon from '../Icon';
 import { eventLabel } from '../../copy';
-import { ReportView } from './CaseWorkbench';
 import {
   Alert, Badge, Empty, Kpi, LiveDot, PageHead, Panel, Pager, bdt, checkText, checkTone,
   num, pct, timeAgo, usePoll, when,
@@ -386,28 +385,6 @@ export function AuditLogPage() {
   );
 }
 
-// ---------------------------------------------------------------------------- reports
-export function ReportsPage({ session }) {
-  const [data, error] = usePoll(() => api.getAuditReports(), 15000);
-  const reports = data?.reports || [];
-  return (
-    <div className="flex flex-col gap-5">
-      <PageHead title={session.role === 'supervisor' ? 'My audit reports' : 'Audit reports'} lead="Every case closes with a written audit report: findings, action taken and the decision." />
-      <Alert>{error}</Alert>
-      {reports.length === 0 ? <Panel><Empty title="No audit reports yet" /></Panel> : (
-        <div className="grid gap-3 lg:grid-cols-2">
-          {reports.map((r) => (
-            <div key={r.report_id} className="flex flex-col gap-1">
-              <div className="muted text-xs">Case #{r.case_id} · <span className="capitalize">{r.reason_text}</span>{r.agent_id ? ` · agent ${r.agent_id}` : ''}</div>
-              <ReportView r={r} />
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ---------------------------------------------------------------------------- supervisor desk
 export function SupervisorDesk({ session, onOpen }) {
   const [d, error] = usePoll(() => api.getDeskSummary(), 5000);
@@ -433,7 +410,7 @@ export function SupervisorDesk({ session, onOpen }) {
         </Panel>
         <Panel title="My cases" action={<button className="link text-xs" onClick={() => onOpen('casework')}>Open cases</button>}>
           {(cases?.cases || []).length === 0 ? <p className="muted">No cases assigned to you.</p> : (
-            <ul className="flex flex-col gap-1.5 text-sm">{cases.cases.map((c) => <li key={c.case_id} className="flex justify-between gap-2"><span className="truncate capitalize">#{c.case_id} · {c.reason_text}</span><Badge tone={c.priority === 'urgent' ? 'badge-error' : 'badge-ghost'}>{c.priority}</Badge></li>)}</ul>
+            <ul className="flex flex-col gap-1.5 text-sm">{cases.cases.map((c) => <li key={c.case_id} className="flex justify-between gap-2"><span className="truncate">#{c.case_id} · {c.reason_text}</span><Badge tone={c.priority === 'urgent' ? 'badge-error' : 'badge-ghost'}>{c.priority}</Badge></li>)}</ul>
           )}
         </Panel>
         <Panel title="Critical notes on open cases">

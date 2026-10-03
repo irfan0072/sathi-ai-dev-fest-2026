@@ -7,7 +7,7 @@ export const tabs = [
   { id: 'callcenter', label: 'Call management', icon: 'phone', group: 'Operations', title: 'Call management', roles: ['super_admin'] },
   { id: 'casework', label: 'Cases', icon: 'cases', group: 'Operations', title: 'Cases', roles: ['super_admin'] },
   { id: 'ledger', label: 'All transactions', icon: 'receipt', group: 'Operations', title: 'All transactions', roles: ['super_admin'] },
-  { id: 'reports', label: 'Audit reports', icon: 'shield', group: 'Operations', title: 'Audit reports', roles: ['super_admin'] },
+  { id: 'scamwatch', label: 'Scam watch', icon: 'warning', group: 'Operations', title: 'Scam watch', roles: ['super_admin'] },
   { id: 'users', label: 'Customers', icon: 'users', group: 'Directory', title: 'Customers', roles: ['super_admin'] },
   { id: 'agents-dir', label: 'Agents', icon: 'store', group: 'Directory', title: 'Agents', roles: ['super_admin'] },
   { id: 'staff', label: 'Supervisors', icon: 'shield', group: 'Directory', title: 'Supervisors and admins', roles: ['super_admin'] },
@@ -15,12 +15,12 @@ export const tabs = [
   { id: 'desk', label: 'My desk', icon: 'chart', group: 'My work', title: 'My desk', roles: ['supervisor'] },
   { id: 'callcenter', label: 'Call queue', icon: 'phone', group: 'My work', title: 'Call queue', roles: ['supervisor'] },
   { id: 'casework', label: 'Cases', icon: 'cases', group: 'My work', title: 'Cases to review', roles: ['supervisor'] },
-  { id: 'reports', label: 'My audit reports', icon: 'shield', group: 'My work', title: 'My audit reports', roles: ['supervisor'] },
+  { id: 'scamwatch', label: 'Scam watch', icon: 'warning', group: 'My work', title: 'Scam watch', roles: ['supervisor'] },
   // Fraud analytics (analyst and super admin)
-  { id: 'command', label: 'Fraud dashboard', icon: 'radar', group: 'Analytics', title: 'Today at a glance', roles: ['analyst', 'super_admin'] },
-  { id: 'transactions', label: 'Confirmations', icon: 'receipt', group: 'Analytics', title: 'Cash-outs confirmed by customers', roles: ['analyst', 'super_admin'] },
+  { id: 'command', label: 'Fraud dashboard', icon: 'radar', group: 'Analytics', title: 'Fraud dashboard', roles: ['analyst', 'super_admin'] },
+  { id: 'transactions', label: 'Confirmations', icon: 'receipt', group: 'Analytics', title: 'Confirmations', roles: ['analyst', 'super_admin'] },
   { id: 'cases', label: 'Cases to review', icon: 'cases', group: 'Analytics', title: 'Cases to review', roles: ['analyst'] },
-  { id: 'agents', label: 'Agent risk (AI)', icon: 'radar', group: 'Analytics', title: 'Agents with unusual activity', roles: ['analyst', 'super_admin'] },
+  { id: 'agents', label: 'Agent risk (AI)', icon: 'radar', group: 'Analytics', title: 'Agent risk (AI)', roles: ['analyst', 'super_admin'] },
   { id: 'liquidity', label: 'Cash planning', icon: 'store', group: 'Analytics', title: 'How much cash agents will need', roles: ['agent', 'analyst', 'super_admin'] },
   { id: 'outreach', label: 'Customers who need help', icon: 'users', group: 'Analytics', title: 'Customers who may need help', roles: ['analyst', 'super_admin'] },
   { id: 'campaign', label: 'Invite planner', icon: 'users', group: 'Analytics', title: 'Who to invite to Sathi', roles: ['analyst', 'super_admin'] },
@@ -28,6 +28,8 @@ export const tabs = [
   // Agent and customer
   { id: 'cashout', label: 'Cash-out', icon: 'flow', group: 'Daily work', title: 'Cash-out', roles: ['agent'] },
   { id: 'account', label: 'My account', icon: 'phone', group: 'Daily work', title: 'My account', roles: ['customer_channel'] },
+  { id: 'send', label: 'Send money', icon: 'arrow', group: 'Daily work', title: 'Send money', roles: ['customer_channel'] },
+  { id: 'community', label: 'Scam alerts', icon: 'shield', group: 'Daily work', title: 'Scam alerts', roles: ['customer_channel'] },
   // System
   { id: 'auditlog', label: 'Audit log', icon: 'lock', group: 'System', title: 'Audit log', roles: ['super_admin'] },
   { id: 'settings', label: 'Settings', icon: 'settings', group: 'System', title: 'Settings', roles: ['super_admin'] },
@@ -41,7 +43,9 @@ export const canOpen = (tab, session) => Boolean(tab) && (!tab.roles || tab.role
 export default function NavTabs({ activeTab, onSelectTab, session = null }) {
   // Locked tabs are hidden, not dimmed. This prevents role-leakage in the sidebar.
   const visibleTabs = tabs.filter((tab) => canOpen(tab, session));
-  const groups = [...new Set(visibleTabs.map((tab) => tab.group))];
+  const order = ['Overview', 'Daily work', 'My work', 'Operations', 'Directory', 'Analytics', 'System', 'Help'];
+  const groups = [...new Set(visibleTabs.map((tab) => tab.group))]
+    .sort((a, b) => order.indexOf(a) - order.indexOf(b));
 
   return (
     <aside className="flex min-h-full w-72 flex-col border-r border-base-300 bg-base-100">

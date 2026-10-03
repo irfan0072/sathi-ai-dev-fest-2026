@@ -221,3 +221,7 @@
     var(--color-base-200) 100%
   );
 }
+/* daisyUI 5 dropped .form-control; keep labels stacked above their inputs everywhere. */
+.form-control { display: flex; flex-direction: column; }
+.form-control > .textarea, .form-control > .select { width: 100%; }
+textarea.textarea { width: 100%; }

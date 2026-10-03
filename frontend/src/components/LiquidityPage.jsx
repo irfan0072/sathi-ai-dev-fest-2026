@@ -153,9 +153,14 @@ export default function LiquidityPage({ session }) {
   const isAgent = session?.role === 'agent';
   useEffect(() => {
     let live = true;
-    const load = isAgent ? api.getAgentLiquidity(session.subject) : api.getLiquidityOverview();
-    load.then((v) => { if (live) setData(v); }).catch((err) => { if (live) setError(err.message); });
-    return () => { live = false; };
+    let timer;
+    const run = () => {
+      const load = isAgent ? api.getAgentLiquidity(session.subject) : api.getLiquidityOverview();
+      load.then((v) => { if (live) { setData(v); setError(''); } })
+        .catch((err) => { if (live) { setError(err.message); timer = setTimeout(run, 20000); } });
+    };
+    run();
+    return () => { live = false; clearTimeout(timer); };
   }, [isAgent, session?.subject]);
   return (
     <div className="flex flex-col gap-6">

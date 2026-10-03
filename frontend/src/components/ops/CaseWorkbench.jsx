@@ -170,9 +170,12 @@ function CaseFile({ caseId, session, supervisors, onChanged, onClose }) {
     >
       <Alert>{error}</Alert>
       <div className="rounded-box bg-base-200/60 p-3 text-sm">
-        <div className="font-semibold capitalize">{file.reason_text}</div>
+        <div className="font-semibold first-letter:uppercase">{file.reason_text}</div>
         <div className="mt-1 grid gap-x-4 gap-y-1 sm:grid-cols-2">
           {file.user_id && <span>Customer <span className="font-mono">{file.user_id}</span></span>}
+          {ev.upay_number && <span>Personal account <span className="font-mono">{ev.upay_number}</span> ({ev.receiver})</span>}
+          {ev.inbound_24h != null && <span>{ev.inbound_24h} payments from {ev.senders} people, 24h</span>}
+          {ev.community_reports != null && <span>{ev.community_reports} community report(s), {ev.verified_reports} verified</span>}
           {file.agent_id && <span>Agent <span className="font-mono">{file.agent_id}</span></span>}
           {ev.ledger_amount != null && <span>Ledger {bdt(ev.ledger_amount)}</span>}
           {ev.stated_amount != null && <span>Customer said {bdt(ev.stated_amount)}</span>}
@@ -182,6 +185,10 @@ function CaseFile({ caseId, session, supervisors, onChanged, onClose }) {
           <span>Assigned: {file.assignee_name || file.assigned_to || 'nobody'}</span>
         </div>
         {ev.guidance && <div className="mt-2 rounded bg-error/10 p-2 text-error">{ev.guidance}</div>}
+        {ev.recommendation && typeof ev.recommendation === 'string' && ev.recommendation.length > 20 && (
+          <div className="mt-2 rounded bg-info/10 p-2 text-sm">{ev.recommendation}</div>
+        )}
+        {ev.customer_message && <div className="mt-2 rounded bg-base-100 p-2 text-sm">Customer wrote: “{ev.customer_message}”</div>}
         {ev.reasons?.length > 0 && (
           <ul className="mt-2 list-disc pl-5 text-xs">{ev.reasons.map((r) => <li key={r}>{r}</li>)}</ul>
         )}
@@ -237,6 +244,7 @@ function CaseFile({ caseId, session, supervisors, onChanged, onClose }) {
         </ul>
       </div>
       {file.can_act && <NoteBox caseId={file.case_id} onSaved={load} />}
+      {file.reports.length > 0 && <div className="text-sm font-semibold">Case audit</div>}
       {file.reports.map((r) => <ReportView key={r.report_id} r={r} />)}
       {file.can_act && <AuditForm caseId={file.case_id} onSaved={() => { load(); onChanged(); }} />}
       {open && !file.can_act && session.role === 'supervisor' && (
@@ -310,7 +318,7 @@ export default function CaseWorkbench({ session, initialCaseId = null }) {
                     <tr key={c.case_id} onClick={() => setSelected(c.case_id)} className={`cursor-pointer hover:bg-base-200/60 ${selected === c.case_id ? 'bg-primary/5' : ''}`}>
                       <td className="font-mono text-xs">#{c.case_id}{c.critical_notes > 0 && <span className="badge badge-error badge-xs ml-1">!</span>}</td>
                       <td><Badge tone={priorityTone[c.priority]}>{c.priority}</Badge></td>
-                      <td className="max-w-[16rem] truncate text-xs capitalize" title={c.reason_text}>{c.reason_text}</td>
+                      <td className="max-w-[18rem] truncate text-xs first-letter:uppercase" title={c.reason_text}>{c.reason_text}</td>
                       <td className="font-mono text-xs">{c.agent_id || '—'}</td>
                       <td className="tabular-nums">{bdt(c.amount ?? c.evidence?.ledger_amount)}</td>
                       <td className={`text-xs ${c.sla_breached ? 'font-semibold text-error' : ''}`}>{slaText(c)}</td>

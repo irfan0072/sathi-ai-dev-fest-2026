@@ -212,3 +212,60 @@ How the assistant resists manipulation:
 
 Tests (`test_assistant.py`) cover all of the above, including a compromised LLM that tries
 to invent a balance, leak another customer's ID or echo an injection.
+
+## Scam-seller protection (P2P fraud by account holders)
+
+### The problem
+In Bangladesh, social-media "shops" often take payment in advance into a **personal**
+mobile-wallet account. Personal accounts are not allowed to sell goods. Many of these
+sellers never deliver. The cash-out checks do not help here, because the victim pays the
+scammer by send money, not through an agent.
+
+### What the money looks like (research summary)
+These patterns are the well-known mule and merchant-misuse typologies used in transaction
+monitoring, adapted to a mobile wallet:
+
+| Signal | Why it matters | Rule |
+|---|---|---|
+| Fan-in | One personal account is paid by many unrelated wallets | 5 or more senders in 24 h (10 or more is stronger) |
+| Same amount | Victims pay the product price, so the amounts repeat exactly | 60% or more of 5+ payments are the same amount |
+| Burst | A post goes viral and orders arrive together | 5 or more payments inside any 1-hour window |
+| Strangers | Family and friends pay repeatedly; buyers pay once | 80% or more of payers never paid this account in the previous 90 days |
+| Pass-through | Scam accounts empty themselves before complaints arrive | 70% or more of the money leaves (cash-out or send) within the day |
+| New account | Throw-away accounts | under 30 days old, with 5+ payments |
+| Community | Victims know first | anonymous reports, "me too" votes, reports verified by upay |
+
+The score is a transparent weighted sum; `app/scam/service.py` lists the weights.
+Every point shows up as a plain sentence for supervisors. The system separates two kinds
+of account:
+
+- **Selling on a personal account**: fan-in and the same amount, but the money stays and
+  there are no complaints. Recommendation: invite the holder to open a merchant account.
+- **Possible scam**: pass-through or community reports on top. A case opens; an existing
+  shop case is escalated instead of duplicated.
+
+### What happens
+1. **Before paying.** *Send money* checks the number first. It shows community reports and
+   the payment-pattern warnings. A high warning needs an explicit "I know this person"
+   tick. Money is never blocked.
+2. **After each transfer.** The receiver is rescored at once. A background job also
+   rescores every minute.
+3. **Supervisors.** The *Scam watch* page lists flagged personal accounts with their
+   reasons, plus the community moderation queue (verify, reject, hide). Verified reports
+   raise the warning payers see.
+4. **Customers.** The *Scam alerts* page:
+   - **check a seller** by upay number, WhatsApp, Facebook or Instagram page, or website;
+   - **report anonymously**: only a keyed hash of the reporter is stored, contact details
+     in the text are redacted, one report per seller per customer, 5 per day;
+   - **"this happened to me too"** votes.
+5. **Assistant.** Asking Sathi Sahayak "01XXXXXXXXX number e taka dibo, safe?" returns the
+   same community and pattern warning. It never returns the account holder's data.
+
+### Live demo scenario
+Loaded automatically after the scale seed. The live traffic simulator keeps it fresh.
+
+| Number | What it is | Expected result |
+|---|---|---|
+| `01900000500` | "Dhaka Gadget Deals" scam: many ৳1,250 payments, money moved out, 2 reports | high risk, urgent case |
+| `01900000600` | Home bakery selling ৳650 cakes on a personal account | caution, "selling on personal account" |
+| `01901000002` | Ordinary customer | no warning |

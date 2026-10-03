@@ -282,8 +282,8 @@ export default function CallCenter({ session }) {
           <Kpi icon="phone" label="Answer rate, 24h" value={pct(s.calls_24h.answer_rate)} note={`${num(s.calls_24h.total)} calls placed`} tone="bg-success/15 text-success" />
           <Kpi icon="refresh" label="Retrying" value={num(s.retrying)} note={s.next_retry_at ? `next ${timeAgo(s.next_retry_at)}` : 'none due'} tone="bg-info/15 text-info" />
           <Kpi icon="users" label="Waiting for a person" value={num(s.manual_waiting)} note={`${num(s.manual_active)} in progress`} tone="bg-warning/20 text-warning-content" />
-          <Kpi icon="x" label="Ignored (unreachable)" value={num(s.ignored)} note={`after ${s.policy.max_auto_attempts} tries`} />
-          <Kpi icon="check" label="Recovered by retry" value={num(s.recovered_by_retry_24h)} note={`avg ${s.avg_auto_attempts} tries · manual ${s.avg_manual_resolution_minutes}m`} tone="bg-primary/15 text-primary" />
+          <Kpi icon="x" label="Unreachable" value={num(s.ignored)} note={`ignored after ${s.policy.max_auto_attempts} tries`} />
+          <Kpi icon="check" label="Recovered by retry" value={num(s.recovered_by_retry_24h)} note={`avg ${s.avg_auto_attempts} tries per call`} tone="bg-primary/15 text-primary" />
         </div>
       )}
       {isAdmin && s && (

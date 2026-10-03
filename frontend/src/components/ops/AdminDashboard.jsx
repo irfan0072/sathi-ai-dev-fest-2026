@@ -39,6 +39,15 @@ function Simulator({ sim, onChange }) {
 const minuteLabel = (p) => new Date(p.minute).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 const hourLabel = (p) => `${new Date(p.hour).getHours()}:00`;
 
+function fillHours(points) {
+  const now = new Date(); now.setMinutes(0, 0, 0);
+  return Array.from({ length: 24 }, (_, i) => {
+    const d = new Date(now.getTime() - (23 - i) * 3600000);
+    const hit = points.find((p) => new Date(p.hour).getTime() === d.getTime());
+    return { hour: d.toISOString(), cashouts: hit?.cashouts || 0, suspicious: hit?.suspicious || 0 };
+  });
+}
+
 function fillMinutes(points) {
   const now = new Date(); now.setSeconds(0, 0);
   return Array.from({ length: 30 }, (_, i) => {
@@ -58,6 +67,20 @@ export default function AdminDashboard({ onOpen }) {
   const calls = d?.calls || {};
   const cases = d?.cases || {};
   const cnt = (k) => by[k]?.count || 0;
+
+  if (!d && !error) {
+    return (
+      <div className="flex flex-col gap-6" aria-busy="true">
+        <PageHead title="Control center" lead="Loading live numbers from the database…" />
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {Array.from({ length: 8 }, (_, i) => <div key={i} className="skeleton h-24 rounded-box" />)}
+        </div>
+        <div className="grid gap-4 lg:grid-cols-3">
+          <div className="skeleton h-56 rounded-box lg:col-span-2" /><div className="skeleton h-56 rounded-box" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -125,7 +148,7 @@ export default function AdminDashboard({ onOpen }) {
             { label: 'Supervisor review', value: cnt('manual_review'), color: 'var(--color-secondary)' },
             { label: 'Unreachable', value: cnt('unreachable'), color: 'var(--color-base-300)' },
           ]} />
-          <Bars points={(d?.hourly || [])} value="cashouts" overlay="suspicious" label="Checks per hour"
+          <Bars points={fillHours(d?.hourly || [])} value="cashouts" overlay="suspicious" label="Checks per hour"
             xLabel={hourLabel} height={120} />
         </Panel>
         <Panel title="Case work, 24h">
