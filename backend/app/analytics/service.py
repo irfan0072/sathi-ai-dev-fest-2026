@@ -4,13 +4,16 @@ Provides:
 - User assisted scoring and SHAP explanation generation.
 - Agent anomaly risk assessment with peer comparisons.
 - High-priority outreach ranking for assisted beneficiaries.
-- Human review queue management and analyst case adjudication.
+- Durable human review queue management and analyst case adjudication.
+- Database ledger-backed Bangla receipts with exact numerical integrity.
 - System-wide evaluation metrics summary conforming to docs/evaluation-results.md.
 """
 
 from __future__ import annotations
 
 import datetime
+import json
+from decimal import Decimal
 from typing import Any
 
 from app.copilot.receipts import generate_bangla_receipt
@@ -33,16 +36,13 @@ FEATURE_DISPLAY_NAMES = {
 
 
 class AnalyticsService:
-    """Service providing intelligence queries, case management, and metrics summary."""
+    """Service providing intelligence queries, durable case management, and receipts."""
 
     def __init__(
         self,
         mandate_service: MandateService | None = None,
     ) -> None:
         self._mandate_service = mandate_service
-
-        # In-memory case registry initialized with sample cases if needed
-        self.review_actions: list[dict[str, Any]] = []
 
     @property
     def mandate_service(self) -> MandateService:
@@ -231,35 +231,35 @@ class AnalyticsService:
         }
 
     def list_cases(self) -> dict[str, Any]:
-        """Return combined review cases from the mandate service and demonstration cases."""
-        raw_cases = list(self.mandate_service.cases)
-        if raw_cases:
-            service_cases = []
-            for c in raw_cases:
-                case_copy = dict(c)
-                case_copy.setdefault("is_sample", False)
-                case_copy.setdefault("provenance", "runtime_record")
-                service_cases.append(case_copy)
-        else:
-            service_cases = [
-                {
-                    "case_id": 1042,
-                    "mandate_id": "e5b87120-a6bb-49e0-8fa3-9f899e3a6a12",
-                    "user_id": "U_42_000008",
-                    "agent_id": "A_000015",
-                    "reason": "Amount mismatch: requested 3000 BDT, customer stated 2500 BDT",
-                    "status": "open",
-                    "severity": "HIGH",
-                    "created_at": "2026-10-02T18:31:00Z",
-                    "is_sample": True,
-                    "provenance": "illustrative sample, not a result",
-                    "evidence": {
-                        "requested_amount": 3000.00,
-                        "stated_amount": 2500.00,
-                    },
-                }
-            ]
-        return {"total": len(service_cases), "cases": service_cases}
+        """Return durable review cases from PostgreSQL cases store."""
+        with self.mandate_service.get_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT case_id, mandate_id, agent_id, reason, evidence, status, created_at
+                    FROM cases ORDER BY case_id ASC;
+                    """
+                )
+                rows = cur.fetchall()
+                service_cases = []
+                for r in rows:
+                    ev = r[4] if isinstance(r[4], dict) else json.loads(r[4] or "{}")
+                    service_cases.append(
+                        {
+                            "case_id": r[0],
+                            "mandate_id": str(r[1]) if r[1] else None,
+                            "agent_id": r[2],
+                            "reason": r[3],
+                            "evidence": ev,
+                            "status": r[5],
+                            "created_at": (
+                                r[6].isoformat() if hasattr(r[6], "isoformat") else str(r[6])
+                            ),
+                            "is_sample": False,
+                            "provenance": "runtime_record",
+                        }
+                    )
+                return {"total": len(service_cases), "cases": service_cases}
 
     def decide_case(
         self,
@@ -268,85 +268,117 @@ class AnalyticsService:
         reviewer: str,
         note: str = "",
     ) -> dict[str, Any]:
-        """Record human review decision and update case status."""
+        """Record human review decision in review_actions and update case status in PostgreSQL.
+
+        Human review updates case status and audit only; never automatically redeems
+        or alters transaction balances. Unknown cases return 404.
+        """
         valid_decisions = {"approved", "denied", "escalated"}
         if decision not in valid_decisions:
             raise ValueError(f"Invalid decision '{decision}'. Must be one of {valid_decisions}.")
 
         now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
 
-        # Update within mandate service cases if found
-        target_case = None
-        for c in self.mandate_service.cases:
-            if c.get("case_id") == case_id:
-                target_case = c
-                break
+        conn = self.mandate_service.get_connection()
+        try:
+            with conn.transaction():
+                with conn.cursor() as cur:
+                    cur.execute(
+                        "SELECT case_id, status FROM cases WHERE case_id = %s FOR UPDATE;",
+                        (case_id,),
+                    )
+                    row = cur.fetchone()
 
-        if target_case:
-            target_case["status"] = decision
-            target_case["reviewer"] = reviewer
-            target_case["note"] = note
-            target_case["resolved_at"] = now_iso
-        else:
-            # Check default seed case
-            target_case = {
+                    if row is None:
+                        raise KeyError(
+                            f"Case {case_id} not found in durable database cases store."
+                        )
+
+                    cur.execute(
+                        "UPDATE cases SET status = %s WHERE case_id = %s;",
+                        (decision, case_id),
+                    )
+
+                    cur.execute(
+                        """
+                        INSERT INTO review_actions (case_id, reviewer, decision, note, ts)
+                        VALUES (%s, %s, %s, %s, now());
+                        """,
+                        (case_id, reviewer, decision, note),
+                    )
+
+                    cur.execute(
+                        """
+                        INSERT INTO audit_log (
+                            actor, action, entity, entity_id, policy_version, detail, ts
+                        )
+                        VALUES (%s, %s, 'case', %s, 'v1.0', %s::jsonb, now());
+                        """,
+                        (
+                            reviewer,
+                            f"CASE_DECISION_{decision.upper()}",
+                            str(case_id),
+                            json.dumps({"decision": decision, "note": note}),
+                        ),
+                    )
+
+            return {
                 "case_id": case_id,
                 "status": decision,
+                "decision": decision,
                 "reviewer": reviewer,
-                "note": note,
                 "resolved_at": now_iso,
             }
-
-        # Record review action in audit log
-        self.mandate_service.log_audit(
-            actor=reviewer,
-            action=f"CASE_DECISION_{decision.upper()}",
-            entity="case",
-            entity_id=str(case_id),
-            detail={"decision": decision, "note": note},
-        )
-
-        return {
-            "case_id": case_id,
-            "status": decision,
-            "decision": decision,
-            "reviewer": reviewer,
-            "resolved_at": now_iso,
-        }
+        finally:
+            conn.close()
 
     def get_receipt(self, txn_id: int) -> dict[str, Any]:
-        """Retrieve verified Bangla receipt for transaction from runtime mandate store."""
-        for mandate in self.mandate_service.mandates.values():
-            if getattr(mandate, "redeemed_txn_id", None) == txn_id:
-                redemption_ts = getattr(mandate, "redeemed_at", None)
-                if redemption_ts is not None:
-                    ts_iso = (
-                        redemption_ts.isoformat()
-                        if hasattr(redemption_ts, "isoformat")
-                        else str(redemption_ts)
-                    )
-                else:
-                    ts_iso = None
-                    for entry in reversed(self.mandate_service.audit_log):
-                        if (
-                            entry.get("action") == "mandate_redeemed"
-                            and entry.get("detail", {}).get("txn_id") == txn_id
-                        ):
-                            ts_iso = entry.get("ts")
-                            break
-                    if not ts_iso:
-                        ts_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        """Retrieve verified plain-language Bangla receipt from durable PostgreSQL transaction.
 
-                return generate_bangla_receipt(
-                    txn_id=txn_id,
-                    user_id=mandate.user_id,
-                    agent_id=mandate.agent_id,
-                    amount_bdt=float(mandate.amount),
-                    fee_bdt=0.0,
-                    payout_bdt=float(mandate.amount),
+        Validates all numbers against actual ledger values to prevent numerical hallucination.
+        Receipts join redeemed mandates and cash_out transaction, never arbitrary rows.
+        """
+        conn = self.mandate_service.get_connection()
+        try:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT t.txn_id, t.user_id, t.agent_id, t.amount, t.fee,
+                           t.balance_after, t.ts
+                    FROM transactions t
+                    JOIN mandates m ON m.redeemed_txn_id = t.txn_id
+                    WHERE t.txn_id = %s
+                      AND t.txn_type = 'cash_out'
+                      AND m.status = 'redeemed';
+                    """,
+                    (txn_id,),
+                )
+                row = cur.fetchone()
+                if not row:
+                    raise KeyError(
+                        f"Redeemed cash-out transaction {txn_id} not found in database ledger."
+                    )
+
+                t_id, user_id, agent_id, amount, fee, balance_after, ts = row
+
+                amount_bdt = float(Decimal(str(amount)))
+                fee_bdt = float(Decimal(str(fee or 0.0)))
+                payout_bdt = amount_bdt
+                ts_iso = ts.isoformat() if hasattr(ts, "isoformat") else str(ts)
+
+                receipt = generate_bangla_receipt(
+                    txn_id=t_id,
+                    user_id=user_id or "unknown",
+                    agent_id=agent_id or "unknown",
+                    amount_bdt=amount_bdt,
+                    fee_bdt=fee_bdt,
+                    payout_bdt=payout_bdt,
                     ts_iso=ts_iso,
                 )
-        raise KeyError(f"Transaction {txn_id} not found in runtime mandate store.")
+                receipt["provenance"] = "database ledger transaction"
+                return receipt
+        finally:
+            conn.close()
 
     def get_metrics_summary(self) -> dict[str, Any]:
         """Evaluation metrics summary is unavailable until evaluation artifacts are wired."""

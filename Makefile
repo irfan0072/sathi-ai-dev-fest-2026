@@ -3,7 +3,7 @@ API_PORT ?= 18000
 DATASET ?= data/generated/train.json
 SATHI_TEST_DATABASE_URL ?= postgresql://sathi:CHANGE_ME@localhost:5432/sathi_phase1_test
 
-.PHONY: test lint check-structure test-api lint-api run-api test-console lint-console build-console run-console smoke-skeleton migrate seed generate split
+.PHONY: test lint check-structure test-api lint-api run-api test-console lint-console build-console run-console smoke-skeleton migrate seed generate split init-env demo-seed
 
 test: check-structure test-api test-console
 
@@ -47,3 +47,9 @@ generate:
 
 split:
 	PYTHONPATH=backend $(PYTHON) -m app.data.cli split
+
+init-env:
+	python3 scripts/init_env.py
+
+demo-seed:
+	PYTHONPATH=backend $(PYTHON) -m app.data.cli demo-seed

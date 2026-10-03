@@ -1,13 +1,13 @@
 """FastAPI router for Sathi Intelligence, Cases, Receipts, and Metrics endpoints.
 
-Conforms strictly to docs/api-contracts.md:
-- GET  /api/v1/users/{id}/assisted-score
-- GET  /api/v1/agents/{id}/risk
-- GET  /api/v1/outreach
-- GET  /api/v1/cases
-- POST /api/v1/cases/{id}/decision
-- GET  /api/v1/receipts/{txn_id}
-- GET  /api/v1/metrics/summary
+Conforms strictly to docs/api-contracts.md and authenticated role policies:
+- GET  /api/v1/users/{id}/assisted-score (Role: analyst)
+- GET  /api/v1/agents/{id}/risk (Role: analyst)
+- GET  /api/v1/outreach (Role: analyst)
+- GET  /api/v1/cases (Role: analyst)
+- POST /api/v1/cases/{id}/decision (Role: analyst)
+- GET  /api/v1/receipts/{txn_id} (Role: customer_channel, agent, analyst)
+- GET  /api/v1/metrics/summary (Role: analyst)
 """
 
 from __future__ import annotations
@@ -15,6 +15,8 @@ from __future__ import annotations
 from typing import Annotated, Any
 
 from app.analytics.service import AnalyticsService
+from app.auth.dependencies import require_roles
+from app.auth.models import AuthenticatedPrincipal
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
@@ -39,13 +41,14 @@ def set_analytics_service(service: AnalyticsService | None) -> None:
 
 class CaseDecisionRequest(BaseModel):
     decision: str = Field(..., description="Decision: approved, denied, or escalated")
-    reviewer: str = Field(..., description="Reviewer identifier")
+    reviewer: str | None = Field(default=None, description="Reviewer identifier")
     note: str = Field(default="", description="Review note explaining reasoning")
 
 
 @router.get("/users/{user_id}/assisted-score")
 def get_user_assisted_score(
     user_id: str,
+    principal: Annotated[AuthenticatedPrincipal, Depends(require_roles("analyst"))],
     service: Annotated[AnalyticsService, Depends(get_analytics_service)],
 ) -> dict[str, Any]:
     """Retrieve calibrated assisted score and local SHAP explanations for customer."""
@@ -55,6 +58,7 @@ def get_user_assisted_score(
 @router.get("/agents/{agent_id}/risk")
 def get_agent_risk(
     agent_id: str,
+    principal: Annotated[AuthenticatedPrincipal, Depends(require_roles("analyst"))],
     service: Annotated[AnalyticsService, Depends(get_analytics_service)],
 ) -> dict[str, Any]:
     """Retrieve agent anomaly risk, risk level, and peer cohort comparison."""
@@ -63,6 +67,7 @@ def get_agent_risk(
 
 @router.get("/outreach")
 def get_outreach_list(
+    principal: Annotated[AuthenticatedPrincipal, Depends(require_roles("analyst"))],
     service: Annotated[AnalyticsService, Depends(get_analytics_service)],
 ) -> dict[str, Any]:
     """Retrieve ranked list of likely assisted beneficiaries for proactive onboarding."""
@@ -71,52 +76,88 @@ def get_outreach_list(
 
 @router.get("/cases")
 def list_cases(
+    principal: Annotated[AuthenticatedPrincipal, Depends(require_roles("analyst"))],
     service: Annotated[AnalyticsService, Depends(get_analytics_service)],
 ) -> dict[str, Any]:
     """Retrieve analyst review queue cases."""
-    return service.list_cases()
+    try:
+        return service.list_cases()
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=str(exc) or "Cases unavailable",
+        )
 
 
 @router.post("/cases/{case_id}/decision", status_code=status.HTTP_200_OK)
 def decide_case(
     case_id: int,
     body: CaseDecisionRequest,
+    principal: Annotated[AuthenticatedPrincipal, Depends(require_roles("analyst"))],
     service: Annotated[AnalyticsService, Depends(get_analytics_service)],
 ) -> dict[str, Any]:
     """Submit human analyst decision for review queue case."""
+    reviewer = principal.subject or body.reviewer or "analyst"
     try:
         return service.decide_case(
             case_id=case_id,
             decision=body.decision,
-            reviewer=body.reviewer,
+            reviewer=reviewer,
             note=body.note,
         )
-    except ValueError as e:
-        raise HTTPException(status_code=422, detail=str(e))
+    except KeyError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc))
 
 
 @router.get("/receipts/{txn_id}")
 def get_receipt(
     txn_id: int,
+    principal: Annotated[
+        AuthenticatedPrincipal,
+        Depends(require_roles("customer_channel", "agent", "analyst")),
+    ],
     service: Annotated[AnalyticsService, Depends(get_analytics_service)],
 ) -> dict[str, Any]:
     """Retrieve plain-language Bangla receipt with verified numbers."""
     try:
-        return service.get_receipt(txn_id)
+        receipt = service.get_receipt(txn_id)
     except KeyError:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Transaction {txn_id} not found in runtime mandate store",
+            detail=f"Transaction {txn_id} not found in database ledger",
         )
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=str(e) or "Receipt lookup unavailable",
+            detail=str(exc) or "Receipt lookup unavailable",
         )
+
+    # Ownership checks
+    if principal.role == "customer_channel" and receipt["user_id"] != principal.subject:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=(
+                f"Customer '{principal.subject}' is not authorized to view receipt "
+                f"for user '{receipt['user_id']}'"
+            ),
+        )
+    if principal.role == "agent" and receipt["agent_id"] != principal.subject:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=(
+                f"Agent '{principal.subject}' is not authorized to view receipt "
+                f"for agent '{receipt['agent_id']}'"
+            ),
+        )
+
+    return receipt
 
 
 @router.get("/metrics/summary")
 def get_metrics_summary(
+    principal: Annotated[AuthenticatedPrincipal, Depends(require_roles("analyst"))],
     service: Annotated[AnalyticsService, Depends(get_analytics_service)],
 ) -> dict[str, Any]:
     """Retrieve comprehensive evaluation metrics and fairness audit summary."""

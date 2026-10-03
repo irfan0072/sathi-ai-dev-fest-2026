@@ -82,3 +82,11 @@ T023 PAUSED at second failed verification after feedback:208backendpass/5fail,ze
 T023 resumed with explicit human go-ahead for tasks/T023-review2.md. agy correction active; completion pending independent gates. T024 remains next.
 
 T023 COMPLETE at2Oct23:58 after authorized retry:215backend/zero skips,17frontend,focused57,structure/lint/build/diffcheck passed; inverted-label refit state preserved; Linux native ML imports/config passed. Final evaluation scores still pendingT023b. Approved nullability clarification clears T024 migration gate. Next durableT024.
+
+T023 pushed712b28c. T024 started with approved design and nullability clarification; Codex added synthetic auth/demo defaults, agy implementation pending verification.
+
+T024 PAUSED at second failed verification after feedback3Oct01:18Dhaka:303backend pass/3fail/zero skips;17frontend previously pass (unchanged),structure/frontend lint/build pass;Ruff14findings,diffcheck one trailingblank. Actual app.main invalid-amount probe returns500 due unsafe validation-error serialization; mismatch response status differs from DB. Precise retry tasks/T024-review2.md; human go-ahead required. No active agy, no development migration/demo seed, no verified T024/live deployment.
+
+Human “ok” reopens precise T024-review2 retry. agy94602 active; completion pending independent checks. No change to approved financial/schema/design defaults.
+
+T024 COMPLETE after approved retry/Codex fallback:307backend/zero skips,17frontend,lint/build/Docker/diffcheck passed. Migration002+seed777 preserved all old rows and001; actual API18000 flow, replay, verification/lockout, cash report/receipt/cases and restart durability verified. Human reports agy reset: resume agy implementation. T023b next; T025 UI pending, no final held-out score/deployment claim.

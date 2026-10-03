@@ -157,3 +157,11 @@ Model defaults are reproducibility controls, not real upay figures or validated 
 | Date | Change | Reason |
 |---|---|---|
 | 2026-10-02 | Added explicit model controls and removed region from scoring peers | ASSUMPTIONS implementing human-approved repair design; preserve generator behavior and separate demographic evaluation |
+
+## Durable demo defaults — ASSUMPTIONS
+
+Approved wrong-code redemption attempts3, distinct from customer verification2. Synthetic demo uses namespace777,50000BDT initial credit at30September2026UTC, never restores spent balances on reseeding. Tokens last30minutes and useHS256 with a separate server secret. Public demo PINs1234/5678/9012 grant agent/customer_channel/analyst roles only; they are synthetic fixtures, never real credentials. Agent scope is limited to U_777_000001; no training-user transactions/admin/policy writes.
+
+| Date | Change | Reason |
+|---|---|---|
+| 2026-10-03 | Added separate redemption attempts and scoped synthetic demo defaults | ASSUMPTIONS implementing approved durable/auth design; preserve original generator and financial defaults |

@@ -515,6 +515,9 @@ def validate_config(config: dict[str, Any]) -> dict[str, Any]:
     _check_int(
         policy.get("max_verification_attempts"), "policy.max_verification_attempts", min_val=1
     )
+    _check_int(
+        policy.get("max_redemption_attempts"), "policy.max_redemption_attempts", min_val=1
+    )
     if type(policy.get("review_on_mismatch")) is not bool:
         raise ConfigError("policy.review_on_mismatch must be a boolean.")
 
@@ -694,4 +697,62 @@ def validate_config(config: dict[str, Any]) -> dict[str, Any]:
             _check_int(value, name, min_val=low, max_val=high)
         if window[0] > window[1]:
             raise ConfigError(f"{name} range is reversed")
+    if "auth" in config:
+        auth_cfg = config["auth"]
+        if not isinstance(auth_cfg, dict):
+            raise ConfigError("Missing or invalid 'auth' mapping in configuration.")
+        if type(auth_cfg.get("demo_enabled")) is not bool:
+            raise ConfigError("auth.demo_enabled must be a boolean.")
+        _check_int(auth_cfg.get("token_ttl_minutes"), "auth.token_ttl_minutes", min_val=1)
+        if auth_cfg.get("signing_algorithm") != "HS256":
+            raise ConfigError("auth.signing_algorithm must be 'HS256'.")
+        _check_int(auth_cfg.get("demo_seed"), "auth.demo_seed", min_val=0)
+        _check_finite_num(
+            auth_cfg.get("demo_initial_balance"),
+            "auth.demo_initial_balance",
+            min_val=0.0,
+            exclusive_min=True,
+        )
+        credit_ts = auth_cfg.get("demo_credit_timestamp")
+        if not isinstance(credit_ts, str):
+            raise ConfigError("auth.demo_credit_timestamp must be an ISO 8601 string.")
+        try:
+            c_dt = datetime.fromisoformat(credit_ts.replace("Z", "+00:00"))
+            if c_dt.tzinfo is None:
+                raise ConfigError("auth.demo_credit_timestamp must include timezone offset.")
+        except Exception as exc:
+            raise ConfigError(
+                f"Invalid auth.demo_credit_timestamp '{credit_ts}': {exc}"
+            ) from exc
+
+        principals = auth_cfg.get("principals")
+        if not isinstance(principals, dict) or not principals:
+            raise ConfigError("auth.principals must be a non-empty mapping.")
+        for p_name, p_info in principals.items():
+            if not isinstance(p_info, dict):
+                raise ConfigError(f"auth.principals['{p_name}'] must be a mapping.")
+            role = p_info.get("role")
+            if role not in ("agent", "customer_channel", "analyst"):
+                raise ConfigError(
+                    f"auth.principals['{p_name}'].role must be one of "
+                    "['agent', 'customer_channel', 'analyst']"
+                )
+            sub = p_info.get("subject")
+            if not isinstance(sub, str) or not sub.strip():
+                raise ConfigError(
+                    f"auth.principals['{p_name}'].subject must be a non-empty string."
+                )
+            pin = p_info.get("pin")
+            if not isinstance(pin, str) or not pin.strip():
+                raise ConfigError(
+                    f"auth.principals['{p_name}'].pin must be a non-empty string."
+                )
+            if "allowed_users" in p_info:
+                ausers = p_info["allowed_users"]
+                if not isinstance(ausers, list) or not all(
+                    isinstance(u, str) for u in ausers
+                ):
+                    raise ConfigError(
+                        f"auth.principals['{p_name}'].allowed_users must be a list of strings."
+                    )
     return config

@@ -100,6 +100,26 @@ def build_parser() -> argparse.ArgumentParser:
         help="Optional database schema (search_path)",
     )
 
+    # demo-seed subcommand
+    demo_seed_parser = subparsers.add_parser(
+        "demo-seed", help="Load deterministic demo seed fixtures (namespace 777)"
+    )
+    demo_seed_parser.add_argument(
+        "--database-url",
+        default=os.environ.get("DATABASE_URL"),
+        help="PostgreSQL connection URL (defaults to DATABASE_URL environment variable)",
+    )
+    demo_seed_parser.add_argument(
+        "--schema",
+        default=os.environ.get("DATABASE_SCHEMA"),
+        help="Optional database schema (search_path)",
+    )
+    demo_seed_parser.add_argument(
+        "--config",
+        default=None,
+        help="Path to YAML configuration file (defaults to data/config.yaml)",
+    )
+
     return parser
 
 
@@ -242,6 +262,22 @@ def main(argv: list[str] | None = None) -> int:
             return 1
         except Exception as exc:
             print(f"Failed to seed dataset ({type(exc).__name__})", file=sys.stderr)
+            return 1
+
+    elif args.command == "demo-seed":
+        print("Seeding deterministic demo fixtures (namespace 777)...")
+        try:
+            from app.data.demo_seed import seed_demo_fixtures
+
+            res = seed_demo_fixtures(
+                db_url=db_url,
+                schema=args.schema,
+                config_path=args.config,
+            )
+            print(res.get("message", "Demo fixtures processed."))
+            return 0
+        except Exception as exc:
+            print(f"Failed to seed demo fixtures ({type(exc).__name__}): {exc}", file=sys.stderr)
             return 1
 
     return 0

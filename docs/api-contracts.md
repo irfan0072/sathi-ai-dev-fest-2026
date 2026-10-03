@@ -1,61 +1,40 @@
-# API Contracts (FastAPI, JSON)
+# Synthetic demo API contract
 
-Base path `/api/v1`. Roles: `agent`, `analyst`, `admin`, `customer_channel` (phone simulator / IVR / USSD gateway). All endpoints require auth; every call writes to `audit_log`. Amounts in BDT. Errors use `{ "error": {"code": "...", "message": "..."} }`.
+Base `/api/v1`. Human-approved repair contract; T024 implements durable authentication/ledger behavior and T025 wires the console. Check docs/handoff.md for verified status. All financial values are simulation ASSUMPTIONS, never actual upay figures. Health is public diagnostic information; business routes require scoped bearer authentication. X-Actor is not authentication. No admin or policy-write role.
 
 | Method | Path | Role | Purpose |
 |---|---|---|---|
-| POST | /mandates/request | agent | Agent requests a cash-out mandate for a customer |
-| POST | /mandates/{id}/verify | customer_channel | Submit stated amount (keypad or voice) |
-| POST | /mandates/{id}/redeem | agent | Redeem with one-time code |
-| POST | /mandates/{id}/confirm-cash | customer_channel | Customer reports cash received |
-| POST | /mandates/{id}/revoke | customer_channel, analyst | Revoke an active mandate |
-| GET | /users/{id}/assisted-score | analyst | Assisted-user score + reasons |
-| GET | /agents/{id}/risk | analyst | Agent risk + peer comparison |
-| GET | /outreach | analyst | Ranked list of likely assisted users |
-| GET | /cases | analyst | Review queue |
-| POST | /cases/{id}/decision | analyst | Approve / deny / escalate with note |
-| GET | /receipts/{txn_id} | customer_channel | Plain-language receipt text (Bangla) |
-| GET | /metrics/summary | analyst | Baseline vs model, fairness, impact simulation |
+| POST | /auth/demo-login | Public synthetic fixture login | Signed, expiring configured-principal token |
+| POST | /mandates/request | Bound agent | Request amount; display payout, fee and total debit |
+| POST | /mandates/{id}/verify | Owning customer_channel | Normalize keypad amount; server-count attempts |
+| POST | /mandates/{id}/issue-code | Bound agent | Terminal code exactly once after verification |
+| POST | /mandates/{id}/redeem | Bound agent | Atomic code check and ledger debit |
+| POST | /mandates/{id}/confirm-cash | Owning customer_channel | Customer report after redemption |
+| POST | /mandates/{id}/revoke | Owning customer_channel, analyst | Revoke without granting transaction authority |
+| GET | /users/{id}/assisted-score | Analyst | Verified synthetic snapshot score/reasons |
+| GET | /agents/{id}/risk | Analyst | Snapshot risk and train-derived volume peers |
+| GET | /outreach | Analyst | Verified synthetic snapshot ranking |
+| GET | /cases | Analyst | Durable human-review queue |
+| POST | /cases/{id}/decision | Analyst | Review and audit; does not redeem |
+| GET | /receipts/{txn_id} | Owning customer_channel | Actual redeemed ledger receipt |
+| GET | /metrics/summary | Analyst | Verified held-out evaluation artifact |
 
-## POST /mandates/request
-Request
-```json
-{ "user_id": "U_000123", "agent_id": "A_0042", "amount": 3000, "purpose": "cash_out" }
-```
-Response 201
-```json
-{ "mandate_id": "uuid", "status": "requested", "next": "verify", "verification_modes": ["keypad", "voice"] }
-```
-Errors: 404 unknown user/agent; 409 active mandate already exists; 422 amount invalid.
+Agent scope permits configured demo customers only, never training/validation/test ledger users. Model/metrics routes depend on T023b/T025 artifacts; unavailable artifacts produce unavailable responses. Unknown records404; missing/invalid authentication401; wrong role/ownership403.
 
-## POST /mandates/{id}/verify
-Request
-```json
-{ "mode": "keypad", "stated_amount": 3000, "attempt": 1 }
-```
-Response 200
-```json
-{ "outcome": "match", "decision": "ISSUE_MANDATE", "status": "active", "expires_at": "ISO-8601",
-  "code_delivery": "agent_terminal" }
-```
-Other decisions: `REVIEW` (case_id returned), `DENY`. The one-time code is shown only to the agent terminal; only its hash is stored.
+## Lifecycle and amounts
 
-## POST /mandates/{id}/redeem
-Request `{ "code": "123456" }`  Response 200 `{ "txn_id": 9912, "amount": 3000, "fee": 0, "status": "redeemed" }`
-Errors: 401 bad code; 410 expired; 409 already used; 423 locked after repeated failures.
+Request fields: user_id, agent_id, amount, purpose=cash_out. A3000BDT request has an assumed45BDT fee,3045BDT debit and3000BDT full payout. Limits/fees/attempts come from data/config.yaml. Financial calculations use decimal cents. Keypad parsing accepts positive finite JSON numbers or numeric text, Bangla digits and valid comma grouping; ambiguous text, booleans, excess precision and nonfinite values are rejected. Speech recognition is not implemented.
 
-## POST /mandates/{id}/confirm-cash
-Request `{ "cash_received": 2800 }`  Response 200 `{ "gap": 200, "flagged": true }`  (a gap above the config tolerance raises an agent signal and a case)
+Verification fields: mode=keypad, stated_amount; legacy client attempt is ignored as authority. Matching changes requested→verified and starts15-minute expiry. Customer responses never contain a code. First mismatch remains requested; second mismatch is rejected under the assumed two-attempt limit. Mismatch creates durable review evidence and bounded server attempts; human review cannot bypass deterministic policy.
 
-## GET /agents/{id}/risk
-```json
-{ "agent_id": "A_0042", "risk": 0.86, "level": "HIGH",
-  "reasons": [{"feature": "fee_ratio_vs_official", "value": 1.35, "peer_median": 1.0}],
-  "peer_group": "region=Rajshahi,volume=high", "model_version": "agent_anomaly_v1" }
-```
+Issuance changes verified→active, stores only64-hex SHA256 hash and returns a cryptographic6-digit code to the bound agent once. It does not extend expiry. Lost delivery requires revoke/new request. Unissued requested/verified/rejected/expired/revoked may have NULL hashes; active/redeemed require a valid hash.
 
-## GET /receipts/{txn_id}
-Returns Bangla text plus numbers drawn from the database. The LLM may reword wording but is not allowed to alter numbers (validated by a post-check that compares numbers in the text with database values).
+Redemption field: code. Database locks enforce expiry at now>=expires_at, single use, balance, mandate cap and Dhaka-calendar daily cash-out limit. Wrong-code attempts persist even when the API returns an error; configured third failure rejects the mandate and creates case/audit records. Success links the actual transaction and returns its amounts/fee. Replay is rejected.
 
-## Versioning and config
-Policy version and model versions are included in every decision log. Thresholds are read from `data/config.yaml` at start and on reload.
+Confirmation field: cash_received. Only redeemed mandates qualify. Identical repeat is idempotent; changed repeat is rejected. Gap tolerance max(50BDT,2% of amount) is an ASSUMPTION. Excess gaps create actual cases; they do not prove intent or coercion. Receipts use the redeemed transaction timestamp/exact amounts. Templates cannot introduce extra numbers.
+
+## Provenance and authority
+
+Model signals support outreach/human review only. Gender, age band, region, group labels and agent types never influence features, calibration, peer scoring or authorization. Artifact rows describe a fixed synthetic snapshot, separate from runtime demo balances. SHAP explains fitted base-model raw log-odds, not calibrated probability contributions. Missing artifacts are unavailable.
+
+Attempts, verification events, cases, ledger records and audit logs are PostgreSQL-backed. Signing secrets belong only in ignored environment configuration. Public synthetic demo PINs are fixtures, not real customer credentials.

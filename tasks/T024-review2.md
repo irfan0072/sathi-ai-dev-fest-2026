@@ -1,0 +1,15 @@
+# T024 precise second-gate correction — human approved
+
+Second verification after first feedback:303backend passed/3failed/zero skips (50.46s);17frontend tests passed; structure/frontend lint/build passed; Ruff14findings; diffcheck trailing blank at test_mandates.py658. Tests/logs tasks/T024-second-tests.log and tasks/T024-second-lint.log. Current correction was interrupted before CLI completion; no active agy process remains. Do not edit implementation until human authorizes this retry.
+
+Approved-design repairs only, no new schema/API/architecture:
+
+1. Fix actual app.main validation exception handler: exc.errors() contains ValueError objects in ctx, so direct JSONResponse serialization raises TypeError. Independent TestClient(app,raise_server_exceptions=False) authenticated requests with amount True,3,00,0,100.001 all returned500. Produce safe422 top-level error envelope without raw exception objects, nonfinite values, credential input or internal details. Add regressions against actual app.main, not only the standalone-router test fixture. Include request/verify/confirm malformed input and preserved DB counts/counters; forbidden auth remains401/403. Do not merely change test expected status to500.
+2. Match verification response.status to durable database status. First mismatch remains requested for the configured bounded retry with REVIEW evidence; second mismatch rejects; terminal rejected never revives. Current result says rejected while DB says requested. Correct result and stale test_verification_mismatch_creates_case assertion, prove states after fresh connection and no code/customer response. No change to configured attempts2.
+3. test_api_cases_workflow currently assumes invented nonempty case1042 in an empty DB. Assert actual empty queue, create actual mismatch case through durable flow, then review its returned ID and prove durable review_actions/audit only, no redemption/balance change. Unknown1042 must404; never restore sample fallback.
+4. Valid JWT happy-path test lacks required scope. Add synthetic_demo to valid payload; retain missing/invalid scope rejection tests. Never weaken mandatory scoped-token validation.
+5. Fix all14 Ruff findings: import order in analytics/router, conftest, analytics/auth/demo/durable/health/mandate tests; six long lines/comments/SQL in service.py and durable test. No broad ignores. Remove trailing blank. Pin installed/tested PyJWT2.15.1 in backend/requirements-dev.lock.
+
+File edits only via agy; no commands/install/Git/docs/config/tasks. Preserve001/schema design/existing development data. No added features or model/evaluation work. Codex then focused/full suites, lint/build, actual-app invalid-input probe and schema preservation/demo/live gates. Log any unmet requirements honestly. Development migration002 and demo seed have NOT been run yet.
+
+Human replied “ok” to the precise retry approval request on3October2026. This authorizes this correction and verification; no prior schema/design approvals need repeating.

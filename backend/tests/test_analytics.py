@@ -1,6 +1,10 @@
 """Unit and integration tests for Sathi Analytics, Receipts, Cases, and Metrics APIs."""
 
+from __future__ import annotations
+
 import pytest
+from app.analytics.router import set_analytics_service
+from app.analytics.service import AnalyticsService
 from app.copilot.receipts import (
     ReceiptValidationError,
     extract_numbers_from_text,
@@ -10,9 +14,20 @@ from app.copilot.receipts import (
     validate_receipt_numerical_integrity,
 )
 from app.main import app
+from app.mandates.router import set_mandate_service
+from app.mandates.service import MandateService
 from fastapi.testclient import TestClient
+from tests.conftest import create_test_token
 
 client = TestClient(app)
+
+
+@pytest.fixture(autouse=True)
+def setup_services(durable_service: MandateService) -> None:
+    """Ensure both mandate and analytics services use the isolated test schema."""
+    set_mandate_service(durable_service)
+    analytics_svc = AnalyticsService(mandate_service=durable_service)
+    set_analytics_service(analytics_svc)
 
 
 def test_bangla_digits_conversion():
@@ -30,21 +45,22 @@ def test_receipt_generation_and_validation():
         agent_id="A_000042",
         amount_bdt=3000.0,
         fee_bdt=45.0,
-        payout_bdt=2955.0,
+        payout_bdt=3000.0,
         ts_iso="2026-10-02T18:32:15Z",
     )
     assert receipt["txn_id"] == 9912042
     assert "৩,০০০" in receipt["receipt_text_bn"]
     assert "৪৫" in receipt["receipt_text_bn"]
-    assert "২,৯৫৫" in receipt["receipt_text_bn"]
     assert receipt["verification_status"] == "verified"
-    assert receipt["provenance"] == "runtime memory, not a database record"
 
 
 def test_receipt_numerical_tamper_detection():
     # Valid text matching expected numbers passes integrity check
-    valid_text = "উত্তোলন: ৩,০০০ টাকা, ফি: ৪৫ টাকা, প্রাপ্ত অর্থ: ২,৯৫৫ টাকা।"
-    assert validate_receipt_numerical_integrity(valid_text, {3000.0, 45.0, 2955.0}) is True
+    valid_text = (
+        "উত্তোলন: ৩,০০০ টাকা, ফি: ৪৫ টাকা, প্রাপ্ত অর্থ: ৩,০০০ টাকা। "
+        "এজেন্ট: A_001, ট্রানজ্যাকশন আইডি: ১২৩৪৫।"
+    )
+    assert validate_receipt_numerical_integrity(valid_text, {3000.0, 45.0, 12345.0}) is True
 
     # Tampered text where amounts are altered must raise ReceiptValidationError
     tampered_text = "উত্তোলন: ৯,৯৯৯ টাকা, ফি: ০ টাকা, প্রাপ্ত অর্থ: ৯,৯৯৯ টাকা।"
@@ -59,9 +75,9 @@ def test_receipt_numerical_tamper_detection():
     assert "unexpected number" in str(exc_extra.value)
 
     # Preserve exact cents
-    exact_cents_text = "উত্তোলন: ৩,০০০ টাকা, ফি: ৪৫.৫০ টাকা, প্রাপ্ত অর্থ: ২,৯৫৪.৫০ টাকা।"
+    exact_cents_text = "উত্তোলন: ৩,০০০ টাকা, ফি: ৪৫.৫০ টাকা, প্রাপ্ত অর্থ: ৩,০০০ টাকা।"
     assert (
-        validate_receipt_numerical_integrity(exact_cents_text, {3000.0, 45.50, 2954.50})
+        validate_receipt_numerical_integrity(exact_cents_text, {3000.0, 45.50})
         is True
     )
 
@@ -71,7 +87,11 @@ def test_receipt_numerical_tamper_detection():
 
 
 def test_api_user_assisted_score():
-    resp = client.get("/api/v1/users/U_42_000008/assisted-score")
+    analyst_token = create_test_token("analyst_rahman", "analyst")
+    resp = client.get(
+        "/api/v1/users/U_42_000008/assisted-score",
+        headers={"Authorization": f"Bearer {analyst_token}"},
+    )
     assert resp.status_code == 200
     data = resp.json()
     assert data["user_id"] == "U_42_000008"
@@ -83,7 +103,11 @@ def test_api_user_assisted_score():
 
 
 def test_api_agent_risk():
-    resp = client.get("/api/v1/agents/A_000015/risk")
+    analyst_token = create_test_token("analyst_rahman", "analyst")
+    resp = client.get(
+        "/api/v1/agents/A_000015/risk",
+        headers={"Authorization": f"Bearer {analyst_token}"},
+    )
     assert resp.status_code == 200
     data = resp.json()
     assert data["agent_id"] == "A_000015"
@@ -94,7 +118,11 @@ def test_api_agent_risk():
 
 
 def test_api_outreach_list():
-    resp = client.get("/api/v1/outreach")
+    analyst_token = create_test_token("analyst_rahman", "analyst")
+    resp = client.get(
+        "/api/v1/outreach",
+        headers={"Authorization": f"Bearer {analyst_token}"},
+    )
     assert resp.status_code == 200
     data = resp.json()
     assert data["provenance"] == "illustrative sample, not a result"
@@ -103,18 +131,89 @@ def test_api_outreach_list():
     assert data["items"][0]["provenance"] == "illustrative sample, not a result"
 
 
-def test_api_cases_workflow():
-    resp = client.get("/api/v1/cases")
+def test_api_cases_workflow(durable_service: MandateService) -> None:
+    """Verify durable review cases workflow, initial empty queue, and audit persistence."""
+    analyst_token = create_test_token("analyst_rahman", "analyst")
+
+    # 1. Assert actual empty review queue in fresh database
+    resp = client.get(
+        "/api/v1/cases",
+        headers={"Authorization": f"Bearer {analyst_token}"},
+    )
     assert resp.status_code == 200
     data = resp.json()
-    assert data["total"] >= 1
-    case = data["cases"][0]
-    case_id = case["case_id"]
-    if case.get("is_sample"):
-        assert case["provenance"] == "illustrative sample, not a result"
+    assert data["total"] == 0
+    assert data["cases"] == []
 
+    # 2. Unknown case 1042 must return 404 (never restore sample fallback)
+    unknown_resp = client.post(
+        "/api/v1/cases/1042/decision",
+        headers={"Authorization": f"Bearer {analyst_token}"},
+        json={
+            "decision": "approved",
+            "reviewer": "analyst_rahman",
+            "note": "Non-existent case rejection test.",
+        },
+    )
+    assert unknown_resp.status_code == 404
+
+    # 3. Create actual mismatch case through durable flow
+    agent_token = create_test_token("A_001", "agent", allowed_users=["U_001"])
+    cust_token = create_test_token("U_001", "customer_channel")
+
+    with durable_service.get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT balance_after FROM transactions
+                WHERE user_id = 'U_001'
+                ORDER BY ts DESC, txn_id DESC LIMIT 1;
+                """
+            )
+            initial_balance = float(cur.fetchone()[0])
+
+    req = client.post(
+        "/api/v1/mandates/request",
+        headers={"Authorization": f"Bearer {agent_token}"},
+        json={
+            "user_id": "U_001",
+            "agent_id": "A_001",
+            "amount": 3000.0,
+            "purpose": "cash_out",
+        },
+    )
+    assert req.status_code == 201
+    mandate_id = req.json()["mandate_id"]
+
+    ver = client.post(
+        f"/api/v1/mandates/{mandate_id}/verify",
+        headers={"Authorization": f"Bearer {cust_token}"},
+        json={"mode": "keypad", "stated_amount": 2500.0, "attempt": 1},
+    )
+    assert ver.status_code == 200
+    ver_data = ver.json()
+    assert ver_data["outcome"] == "mismatch"
+    assert ver_data["decision"] == "REVIEW"
+    case_id = ver_data["case_id"]
+    assert case_id is not None
+
+    # 4. Review queue now reflects the created mismatch case
+    q_resp = client.get(
+        "/api/v1/cases",
+        headers={"Authorization": f"Bearer {analyst_token}"},
+    )
+    assert q_resp.status_code == 200
+    q_data = q_resp.json()
+    assert q_data["total"] >= 1
+    matched = [c for c in q_data["cases"] if c["case_id"] == case_id][0]
+    assert matched["status"] == "open"
+    assert matched["reason"] == "stated_amount_mismatch"
+    assert matched["is_sample"] is False
+
+    # 5. Adjudicate the case and assert response
     dec_resp = client.post(
         f"/api/v1/cases/{case_id}/decision",
+        headers={"Authorization": f"Bearer {analyst_token}"},
         json={
             "decision": "approved",
             "reviewer": "analyst_rahman",
@@ -127,15 +226,72 @@ def test_api_cases_workflow():
     assert dec_data["status"] == "approved"
     assert dec_data["reviewer"] == "analyst_rahman"
 
+    # 6. Prove durable review_actions/audit only, no redemption or balance change
+    with durable_service.get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT reviewer, decision, note FROM review_actions WHERE case_id = %s;",
+                (case_id,),
+            )
+            action_row = cur.fetchone()
+            assert action_row is not None
+            assert action_row[0] == "analyst_rahman"
+            assert action_row[1] == "approved"
+            assert "Verified customer biometric" in action_row[2]
+
+            cur.execute(
+                "SELECT action, actor FROM audit_log "
+                "WHERE entity = 'case' AND entity_id = %s;",
+                (str(case_id),),
+            )
+            audit_row = cur.fetchone()
+            assert audit_row is not None
+            assert audit_row[0] == "CASE_DECISION_APPROVED"
+            assert audit_row[1] == "analyst_rahman"
+
+            # Mandate remains unredeemed
+            cur.execute(
+                "SELECT redeemed_txn_id FROM mandates WHERE mandate_id = %s;",
+                (mandate_id,),
+            )
+            mandate_row = cur.fetchone()
+            assert mandate_row[0] is None
+
+            # User balance remains unchanged
+            cur.execute(
+                """
+                SELECT balance_after FROM transactions
+                WHERE user_id = 'U_001'
+                ORDER BY ts DESC, txn_id DESC LIMIT 1;
+                """
+            )
+            current_balance = float(cur.fetchone()[0])
+            assert current_balance == initial_balance
+
+            cur.execute(
+                "SELECT COUNT(*) FROM transactions "
+                "WHERE user_id = 'U_001' AND txn_type = 'cash_out';"
+            )
+            assert cur.fetchone()[0] == 0
+
 
 def test_api_receipt_endpoint():
+    analyst_token = create_test_token("analyst_rahman", "analyst")
+    agent_token = create_test_token("A_000042", "agent", allowed_users=["U_RCPT_01"])
+    cust_token = create_test_token("U_RCPT_01", "customer_channel")
+
     # Arbitrary transaction without record must return 404
-    resp = client.get("/api/v1/receipts/9912042")
+    resp = client.get(
+        "/api/v1/receipts/9912042",
+        headers={"Authorization": f"Bearer {analyst_token}"},
+    )
     assert resp.status_code == 404
 
-    # Real lifecycle: request, verify, redeem mandate to produce an actual transaction
+    # Real lifecycle: request, verify, issue-code, redeem mandate to produce
+    # an actual ledger transaction
     req = client.post(
         "/api/v1/mandates/request",
+        headers={"Authorization": f"Bearer {agent_token}"},
         json={
             "user_id": "U_RCPT_01",
             "agent_id": "A_000042",
@@ -148,30 +304,46 @@ def test_api_receipt_endpoint():
 
     ver = client.post(
         f"/api/v1/mandates/{mandate_id}/verify",
+        headers={"Authorization": f"Bearer {cust_token}"},
         json={"mode": "keypad", "stated_amount": 3000.0, "attempt": 1},
     )
     assert ver.status_code == 200
-    code = ver.json()["one_time_code"]
+
+    iss = client.post(
+        f"/api/v1/mandates/{mandate_id}/issue-code",
+        headers={"Authorization": f"Bearer {agent_token}"},
+    )
+    assert iss.status_code == 200
+    code = iss.json()["code"]
 
     red = client.post(
         f"/api/v1/mandates/{mandate_id}/redeem",
+        headers={"Authorization": f"Bearer {agent_token}"},
         json={"code": code},
     )
     assert red.status_code == 200
     txn_id = red.json()["txn_id"]
 
-    # Now receipt endpoint resolves the real runtime record
-    rcpt_resp = client.get(f"/api/v1/receipts/{txn_id}")
+    # Now receipt endpoint resolves the real PostgreSQL ledger record
+    rcpt_resp = client.get(
+        f"/api/v1/receipts/{txn_id}",
+        headers={"Authorization": f"Bearer {cust_token}"},
+    )
     assert rcpt_resp.status_code == 200
     rcpt_data = rcpt_resp.json()
     assert rcpt_data["txn_id"] == txn_id
     assert rcpt_data["amount_bdt"] == 3000.0
+    assert rcpt_data["fee_bdt"] == 45.0
     assert "৩,০০০" in rcpt_data["receipt_text_bn"]
-    assert rcpt_data["provenance"] == "runtime memory, not a database record"
+    assert rcpt_data["provenance"] == "database ledger transaction"
     assert "ts" in rcpt_data and rcpt_data["ts"] is not None
 
 
 def test_api_metrics_summary():
-    resp = client.get("/api/v1/metrics/summary")
+    analyst_token = create_test_token("analyst_rahman", "analyst")
+    resp = client.get(
+        "/api/v1/metrics/summary",
+        headers={"Authorization": f"Bearer {analyst_token}"},
+    )
     assert resp.status_code == 503
     assert "unavailable" in resp.json()["detail"].lower()

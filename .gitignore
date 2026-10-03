@@ -83,3 +83,6 @@ data/*.parquet
 data/*.jsonl
 data/*.sqlite
 data/*.db
+
+# Local diagnostic output; task briefs and verified outcomes are tracked
+tasks/*.log

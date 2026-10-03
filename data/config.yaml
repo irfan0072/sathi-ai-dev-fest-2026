@@ -115,10 +115,34 @@ policy:
   assisted_outreach_threshold: 0.6
   verification_modes: [keypad, voice]
   max_verification_attempts: 2       # does not define wrong-code lockout
+  max_redemption_attempts: 3        # ASSUMPTION: approved separate wrong-code lockout
   review_on_mismatch: true
   cash_gap:
     min_bdt: 50
     rate: 0.02
+
+auth:
+  # Synthetic public demo fixtures only; signing secret belongs in ignored environment.
+  demo_enabled: true
+  token_ttl_minutes: 30
+  signing_algorithm: HS256
+  demo_seed: 777
+  demo_initial_balance: 50000      # ASSUMPTION: ample demo credit, never reset spent balance
+  demo_credit_timestamp: "2026-09-30T00:00:00Z"
+  principals:
+    demo_agent:
+      role: agent
+      subject: A_777_000001
+      pin: "1234"                 # public synthetic demo PIN, never a real credential
+      allowed_users: [U_777_000001]
+    demo_customer:
+      role: customer_channel
+      subject: U_777_000001
+      pin: "5678"
+    demo_analyst:
+      role: analyst
+      subject: analyst_777
+      pin: "9012"
 
 models:
   assisted_classifier:
