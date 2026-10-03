@@ -1,0 +1,12 @@
+{
+  "artifacts": {
+    "liquidity": "17c9af2ee630319a2351b97de23d61ce9c597cfc4e3893b1936f55704c3b2f32",
+    "uplift": "0a621ddcf447fe437917305a31a17e7cf5b5b2004bf16247257b4a8b80a06f9c"
+  },
+  "dataset_sha256": "fbeaa930b345a64ef77012d41185c0c28b8afd44c26ce4542e154c1717303827",
+  "external_sha256": "24fea682a2c7489621c44f3e3dc64a36ea3748c52f9c047a12f94ea23d8e22c1",
+  "generated_at": "2026-10-03T04:43:37.545198+00:00",
+  "git_revision": "a4f29f282a6ea048d40d6a58bf8cd2123c504d1c",
+  "seed": 42,
+  "synthetic": true
+}

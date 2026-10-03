@@ -84,11 +84,21 @@ async def validation_exception_handler(
 from app.analytics.router import router as analytics_router  # noqa: E402
 from app.auth.router import router as auth_router  # noqa: E402
 from app.bootstrap import readiness  # noqa: E402
+from app.copilot.router import router as copilot_router  # noqa: E402
+from app.intelligence.router import router as intelligence_router  # noqa: E402
 from app.mandates.router import router as mandates_router  # noqa: E402
+from app.notify.router import router as notify_router  # noqa: E402
+from app.ops.router import router as ops_router  # noqa: E402
+from app.voice.router import router as voice_router  # noqa: E402
 
 app.include_router(auth_router)
 app.include_router(mandates_router)
 app.include_router(analytics_router)
+app.include_router(voice_router)
+app.include_router(copilot_router)
+app.include_router(intelligence_router)
+app.include_router(notify_router)
+app.include_router(ops_router)
 
 
 @app.get("/health")

@@ -18,4 +18,13 @@ Customer confirmation checks the stated amount only. It cannot detect coercion, 
 
 Synthetic distributions cannot establish real-world accuracy or prevented loss. Sparse skimmers and small fairness slices limit estimates; undefined rates must remain unavailable. Adoption30/50/70 estimates are idealized counterfactuals with eligible-loss denominators and explicit assumptions. Validation used for calibration is a diagnostic cohort; final test estimates must use frozen models. A governed pilot is required before any real deployment.
 
-LLM, voice and graph extensions may be omitted. Current receipts use validated templates; no external LLM inference or voice quality claim is necessary for the essential keypad demo.
+Receipts use validated templates. Live-mode extensions ([live-mode.md](live-mode.md)) keep the same boundaries:
+
+| Extension | Control |
+|---|---|
+| Verification call | Number from server phone book only; amount never spoken; signed webhooks plus per-call token; masked numbers only stored |
+| Silent duress | Leading-zero amount holds the mandate and opens an urgent case; identical closing speech and "not verified" screens hide it from bystanders. It depends on the customer remembering the rule |
+| Real-time risk | Raises verification strength only; fails toward stronger verification; signal trace hidden from agents to resist gaming |
+| AI case brief | Facts-only prompt, data-not-instructions rule, schema and citation validation, fixed next-step list, provider recorded, escaped rendering; never a decision |
+| Liquidity forecast | Planning aid for agents; never limits a customer's cash-out |
+| Uplift targeting | Invitation only, no offers or pressure; non-positive uplift never contacted; demographics not features; injected truth documented |

@@ -1,8 +1,8 @@
 # Sathi (সাথী): Delegated Trust for Assisted MFS Users
 
-AI DEV FEST2026, DIU CPC × upay, Track07 Open Innovation. Team: Runtime Terrors.
+AI DEV FEST2026, DIU CPC × upay. Primary Track07 Open Innovation, extended across Track01 Trust & Risk, Track05 Merchant & Agent and Track04 Growth & Campaign. Team: Runtime Terrors.
 
-**Verified local synthetic prototype.** Full352backend tests/zero skips,30frontend tests, lint and production build pass. Browser roles, Bangla confirmation, terminal-only one-time codes, redemption/replay rejection, cash-gap review and ledger receipts work against the real API. Automatic startup preserves spent balances. Held-out assisted PR-AUC0.8091 versus rule0.6967; agent ensemble detects2/2 injected skimmers with0/4 honest high-volume false flags (small denominators). Public hosting remains pending; the human requested local work. See [verification record](docs/verification-record.md).
+**Verified local synthetic prototype.** Full387backend tests/zero skips,44frontend tests, lint and production build pass (3 October, after live-mode extension). Browser roles, Bangla confirmation, terminal-only one-time codes, redemption/replay rejection, cash-gap review and ledger receipts work against the real API. Automatic startup preserves spent balances. Held-out assisted PR-AUC0.8091 versus rule0.6967; agent ensemble detects2/2 injected skimmers with0/4 honest high-volume false flags (small denominators). Public hosting remains pending; the human requested local work. See [verification record](docs/verification-record.md).
 
 ## Overview and features
 
@@ -17,9 +17,16 @@ Sathi explores scoped, expiring, one-time cash-out authority instead of sharing 
 | Keypad/Bangla digits, terminal-only code, cash reports, real receipts/cases | Actual API/browser flow verifiedT025 |
 | React console | Scoped in-memory role login; verified saved outreach/risk/metrics; unavailable evidence fails closed |
 | Local walkthrough/report package | [Recorded walkthrough](docs/demo-walkthrough.html), [MP4](docs/demo-walkthrough.mp4), [report](docs/report-draft.md) |
+| Verification call to registered phone, Bangla IVR, silent duress (Track07/01) | Twilio adapter + simulated handset share one code path; tested with signed webhooks, not yet against a live Twilio account. [Live mode](docs/live-mode.md) |
+| Real-time mandate risk and risk-based step-up (Track01) | Rule-traced score at request; high risk opens a case; never authorizes or denies |
+| AI investigation assistant (Track01) | Gemini 2.5 Flash → GPT-4o → template; citations validated against evidence facts; template path verified without keys |
+| Agent liquidity forecast (Track05) | LightGBM point + P90; holdout WAPE 0.90 vs 1.35 moving average; P90 coverage 0.897 |
+| Uplift targeting and budget optimizer (Track04) | T-learner beats response model on holdout (278.5 vs 253 true extra enrollments, top 20%) |
+| Fraud Command Center, prioritized queue with response targets, case timeline, agent watchlist | Live runtime data; watchlist forces the call channel, never blocks |
+| Bangladesh channels | `bd_http_ivr` JSON IVR adapter (vendor mapping pending) and Alpha SMS receipts; simulated outbox by default |
 | Public deployment | Pending human dashboard action; no live URL claimed |
 
-Financial figures are **ASSUMPTIONS**, never actual upay rates. All identities/data/transactions are synthetic. Amount confirmation cannot establish coercion, honesty, speaker identity or physical cash delivery. No real upay integration, voice recognition or external LLM is implemented in the verified flow.
+Financial figures are **ASSUMPTIONS**, never actual upay rates. All identities/data/transactions are synthetic. Amount confirmation cannot establish coercion, honesty, speaker identity or physical cash delivery. No real upay integration or voice recognition exists. Real phone calls (Twilio) and external LLM briefs (Gemini/OpenAI) are optional and switched on only by environment variables; without them the simulated handset and the deterministic brief template run.
 
 ## Stack and requirements
 
@@ -61,7 +68,16 @@ Open [local console](http://127.0.0.1:13000) and [API health](http://127.0.0.1:1
 | `CORS_ORIGINS` | Explicit allowed console origins; production needs the actual public HTTPS origin |
 | `VITE_API_URL` | Build-time browser API URL; production requires actual public HTTPS API |
 | `SATHI_TEST_DATABASE_URL` | Dedicated local test database, never production |
-| `LLM_API_KEY`, `STT_API_KEY` | Unused optional placeholders; no runtime dependency |
+| `SATHI_INTELLIGENCE_DIR` | Hash-verified liquidity/uplift artifacts, default `data/artifacts/intelligence` |
+| `SATHI_VOICE_PROVIDER` | `simulated` (default), `twilio` or `bd_http_ivr` |
+| `SATHI_BD_IVR_BASE_URL`, `SATHI_BD_IVR_API_KEY`, `SATHI_BD_IVR_WEBHOOK_SECRET`, `SATHI_BD_IVR_LANGUAGE` | Bangladesh JSON IVR gateway adapter ([contract](docs/live-mode.md)) |
+| `SATHI_SMS_PROVIDER`, `ALPHA_SMS_API_KEY`, `ALPHA_SMS_SENDER_ID` | SMS receipts: simulated outbox or Alpha SMS (sms.net.bd) |
+| `SATHI_PUBLIC_API_URL` | Public HTTPS API origin used in Twilio webhook URLs |
+| `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER` | Twilio credentials and caller number; secrets, never commit |
+| `SATHI_VOICE_PHONE_BOOK` | JSON map synthetic customer id → E.164 phone; server-side only |
+| `SATHI_STEP_UP_ENFORCED` | `true` blocks app-keypad confirmation for medium/high-risk mandates |
+| `GEMINI_API_KEY`, `SATHI_GEMINI_MODEL` | Optional AI brief provider, default `gemini-2.5-flash` |
+| `OPENAI_API_KEY`, `SATHI_OPENAI_MODEL` | Optional fallback provider, default `gpt-4o` |
 
 ## Synthetic demo principals
 

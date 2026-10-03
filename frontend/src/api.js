@@ -132,6 +132,29 @@ export const api = {
   }),
   getReceipt: (id) => request(`/api/v1/receipts/${encodeURIComponent(id)}`),
   getMetricsSummary: () => request('/api/v1/metrics/summary'),
+  getVoiceConfig: () => request('/api/v1/voice/config'),
+  placeCall: (mandateId) => request(`/api/v1/mandates/${encodeURIComponent(mandateId)}/call`, { method: 'POST' }),
+  getCall: (mandateId) => request(`/api/v1/mandates/${encodeURIComponent(mandateId)}/call`),
+  getIncomingCalls: () => request('/api/v1/voice/incoming'),
+  answerSimulatedCall: ({ callId, digits }) => request(`/api/v1/voice/calls/${encodeURIComponent(callId)}/simulated-answer`, {
+    method: 'POST', body: { digits },
+  }),
+  generateCaseBrief: (caseId) => request(`/api/v1/cases/${encodeURIComponent(caseId)}/brief`, { method: 'POST' }),
+  getLiquidityOverview: () => request('/api/v1/liquidity/overview'),
+  getAgentLiquidity: (agentId) => request(`/api/v1/liquidity/agents/${encodeURIComponent(agentId)}`),
+  getUpliftSummary: () => request('/api/v1/campaigns/uplift'),
+  getOpsOverview: () => request('/api/v1/ops/overview'),
+  getPrioritizedCases: () => request('/api/v1/ops/cases'),
+  getCaseTimeline: (caseId) => request(`/api/v1/cases/${encodeURIComponent(caseId)}/timeline`),
+  getWatchlist: () => request('/api/v1/watchlist'),
+  addToWatchlist: ({ agentId, reason, caseId }) => request(`/api/v1/watchlist/${encodeURIComponent(agentId)}`, {
+    method: 'PUT', body: { reason, case_id: caseId ?? null },
+  }),
+  removeFromWatchlist: (agentId) => request(`/api/v1/watchlist/${encodeURIComponent(agentId)}`, { method: 'DELETE' }),
+  getNotifications: () => request('/api/v1/notifications'),
+  optimizeCampaign: (budgetBdt) => request('/api/v1/campaigns/optimize', {
+    method: 'POST', body: { budget_bdt: budgetBdt },
+  }),
   async checkHealth() {
     if (!API_BASE_URL) return false;
     try {

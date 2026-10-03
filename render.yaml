@@ -34,6 +34,45 @@ services:
         value: "data/artifacts/deployment"
       - key: JWT_SECRET
         generateValue: true
+      - key: SATHI_INTELLIGENCE_DIR
+        value: "data/artifacts/intelligence"
+      # Live verification calls. Set SATHI_VOICE_PROVIDER=twilio after adding credentials.
+      - key: SATHI_VOICE_PROVIDER
+        value: "simulated"
+      - key: SATHI_PUBLIC_API_URL
+        sync: false
+      - key: SATHI_VOICE_PHONE_BOOK
+        sync: false
+      - key: SATHI_STEP_UP_ENFORCED
+        value: "false"
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_FROM_NUMBER
+        sync: false
+      # Bangladesh JSON IVR gateway (SATHI_VOICE_PROVIDER=bd_http_ivr).
+      - key: SATHI_BD_IVR_BASE_URL
+        sync: false
+      - key: SATHI_BD_IVR_API_KEY
+        sync: false
+      - key: SATHI_BD_IVR_WEBHOOK_SECRET
+        sync: false
+      - key: SATHI_SMS_PROVIDER
+        value: "simulated"
+      - key: ALPHA_SMS_API_KEY
+        sync: false
+      - key: ALPHA_SMS_SENDER_ID
+        sync: false
+      # AI investigation assistant: Gemini first, OpenAI fallback, template if neither.
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: SATHI_GEMINI_MODEL
+        value: "gemini-2.5-flash"
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: SATHI_OPENAI_MODEL
+        value: "gpt-4o"
 
   - type: web
     name: sathi-console

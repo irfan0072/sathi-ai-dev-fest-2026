@@ -77,6 +77,9 @@ class MandateRequestResponse(BaseModel):
     total_debit: float = Field(
         default=0.0, description="Total user balance debit in BDT (amount + fee)"
     )
+    risk: dict[str, Any] | None = Field(
+        default=None, description="Real-time risk assessment; sets verification strength only"
+    )
 
 
 class MandateVerifyRequest(BaseModel):

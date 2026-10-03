@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Header, status
@@ -23,6 +24,7 @@ from app.mandates.models import (
     MandateVerifyResponse,
 )
 from app.mandates.service import MandateError, MandateService
+from app.policy.risk import MandateRiskEngine
 from app.verification.keypad import KeypadParseError
 
 router = APIRouter(prefix="/api/v1/mandates", tags=["mandates"])
@@ -42,6 +44,39 @@ def set_mandate_service(service: MandateService | None) -> None:
     """Setter for testing or custom configuration injection."""
     global _mandate_service_instance
     _mandate_service_instance = service
+
+
+def _agent_score(agent_id: str) -> float | None:
+    """Saved agent anomaly score from the verified snapshot, when the agent is in it."""
+    from app.analytics.service import AnalyticsService
+
+    try:
+        return float(AnalyticsService().get_agent_risk(agent_id)["risk"])
+    except Exception:
+        return None
+
+
+def get_risk_engine(service: MandateService) -> MandateRiskEngine:
+    return MandateRiskEngine(
+        service.get_connection, agent_score_lookup=_agent_score, cap=service.user_cap_default
+    )
+
+
+def step_up_enforced() -> bool:
+    return os.getenv("SATHI_STEP_UP_ENFORCED", "false").strip().lower() == "true"
+
+
+def _send_receipt(user_id: str, mandate_id: str, result: dict[str, Any]) -> None:
+    """Best-effort SMS receipt after redemption; never affects the ledger result."""
+    from app.notify.router import get_notification_service
+
+    try:
+        get_notification_service().notify(
+            user_id, "cashout_receipt", mandate_id=mandate_id,
+            amount=float(result["amount"]), fee=float(result.get("fee", 0.0)),
+        )
+    except Exception:
+        pass
 
 
 def _handle_mandate_error(err: MandateError) -> JSONResponse:
@@ -113,7 +148,17 @@ def request_mandate(
             purpose=body.purpose,
             actor=principal.subject,
         )
-        return MandateRequestResponse(**result)
+        engine = get_risk_engine(service)
+        try:
+            risk = engine.assess(
+                result["mandate_id"], body.user_id, body.agent_id, result["amount"]
+            )
+        except Exception:
+            risk = engine.fail_safe(result["mandate_id"])
+        # The agent learns how strong verification must be, not which signals fired,
+        # so requests cannot be tuned around the rules. Analysts see the full trace.
+        public_risk = {k: v for k, v in risk.to_dict().items() if k != "reasons"}
+        return MandateRequestResponse(**result, risk=public_risk)
     except KeypadParseError as err:
         return JSONResponse(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -172,6 +217,24 @@ def verify_mandate(
                 }
             },
         )
+
+    if step_up_enforced():
+        try:
+            risk = get_risk_engine(service).load(mandate_id)
+        except Exception:
+            risk = None
+        needs_call = risk is None or risk.step_up != "keypad_or_call"
+        if needs_call:
+            return JSONResponse(
+                status_code=status.HTTP_403_FORBIDDEN,
+                content={
+                    "error": {
+                        "code": "STEP_UP_REQUIRED",
+                        "message": "This mandate must be confirmed on a call to the "
+                        "customer's registered phone.",
+                    }
+                },
+            )
 
     try:
         result = service.verify_mandate(
@@ -328,6 +391,7 @@ def redeem_mandate(
             code=body.code,
             actor=principal.subject,
         )
+        _send_receipt(record.user_id, mandate_id, result)
         return MandateRedeemResponse(**result)
     except MandateError as err:
         return _handle_mandate_error(err)

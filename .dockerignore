@@ -16,6 +16,11 @@
 # Allow config snapshot
 !data
 !data/config.yaml
+!data/artifacts
+!data/artifacts/deployment
+!data/artifacts/deployment/**
+!data/artifacts/intelligence
+!data/artifacts/intelligence/**
 
 # Exclude local .env files everywhere
 .env

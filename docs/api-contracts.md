@@ -42,3 +42,7 @@ Attempts, verification events, cases, ledger records and audit logs are PostgreS
 ## Runtime readiness (T026)
 
 `GET /health` returns200 only when signing is configured, the curated bundle passes hashes/current-config validation, and the database probe finds migrations, configured demo principals and their ledger. Payload keys: `status`, `database` (`ready`/`unavailable`), `auth_signing`, `artifacts` (`verified`/`unavailable`). Unready state returns503/degraded without underlying exceptions or credentials. Existing business routes and schema are unchanged. Startup validates before database writes, applies001/002 idempotently and seeds only namespace777 without replenishing spent balances.
+
+## Live channels and intelligence (3 October 2026)
+
+Migration 003 adds `voice_calls`, `mandate_risk` and `case_briefs` (additive only). `POST /mandates/request` also returns `risk` {score, band, step_up, engine_version}; the signal trace is analyst-only. Optional enforcement (`SATHI_STEP_UP_ENFORCED=true`) makes `/verify` return `403 STEP_UP_REQUIRED` unless step-up is `keypad_or_call`. Full route table, roles and security notes: [live-mode.md](live-mode.md#new-api-routes).

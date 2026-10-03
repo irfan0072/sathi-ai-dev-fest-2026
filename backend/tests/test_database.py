@@ -371,9 +371,12 @@ def test_integration_migrate_twice(test_db_schema):
     """Verify migrations apply once and subsequent run is an idempotent no-op."""
     test_db_url, schema_name = test_db_schema
 
-    # First migration run: applies both migrations 001 and 002
+    # First migration run: applies migrations 001, 002 and 003
     applied1 = run_migrations(test_db_url, schema=schema_name)
-    assert applied1 == ["001_initial.sql", "002_durable_mandates.sql"]
+    assert applied1 == [
+        "001_initial.sql", "002_durable_mandates.sql", "003_live_channels.sql",
+        "004_fraud_ops.sql",
+    ]
 
     # Second migration run: should no-op
     applied2 = run_migrations(test_db_url, schema=schema_name)
@@ -387,11 +390,14 @@ def test_integration_migrate_twice(test_db_schema):
                 "SELECT version, checksum FROM schema_migrations ORDER BY version ASC;"
             )
             rows = cur.fetchall()
-            assert len(rows) == 2
+            assert len(rows) == 4
             assert rows[0][0] == "001_initial.sql"
             assert len(rows[0][1]) == 64
             assert rows[1][0] == "002_durable_mandates.sql"
             assert len(rows[1][1]) == 64
+            assert rows[2][0] == "003_live_channels.sql"
+            assert len(rows[2][1]) == 64
+            assert rows[3][0] == "004_fraud_ops.sql"
     finally:
         conn.close()
 
