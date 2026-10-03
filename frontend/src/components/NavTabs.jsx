@@ -1,57 +1,72 @@
 import Icon from './Icon';
+import ThemeToggle from './ThemeToggle';
 
 export const tabs = [
-  { id: 'command', label: 'Command Center', icon: 'chart', group: 'Operations', title: 'Fraud command center', roles: ['analyst'] },
-  { id: 'simulation', label: 'Live Mandate Simulator', icon: 'flow', group: 'Operations', title: 'Cash-out mandate flow' },
-  { id: 'cases', label: 'Review Queue', icon: 'cases', group: 'Operations', title: 'Supervisor review queue', roles: ['analyst'] },
-  { id: 'liquidity', label: 'Liquidity Forecast', icon: 'store', group: 'Ecosystem', title: 'Agent liquidity forecast', roles: ['agent', 'analyst'] },
-  { id: 'campaign', label: 'Adoption Uplift', icon: 'users', group: 'Ecosystem', title: 'Sathi adoption campaign', roles: ['analyst'] },
-  { id: 'agents', label: 'Agent Risk Board', icon: 'radar', group: 'Ecosystem', title: 'Agent anomaly risk', roles: ['analyst'] },
-  { id: 'outreach', label: 'Assisted User Outreach', icon: 'users', group: 'Evidence', title: 'Assisted user outreach', roles: ['analyst'] },
-  { id: 'metrics', label: 'Evidence & Metrics', icon: 'chart', group: 'Evidence', title: 'Synthetic evidence and metrics', roles: ['analyst'] },
-  { id: 'architecture', label: 'How Sathi Works', icon: 'info', group: 'About', title: 'Problem, solution and principles' },
+  { id: 'command', label: 'Dashboard', icon: 'chart', group: 'Daily work', title: 'Today at a glance', roles: ['analyst'] },
+  { id: 'simulation', label: 'Cash-out', icon: 'flow', group: 'Daily work', title: 'Safe cash-out' },
+  { id: 'cases', label: 'Cases to review', icon: 'cases', group: 'Daily work', title: 'Cases to review', roles: ['analyst'] },
+  { id: 'liquidity', label: 'Cash planning', icon: 'store', group: 'Agents', title: 'How much cash agents will need', roles: ['agent', 'analyst'] },
+  { id: 'agents', label: 'Agent check', icon: 'radar', group: 'Agents', title: 'Agents with unusual activity', roles: ['analyst'] },
+  { id: 'outreach', label: 'Customers who need help', icon: 'users', group: 'Customers', title: 'Customers who may need help', roles: ['analyst'] },
+  { id: 'campaign', label: 'Invite planner', icon: 'users', group: 'Customers', title: 'Who to invite to Sathi', roles: ['analyst'] },
+  { id: 'metrics', label: 'AI test results', icon: 'chart', group: 'Reports', title: 'How well the AI works', roles: ['analyst'] },
+  { id: 'settings', label: 'Settings', icon: 'settings', group: 'System', title: 'Settings', roles: ['analyst'] },
+  { id: 'architecture', label: 'How it works', icon: 'info', group: 'Help', title: 'How Sathi keeps cash-outs safe' },
 ];
 
 export const canOpen = (tab, session) => !tab.roles || tab.roles.includes(session?.role);
 
 export default function NavTabs({ activeTab, onSelectTab, session = null }) {
-  const groups = [...new Set(tabs.map((tab) => tab.group))];
+  // Locked tabs are hidden, not dimmed. This prevents role-leakage in the sidebar.
+  const visibleTabs = tabs.filter((tab) => canOpen(tab, session));
+  const groups = [...new Set(visibleTabs.map((tab) => tab.group))];
+
   return (
     <aside className="flex min-h-full w-72 flex-col border-r border-base-300 bg-base-100">
-      <div className="flex items-center gap-3 px-5 py-5">
-        <span className="grid size-10 place-items-center rounded-xl bg-primary font-bangla text-lg font-bold text-primary-content">সাথী</span>
+      <div className="flex items-center gap-3 border-b border-base-300 px-5 py-5">
+        <span className="grid size-10 place-items-center rounded-xl bg-primary font-bangla text-lg font-bold text-primary-content">
+          সাথী
+        </span>
         <div className="leading-tight">
           <div className="text-lg font-extrabold tracking-wide">SATHI</div>
-          <div className="text-xs opacity-60">Scoped cash-out mandates</div>
+          <div className="text-xs text-base-content/60">Safe cash-out, no PIN sharing</div>
         </div>
       </div>
 
-      <nav aria-label="Sathi Console Navigation" className="flex-1 px-3">
+      <nav aria-label="Sathi Console Navigation" className="flex-1 overflow-y-auto px-3 py-4">
         {groups.map((group) => (
-          <ul key={group} className="menu w-full gap-0.5 p-0 pb-4">
-            <li className="menu-title px-3 text-[11px] uppercase tracking-wider">{group}</li>
-            {tabs.filter((tab) => tab.group === group).map((tab) => {
-              const locked = !canOpen(tab, session);
-              return (
-                <li key={tab.id}>
-                  <button
-                    className={`gap-3 py-2.5 ${activeTab === tab.id ? 'menu-active' : ''}`}
-                    onClick={() => onSelectTab(tab.id)}
-                    aria-current={activeTab === tab.id ? 'page' : undefined}
-                  >
-                    <Icon name={tab.icon} />
-                    <span className="flex-1 text-left">{tab.label}</span>
-                    {locked && <Icon name="lock" className="size-3.5 opacity-40" />}
-                  </button>
-                </li>
-              );
-            })}
+          <ul key={group} className="menu w-full gap-0.5 p-0 pb-5">
+            <li className="menu-title px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-base-content/60">
+              {group}
+            </li>
+            {visibleTabs
+              .filter((tab) => tab.group === group)
+              .map((tab) => {
+                const selected = activeTab === tab.id;
+                return (
+                  <li key={tab.id}>
+                    <button
+                      className={`group gap-3 rounded-lg py-2.5 pl-3 pr-2 transition focus-ring ${
+                        selected ? 'menu-active font-medium' : 'hover:bg-base-200/70'
+                      }`}
+                      onClick={() => onSelectTab(tab.id)}
+                      aria-current={selected ? 'page' : undefined}
+                    >
+                      <Icon name={tab.icon} className="size-4 shrink-0" />
+                      <span className="flex-1 text-left text-sm">{tab.label}</span>
+                    </button>
+                  </li>
+                );
+              })}
           </ul>
         ))}
       </nav>
 
-      <div className="m-3 rounded-box bg-base-200 p-3 text-[11px] leading-relaxed opacity-80">
-        Track 07 · AI DEV FEST 2026 · DIU CPC × upay. Research prototype on synthetic data; not connected to upay production.
+      <div className="m-3 mt-2 flex items-center justify-between gap-2 rounded-box border border-base-300 bg-base-200/60 p-3 text-[11px] leading-relaxed text-base-content/80">
+        <span className="flex-1">
+          Demo version with made-up data. Not connected to real upay accounts.
+        </span>
+        <ThemeToggle />
       </div>
     </aside>
   );

@@ -26,8 +26,8 @@ describe('Live verification channel', () => {
 
   it('risk card states that risk never authorizes', () => {
     const html = clean(renderToString(<RiskCard risk={{ score: 0.72, band: 'high', step_up: 'call_and_review', reasons: [{ signal: 'x', explanation: 'Agent has 3 cases.' }] }} />));
-    expect(html).toContain('high');
-    expect(html).toContain('Phone call required + analyst review case opened');
+    expect(html).toContain('High risk');
+    expect(html).toContain('Customer must confirm by phone call, and a supervisor will review it');
     expect(html).toContain('never approves or denies');
     expect(html).not.toContain('Agent has 3 cases.');
   });
@@ -57,8 +57,8 @@ describe('Ecosystem intelligence views', () => {
 
   it('forecast chart labels both marks', () => {
     const html = renderToString(<ForecastChart days={days} />);
-    expect(html).toContain('Expected demand');
-    expect(html).toContain('P90 (busy-day) demand');
+    expect(html).toContain('Expected cash needed');
+    expect(html).toContain('On a busy day');
   });
 
   it('agent forecast shows float recommendation and planning-only boundary', () => {
@@ -70,13 +70,20 @@ describe('Ecosystem intelligence views', () => {
   it('qini chart has a legend and direct labels for every policy', () => {
     const curve = [0, 0.5, 1].map((s) => ({ targeted_share: s, incremental: s * 10 }));
     const html = renderToString(<QiniChart policies={{ uplift_t_learner: { curve }, response_model: { curve }, random: { curve } }} />);
-    expect(html.match(/Uplift model/g).length).toBeGreaterThanOrEqual(2);
-    expect(html).toContain('Random');
+    expect(html.match(/Sathi AI/g).length).toBeGreaterThanOrEqual(2);
+    expect(html).toContain('Random pick');
   });
 
-  it('navigation lists the new pages', () => {
-    const html = renderToString(<App />);
-    expect(html).toContain('Liquidity Forecast');
-    expect(html).toContain('Adoption Uplift');
+  it('navigation lists the new pages', async () => {
+    const { api } = await import('./api');
+    const original = api.getSession();
+    api.__setSessionForTests({ role: 'analyst', subject: 'demo_analyst', allowed_users: [] });
+    try {
+      const html = renderToString(<App />);
+      expect(html).toContain('Cash planning');
+      expect(html).toContain('Invite planner');
+    } finally {
+      api.__setSessionForTests(original);
+    }
   });
 });

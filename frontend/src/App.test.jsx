@@ -11,20 +11,14 @@ import AgentRiskBoard from './components/AgentRiskBoard';
 import { API_BASE_URL, resolveApiBaseUrl, setApiBaseUrl } from './api';
 
 describe('App', () => {
-  it('renders Sathi console header', () => {
+  it('shows the login screen first when signed out', () => {
     const html = renderToString(<App />);
-    expect(html).toContain('SATHI');
-  });
-
-  it('renders the agent terminal section', () => {
-    const html = renderToString(<App />);
-    expect(html).toContain('Agent Point-of-Sale Terminal');
-  });
-
-  it('renders the navigation tabs', () => {
-    const html = renderToString(<App />);
-    expect(html).toContain('Live Mandate Simulator');
-    expect(html).toContain('Review Queue');
+    expect(html).toContain('Sign in');
+    // Dashboard / sidebar tabs must NOT leak before authentication.
+    expect(html).not.toContain('Agent counter');
+    expect(html).not.toContain('Cash-out');
+    expect(html).not.toContain('Cases to review');
+    expect(html).not.toContain('Dashboard');
   });
 });
 
@@ -113,8 +107,8 @@ describe('Screen Labels & Provenance', () => {
 
   it('initial health status is unknown and never initially green', () => {
     const html = renderToString(<Header />);
-    expect(html).toContain('Connecting to API...');
-    expect(html).not.toContain('Live Backend Connected');
+    expect(html).toContain('Connecting…');
+    expect(html).not.toContain('>Online<');
     expect(html).toContain('#94a3b8');
   });
 });
@@ -125,32 +119,132 @@ describe('Verified role and evidence boundaries', () => {
     const html = renderToString(<LiveSimulation session={{role: 'customer_channel', subject: 'U_fixture'}} flow={{mandateId: 'fixture-id'}} />);
     expect(html).toContain('Confirm amount');
     expect(html).toContain('গ্রাহকের নিশ্চিতকরণ');
-    expect(html).not.toContain('Issue terminal code once');
-    expect(html).not.toContain('Terminal redemption code');
+    expect(html).not.toContain('Get one-time code');
+    expect(html).not.toContain('Type the one-time code');
     expect(html).not.toContain('849201');
   });
   it('agent cannot render customer verification controls', () => {
     const html = renderToString(<LiveSimulation session={{role: 'agent', subject: 'A_fixture', allowed_users: ['U_fixture']}} />);
-    expect(html).toContain('Issue terminal code once');
+    expect(html).toContain('Get one-time code');
     expect(html).not.toContain('Confirm amount');
-    expect(html).not.toContain('Report cash received');
+    expect(html).not.toContain('Send cash amount');
   });
   it('renders exact saved metrics, denominators, target misses and adoption result', () => {
     const html = renderToString(<MetricsPage initialData={evidenceFixture} />).replace(/<!-- -->/g, '');
+    // Default view: summary KPIs + provenance + first tab (Assisted detection)
     expect(html).toContain('0.7312'); expect(html).toContain('0.5123');
-    expect(html).toContain('10 / 4'); expect(html).toContain('75.00%');
-    expect(html).toContain('Target missed'); expect(html).toContain('Undefined');
-    expect(html).toContain('৳10.00 BDT'); expect(html).not.toContain('৳50.00 BDT');
+    expect(html).toContain('10 / 4');
+    expect(html).toContain('assisted classifier');
+    expect(html).toContain('rule baseline');
+    expect(html).toContain('Verified frozen');
+    expect(html).toContain('Missed');
     expect(html).not.toContain('type="range"');
     expect(html).toContain('calibration cohort');
+    // Tab labels are reachable
+    expect(html).toContain('Agent review');
+    expect(html).toContain('Adoption impact');
+    expect(html).toContain('Robustness');
+    expect(html).toContain('Fairness audit');
   });
   it('renders untrusted explanation text escaped instead of executing HTML', () => {
     const html = renderToString(<UserReasons data={{user_id: 'fixture', score: .7, top_reasons: [{feature: '<img src=x onerror=alert(1)>', value: 1, attribution: .2}]}} />);
     expect(html).toContain('&lt;img'); expect(html).not.toContain('<img');
     expect(html).toContain('raw log-odds');
   });
-  it('keeps the synthetic and assumed financial notice visible when signed out', () => {
+  it('keeps the synthetic and assumed financial notice hidden until the user signs in', () => {
+    // The SYNTHETIC DEMO banner only renders inside the authenticated layout.
     const html = renderToString(<App />);
-    expect(html).toContain('SYNTHETIC DEMO'); expect(html).toContain('ASSUMPTIONS');
+    expect(html).not.toContain('SYNTHETIC DEMO');
+    expect(html).not.toContain('ASSUMPTIONS');
+  });
+});
+
+describe('Role-scoped navigation', () => {
+  it('hides analyst-only tabs from a signed-in agent', async () => {
+    const { default: App } = await import('./App');
+    const { api } = await import('./api');
+    const original = api.getSession();
+    api.__setSessionForTests({ role: 'agent', subject: 'A_fixture', allowed_users: ['U_fixture'] });
+    try {
+      const html = renderToString(<App />);
+      // Agent should see Liquidity + Simulator + Architecture, but NOT analyst tools.
+      expect(html).toContain('Cash planning');
+      expect(html).toContain('Cash-out');
+      expect(html).toContain('How it works');
+      expect(html).not.toContain('Cases to review');
+      expect(html).not.toContain('Customers who need help');
+      expect(html).not.toContain('Agent check');
+      expect(html).not.toContain('Invite planner');
+      expect(html).not.toContain('AI test results');
+      expect(html).not.toContain('Dashboard');
+    } finally {
+      api.__setSessionForTests(original);
+    }
+  });
+
+  it('hides analyst-only tabs from a signed-in customer_channel', async () => {
+    const { default: App } = await import('./App');
+    const { api } = await import('./api');
+    const original = api.getSession();
+    api.__setSessionForTests({ role: 'customer_channel', subject: 'U_fixture', allowed_users: [] });
+    try {
+      const html = renderToString(<App />);
+      // Customer sees only the customer-facing simulator + Architecture.
+      expect(html).toContain('Cash-out');
+      expect(html).toContain('How it works');
+      expect(html).not.toContain('Cases to review');
+      expect(html).not.toContain('Cash planning');
+      expect(html).not.toContain('Customers who need help');
+      expect(html).not.toContain('Agent check');
+      expect(html).not.toContain('Invite planner');
+      expect(html).not.toContain('AI test results');
+      expect(html).not.toContain('Dashboard');
+    } finally {
+      api.__setSessionForTests(original);
+    }
+  });
+
+  it('lands an analyst on the Command Center and shows every tab', async () => {
+    const { default: App } = await import('./App');
+    const { api } = await import('./api');
+    const original = api.getSession();
+    api.__setSessionForTests({ role: 'analyst', subject: 'demo_analyst', allowed_users: [] });
+    try {
+      const html = renderToString(<App />);
+      // SSR cannot run useEffect, so the active tab stays at the default
+      // 'simulation'. We assert on the rendered sidebar/header instead,
+      // which are purely derived from session + tabs list.
+      expect(html).toContain('Supervisor');
+      expect(html).toContain('demo_analyst');
+      expect(html).toContain('Dashboard');
+      expect(html).toContain('Cases to review');
+      expect(html).toContain('Cash planning');
+      expect(html).toContain('Invite planner');
+      expect(html).toContain('Agent check');
+      expect(html).toContain('Customers who need help');
+      expect(html).toContain('AI test results');
+      expect(html).toContain('How it works');
+    } finally {
+      api.__setSessionForTests(original);
+    }
+  });
+
+  it('agents and customers never see analyst-only tabs in the sidebar', async () => {
+    const { api } = await import('./api');
+    const original = api.getSession();
+    try {
+      api.__setSessionForTests({ role: 'agent', subject: 'A_fixture', allowed_users: ['U_fixture'] });
+      const agentHtml = renderToString(<App />);
+      api.__setSessionForTests({ role: 'customer_channel', subject: 'U_fixture', allowed_users: [] });
+      const customerHtml = renderToString(<App />);
+      // Sidebar groups for Operations/Ecosystem/Evidence/About are derived from
+      // the visible tabs list — make sure analyst sections aren't even labeled.
+      for (const label of ['Dashboard', 'Cases to review', 'Invite planner', 'Agent check', 'Customers who need help', 'AI test results']) {
+        expect(agentHtml).not.toContain(label);
+        expect(customerHtml).not.toContain(label);
+      }
+    } finally {
+      api.__setSessionForTests(original);
+    }
   });
 });

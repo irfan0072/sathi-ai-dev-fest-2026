@@ -85,8 +85,36 @@ def init_env(env_path: Path | None = None, example_path: Path | None = None) -> 
         return False
 
 
+def ensure_runtime_secrets(env_path: Path | None = None) -> list[str]:
+    """Add SATHI_SECRETS_KEY when missing or a placeholder.
+
+    SATHI_SECRETS_KEY encrypts provider credentials entered on the Settings page.
+    The value is written to the ignored .env only and never printed.
+    """
+    target_env = env_path or (Path(__file__).resolve().parent.parent / ".env")
+    if not target_env.exists():
+        return []
+    content = target_env.read_text(encoding="utf-8")
+    added = []
+    for name in ("SATHI_SECRETS_KEY",):
+        match = re.search(rf"^{name}=(.*)$", content, re.MULTILINE)
+        if match and match.group(1).strip() not in PLACEHOLDER_SECRETS:
+            continue
+        value = secrets.token_urlsafe(32)
+        if match:
+            content = re.sub(rf"^{name}=.*$", f"{name}={value}", content, flags=re.MULTILINE)
+        else:
+            content = content.rstrip() + f"\n{name}={value}\n"
+        added.append(name)
+    if added:
+        target_env.write_text(content, encoding="utf-8")
+        print(f"Generated {', '.join(added)} in .env (values not printed).")
+    return added
+
+
 def main() -> int:
     init_env()
+    ensure_runtime_secrets()
     return 0
 
 

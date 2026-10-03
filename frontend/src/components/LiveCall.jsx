@@ -1,24 +1,17 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api';
 import Icon from './Icon';
+import { callStatus, checkNeeded, riskLevel } from '../copy';
 
 const LIVE = ['queued', 'ringing', 'in_progress'];
 
-const callLabel = {
-  queued: 'Placing call…', ringing: 'Ringing customer…', in_progress: 'Customer is on the call',
-  verified: 'Customer confirmed the amount', not_verified: 'Customer did not confirm',
-  no_answer: 'No answer', failed: 'Call failed',
-};
+const callLabel = callStatus;
 const callTone = {
   verified: 'badge-success', not_verified: 'badge-error', no_answer: 'badge-warning', failed: 'badge-error',
 };
 
 const bandTone = { low: 'badge-success', medium: 'badge-warning', high: 'badge-error' };
-const stepUpText = {
-  keypad_or_call: 'App keypad or phone call',
-  call_required: 'Phone call to registered number required',
-  call_and_review: 'Phone call required + analyst review case opened',
-};
+const stepUpText = checkNeeded;
 
 export function RiskCard({ risk }) {
   if (!risk) return null;
@@ -26,16 +19,16 @@ export function RiskCard({ risk }) {
   return (
     <div className="flex flex-col gap-2 border-t border-base-300 pt-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-sm font-semibold">Real-time risk</h4>
-        <span className={`badge badge-sm ${bandTone[risk.band] || 'badge-ghost'}`}>{risk.band}</span>
+        <h4 className="text-sm font-semibold">Safety check</h4>
+        <span className={`badge badge-sm ${bandTone[risk.band] || 'badge-ghost'}`}>{riskLevel[risk.band] || risk.band}</span>
       </div>
       <div className="flex items-center gap-2">
         <progress className="progress w-full" value={pct} max="100" aria-label="Risk score" />
         <span className="font-mono text-xs">{pct}</span>
       </div>
-      <p className="text-xs"><strong>Verification:</strong> {stepUpText[risk.step_up] || risk.step_up}</p>
+      <p className="text-xs">{stepUpText[risk.step_up] || risk.step_up}</p>
       {/* Signal details stay with analysts so agents cannot tune requests around them. */}
-      <p className="muted">Risk sets verification strength only. It never approves or denies a cash-out.</p>
+      <p className="muted">This only decides how the customer confirms. It never approves or denies a cash-out by itself.</p>
     </div>
   );
 }
@@ -67,19 +60,36 @@ export function AgentCallPanel({ mandateId, status, onVerified, onNotVerified, b
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-sm opacity-80">The server calls the customer&apos;s <strong>registered</strong> phone. The prompt never says the amount; the customer types it on their own keypad.</p>
-      <button className="btn btn-primary w-full sm:w-auto" disabled={busy || !canCall} onClick={place}>
-        <Icon name="phone" className="size-4" />Call customer to confirm
+      <p className="text-sm text-base-content/80">
+        We call the customer&apos;s <strong>registered</strong> phone number. The call does not say the amount; the
+        customer types it on their own phone.
+      </p>
+      <button
+        className="btn btn-primary w-full focus-ring sm:w-auto"
+        disabled={busy || !canCall}
+        onClick={place}
+      >
+        <Icon name="phone" className="size-4" />
+        Call customer to confirm
       </button>
       {call && (
         <div className="flex flex-wrap items-center gap-2 rounded-box bg-base-200 p-3 text-sm">
-          {LIVE.includes(call.status) && <span className="loading loading-ring loading-sm text-primary" />}
-          <span className={`badge ${callTone[call.status] || 'badge-info'}`}>{call.status.replace('_', ' ')}</span>
-          <span>{callLabel[call.status] || call.status}</span>
-          <span className="muted ml-auto">{call.provider === 'twilio' ? `Live call · ${call.to}` : 'Simulated handset'}</span>
+          {LIVE.includes(call.status) && (
+            <span className="loading loading-ring loading-sm text-primary" />
+          )}
+          <span className={`badge ${callTone[call.status] || 'badge-info'}`}>
+            {callLabel[call.status] || call.status}
+          </span>
+          <span className="muted ml-auto">
+            {call.provider === 'simulated' ? 'Demo phone' : `Real call · ${call.to}`}
+          </span>
         </div>
       )}
-      {error && <div role="alert" className="alert alert-error alert-soft text-sm">{error}</div>}
+      {error && (
+        <div role="alert" className="alert alert-error alert-soft text-sm">
+          {error}
+        </div>
+      )}
     </div>
   );
 }
@@ -89,7 +99,7 @@ const dialKeys = [
   ['7', '৭'], ['8', '৮'], ['9', '৯'], ['*', ''], ['0', '০'], ['#', ''],
 ];
 
-export function IncomingCall({ mandateId, onFinished }) {
+export function IncomingCall({ onFinished }) {
   const [incoming, setIncoming] = useState(null);
   const [answered, setAnswered] = useState(false);
   const [digits, setDigits] = useState('');
@@ -131,42 +141,77 @@ export function IncomingCall({ mandateId, onFinished }) {
   };
 
   if (!incoming && !answered) {
-    return <p className="muted">No incoming call. When the agent taps “Call customer”, the phone rings here{mandateId ? '' : ' (simulated handset)'}.</p>;
+    return (
+      <p className="muted">
+        No call yet. When the agent asks for confirmation, this phone will ring here.
+      </p>
+    );
   }
 
   return (
-    <div className="mx-auto w-full max-w-xs rounded-[1.75rem] border-4 border-neutral bg-base-100 p-4 shadow-sm">
+    <div className="mx-auto w-full max-w-xs rounded-[1.75rem] border-4 border-neutral bg-base-100 p-4 shadow-md">
       <div className="text-center">
-        <div className="text-xs opacity-60">{ended ? 'Call ended' : answered ? 'On call' : 'Incoming call'}</div>
+        <div className="text-xs text-base-content/60">
+          {ended ? 'Call ended' : answered ? 'On call' : 'Incoming call…'}
+        </div>
         <div lang="bn" className="text-lg font-semibold">সাথী নিরাপত্তা কল</div>
         {!answered && <div className="muted">Agent {incoming.agent_id}</div>}
       </div>
       {!answered ? (
         <div className="mt-4 flex justify-center gap-6">
-          <button className="btn btn-circle btn-success btn-lg" aria-label="Answer call" onClick={() => setAnswered(true)}>
+          <button
+            className="btn btn-circle btn-success btn-lg focus-ring"
+            aria-label="Answer call"
+            onClick={() => setAnswered(true)}
+          >
             <Icon name="phone" />
           </button>
         </div>
       ) : (
         <>
-          <p lang="bn" className="mt-3 rounded-box bg-base-200 p-2 text-sm leading-relaxed">
+          <p
+            lang="bn"
+            className="mt-3 rounded-box bg-base-200 p-2 text-sm leading-relaxed"
+          >
             {spoken.length ? spoken.join(' ') : incoming.prompt_bn}
           </p>
-          {!ended && <>
-            <div className="mt-3 rounded-box border border-base-300 p-2 text-center font-mono text-2xl tracking-widest" aria-live="polite">{digits || ' '}</div>
-            <div className="mt-2 grid grid-cols-3 gap-2">
-              {dialKeys.map(([key, bn]) => (
-                <button key={key} type="button" className="btn btn-ghost h-12 flex-col gap-0 bg-base-200" onClick={() => press(key)}>
-                  <span className="text-lg leading-none">{key}</span>
-                  {bn && <span lang="bn" className="text-[10px] leading-none opacity-60">{bn}</span>}
-                </button>
-              ))}
-            </div>
-            <p className="muted mt-2">Type the amount, then press #. Press # alone if you did not ask for this.</p>
-          </>}
+          {!ended && (
+            <>
+              <div
+                className="mt-3 rounded-box border border-base-300 p-2 text-center font-mono text-2xl tracking-widest"
+                aria-live="polite"
+              >
+                {digits || ' '}
+              </div>
+              <div className="mt-2 grid grid-cols-3 gap-2">
+                {dialKeys.map(([key, bn]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    className="btn btn-ghost h-12 flex-col gap-0 bg-base-200 focus-ring"
+                    onClick={() => press(key)}
+                  >
+                    <span className="text-lg leading-none">{key}</span>
+                    {bn && (
+                      <span lang="bn" className="text-[10px] leading-none opacity-60">
+                        {bn}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+              <p className="muted mt-2">
+                Type the amount you want, then press #. If you did not ask for any money, just press #.
+              </p>
+            </>
+          )}
         </>
       )}
-      {error && <div role="alert" className="alert alert-error alert-soft mt-2 text-xs">{error}</div>}
+      {error && (
+        <div role="alert" className="alert alert-error alert-soft mt-2 text-xs">
+          {error}
+        </div>
+      )}
     </div>
   );
 }
@@ -182,13 +227,13 @@ export function SmsInbox() {
   }, []);
   return (
     <div className="flex flex-col gap-2">
-      <h4 className="flex items-center gap-2 text-sm font-semibold"><Icon name="phone" className="size-4" />SMS inbox</h4>
-      {!items?.length ? <p className="muted">No messages yet. A receipt SMS arrives after every cash-out.</p> : (
+      <h4 className="flex items-center gap-2 text-sm font-semibold"><Icon name="phone" className="size-4" />Messages</h4>
+      {!items?.length ? <p className="muted">No messages yet. You get a receipt SMS after every cash-out.</p> : (
         <ul className="flex max-h-56 flex-col gap-2 overflow-y-auto">
           {items.map((m) => (
             <li key={m.notification_id} className="chat chat-start">
               <div className="chat-bubble chat-bubble-primary text-sm" lang="bn">{m.body}</div>
-              <div className="chat-footer muted">{new Date(m.created_at).toLocaleTimeString()} · {m.status === 'simulated' ? 'simulated SMS' : m.status}</div>
+              <div className="chat-footer muted">{new Date(m.created_at).toLocaleTimeString()} · {m.status === 'simulated' ? 'demo SMS' : m.status === 'sent' ? 'sent' : 'not delivered'}</div>
             </li>
           ))}
         </ul>

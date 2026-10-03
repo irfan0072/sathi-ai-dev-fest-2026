@@ -3,18 +3,19 @@ import { api } from '../api';
 import Icon from './Icon';
 import CaseBrief from './CaseBrief';
 import { WatchButton } from './CommandCenter';
+import { caseStatus, eventLabel, priorityName, reasonLabel } from '../copy';
 
 const decisions = [
   { id: 'approved', label: 'Approve', tone: 'btn-success' },
   { id: 'denied', label: 'Deny', tone: 'btn-error' },
-  { id: 'escalated', label: 'Escalate', tone: 'btn-warning' },
+  { id: 'escalated', label: 'Send to fraud team', tone: 'btn-warning' },
 ];
 const priorityTone = { urgent: 'badge-error', high: 'badge-warning', normal: 'badge-ghost' };
 const statusTone = (status) => (status === 'open' ? 'badge-info' : status === 'escalated' ? 'badge-error' : 'badge-ghost');
 const filters = [
   { id: 'open', label: 'Open', test: (c) => ['open', 'escalated'].includes(c.status) },
   { id: 'urgent', label: 'Urgent', test: (c) => c.priority === 'urgent' && ['open', 'escalated'].includes(c.status) },
-  { id: 'overdue', label: 'Past target', test: (c) => c.sla_breached },
+  { id: 'overdue', label: 'Late', test: (c) => c.sla_breached },
   { id: 'all', label: 'All', test: () => true },
 ];
 
@@ -22,7 +23,7 @@ const slaText = (c) => {
   if (!['open', 'escalated'].includes(c.status)) return 'closed';
   const left = c.sla_minutes - c.age_minutes;
   const fmt = (m) => (Math.abs(m) >= 60 ? `${Math.round(Math.abs(m) / 60)}h` : `${Math.round(Math.abs(m))}m`);
-  return left >= 0 ? `${fmt(left)} left` : `overdue ${fmt(left)}`;
+  return left >= 0 ? `${fmt(left)} left to respond` : `${fmt(left)} late`;
 };
 
 function Timeline({ caseId }) {
@@ -38,7 +39,7 @@ function Timeline({ caseId }) {
       {events.map((e, i) => (
         <li key={i} className="mb-3 last:mb-0">
           <span className={`absolute -left-[5px] mt-1.5 inline-block size-2.5 rounded-full ${e.kind === 'review' ? 'bg-secondary' : e.kind === 'call' ? 'bg-primary' : e.kind === 'case' ? 'bg-error' : 'bg-base-300'}`} />
-          <div className="text-sm">{e.label.replaceAll('_', ' ')}</div>
+          <div className="text-sm">{e.kind === 'audit' ? eventLabel(e.label) : e.label}</div>
           <div className="muted">{e.actor} · {new Date(e.at).toLocaleString()}</div>
         </li>
       ))}
@@ -80,13 +81,16 @@ export default function ReviewQueue() {
   const count = (f) => (cases ? cases.filter(f.test).length : 0);
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h2 className="page-title">Supervisor Review Queue</h2>
-          <p className="page-lead">Actual synthetic runtime cases from PostgreSQL, ordered by priority and time left to the response target. Human decisions update cases and audit only; models and review decisions never grant cash-out.</p>
+        <div className="min-w-0">
+          <h2 className="page-title">Cases to review</h2>
+          <p className="page-lead mt-1">Problems found during cash-outs, most urgent first. Open a case, read what happened, then decide. Your decision never pays out cash.</p>
         </div>
-        <button className="btn btn-outline btn-sm" onClick={refresh}><Icon name="refresh" className="size-4" />Refresh cases</button>
+        <button className="btn btn-outline btn-sm focus-ring" onClick={refresh}>
+          <Icon name="refresh" className="size-4" />
+          Refresh
+        </button>
       </div>
 
       {error && <div role="alert" className="alert alert-error alert-soft text-sm">Unavailable: {error}</div>}
@@ -94,33 +98,55 @@ export default function ReviewQueue() {
 
       <div role="tablist" className="tabs tabs-box w-fit">
         {filters.map((f) => (
-          <button key={f.id} role="tab" className={`tab gap-1.5 ${filter === f.id ? 'tab-active' : ''}`} onClick={() => setFilter(f.id)}>
-            {f.label}<span className="badge badge-xs">{count(f)}</span>
+          <button
+            key={f.id}
+            role="tab"
+            className={`tab gap-1.5 focus-ring ${filter === f.id ? 'tab-active' : ''}`}
+            onClick={() => setFilter(f.id)}
+          >
+            {f.label}
+            <span className="badge badge-xs">{count(f)}</span>
           </button>
         ))}
       </div>
 
       <div className="grid gap-5 lg:grid-cols-5">
-        <div className="panel lg:col-span-3">
+        <div className="panel shadow-sm lg:col-span-3">
           <div className="panel-body p-2 sm:p-3">
             {cases === null ? (
-              <p className="flex items-center gap-2 p-4 text-sm opacity-70"><span className="loading loading-dots loading-sm" />Unavailable — waiting for the database queue.</p>
+              <p className="flex items-center gap-2 p-4 text-sm text-base-content/70">
+                <span className="loading loading-dots loading-sm" />
+                Unavailable — waiting for the database queue.
+              </p>
             ) : shown.length === 0 ? (
-              <div className="p-8 text-center text-sm opacity-70">{cases.length === 0 ? 'No review cases in the current database.' : 'Nothing in this view.'}</div>
+              <div className="p-8 text-center text-sm text-base-content/70">
+                {cases.length === 0 ? 'No cases right now. Good news!' : 'No cases in this list.'}
+              </div>
             ) : (
               <ul className="flex flex-col gap-1">
                 {shown.map((item) => (
                   <li key={item.case_id}>
-                    <button onClick={() => { setSelected(item); setNote(''); }}
-                      className={`flex w-full items-center gap-3 rounded-box px-3 py-3 text-left transition hover:bg-base-200 ${selected?.case_id === item.case_id ? 'bg-primary/10 ring-1 ring-primary' : ''}`}>
+                    <button
+                      onClick={() => {
+                        setSelected(item);
+                        setNote('');
+                      }}
+                      className={`flex w-full items-center gap-3 rounded-box px-3 py-3 text-left transition focus-ring hover:bg-base-200 ${
+                        selected?.case_id === item.case_id ? 'bg-primary/10 ring-1 ring-primary' : ''
+                      }`}
+                    >
                       <span className="font-mono text-sm font-semibold">#{item.case_id}</span>
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm font-medium">{item.reason.replaceAll('_', ' ')}</span>
-                        <span className="block truncate text-[11px] opacity-60">{item.agent_id || 'no agent'} · {slaText(item)}</span>
+                        <span className="block truncate text-sm font-medium">{reasonLabel(item.reason)}</span>
+                        <span className="block truncate text-[11px] text-base-content/60">
+                          Agent {item.agent_id || '—'} · {slaText(item)}
+                        </span>
                       </span>
                       <span className="flex flex-col items-end gap-1">
-                        <span className={`badge badge-sm ${priorityTone[item.priority]}`}>{item.priority}</span>
-                        <span className={`badge badge-xs ${item.sla_breached ? 'badge-error' : statusTone(item.status)}`}>{item.sla_breached ? 'past target' : item.status}</span>
+                        <span className={`badge badge-sm ${priorityTone[item.priority]}`}>{priorityName[item.priority] || item.priority}</span>
+                        <span className={`badge badge-xs ${item.sla_breached ? 'badge-error' : statusTone(item.status)}`}>
+                          {item.sla_breached ? 'late' : caseStatus[item.status] || item.status}
+                        </span>
                       </span>
                     </button>
                   </li>
@@ -130,45 +156,57 @@ export default function ReviewQueue() {
           </div>
         </div>
 
-        <div className="panel h-fit lg:col-span-2">
+        <div className="panel h-fit shadow-sm lg:col-span-2">
           <div className="panel-body">
             {!selected ? (
               <div className="py-8 text-center text-sm opacity-60">Select a case to review its evidence.</div>
             ) : (
               <>
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <h3 className="font-semibold">Case #{selected.case_id} · {selected.reason.replaceAll('_', ' ')}</h3>
-                  <span className={`badge ${priorityTone[selected.priority]}`}>{selected.priority} · {slaText(selected)}</span>
+                  <h3 className="font-semibold">Case #{selected.case_id} · {reasonLabel(selected.reason)}</h3>
+                  <span className={`badge ${priorityTone[selected.priority]}`}>{priorityName[selected.priority] || selected.priority} · {slaText(selected)}</span>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="muted font-mono">{selected.mandate_id || 'no mandate'}</span>
+                  <span className="muted">Reference {selected.mandate_id ? selected.mandate_id.slice(0, 8) : '—'}</span>
                   {selected.agent_id && <>
                     <span className="muted">· agent {selected.agent_id}</span>
                     <WatchButton agentId={selected.agent_id} watchlisted={watch.has(selected.agent_id)} caseId={selected.case_id} onChange={refresh} />
                   </>}
                 </div>
                 {selected.reason === 'duress_signal' && (
-                  <div className="alert alert-error alert-soft text-sm"><Icon name="warning" /><span>Silent duress. Call the customer on the registered number, away from the agent, before anything else.</span></div>
+                  <div className="alert alert-error alert-soft text-sm"><Icon name="warning" /><span>The customer asked for help secretly. Call them on their registered number, away from the agent, before anything else.</span></div>
                 )}
                 <CaseBrief key={selected.case_id} caseId={selected.case_id} />
                 <details className="collapse collapse-arrow bg-base-200" open>
-                  <summary className="collapse-title min-h-0 py-2 text-sm">Timeline</summary>
+                  <summary className="collapse-title min-h-0 py-2 text-sm">What happened, step by step</summary>
                   <div className="collapse-content"><Timeline key={selected.case_id} caseId={selected.case_id} /></div>
                 </details>
                 <details className="collapse collapse-arrow bg-base-200">
-                  <summary className="collapse-title min-h-0 py-2 text-sm">Raw evidence</summary>
+                  <summary className="collapse-title min-h-0 py-2 text-sm">Technical details</summary>
                   <div className="collapse-content"><pre className="json-block">{JSON.stringify(selected.evidence, null, 2)}</pre></div>
                 </details>
                 <label className="w-full">
-                  <span className="mb-1 block text-sm">Human review note</span>
-                  <textarea className="textarea textarea-bordered w-full" rows={3} value={note} onChange={(e) => setNote(e.target.value)} />
+                  <span className="mb-1 block text-sm">Your note (optional)</span>
+                  <textarea
+                    className="textarea textarea-bordered w-full focus-ring"
+                    rows={3}
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                  />
                 </label>
                 <div className="grid grid-cols-3 gap-2">
                   {decisions.map((d) => (
-                    <button key={d.id} className={`btn btn-sm btn-soft ${d.tone}`} disabled={busy} onClick={() => decide(d.id)}>{d.label}</button>
+                    <button
+                      key={d.id}
+                      className={`btn btn-sm btn-soft focus-ring ${d.tone}`}
+                      disabled={busy}
+                      onClick={() => decide(d.id)}
+                    >
+                      {d.label}
+                    </button>
                   ))}
                 </div>
-                <p className="muted">Decisions are audited. They never redeem or authorize cash-out.</p>
+                <p className="muted">Your decision is saved with your name. It never pays out cash.</p>
               </>
             )}
           </div>

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Header, status
@@ -57,13 +56,20 @@ def _agent_score(agent_id: str) -> float | None:
 
 
 def get_risk_engine(service: MandateService) -> MandateRiskEngine:
+    from app.settings.service import SettingsService
+
+    values = SettingsService(service.get_connection).values()
     return MandateRiskEngine(
-        service.get_connection, agent_score_lookup=_agent_score, cap=service.user_cap_default
+        service.get_connection, agent_score_lookup=_agent_score, cap=service.user_cap_default,
+        bands=(("low", values["risk.band_low_max"]), ("medium", values["risk.band_medium_max"]),
+               ("high", 1.01)),
     )
 
 
 def step_up_enforced() -> bool:
-    return os.getenv("SATHI_STEP_UP_ENFORCED", "false").strip().lower() == "true"
+    from app.settings.router import get_settings
+
+    return bool(get_settings().get("risk.step_up_enforced"))
 
 
 def _send_receipt(user_id: str, mandate_id: str, result: dict[str, Any]) -> None:

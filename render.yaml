@@ -58,6 +58,12 @@ services:
         sync: false
       - key: SATHI_BD_IVR_WEBHOOK_SECRET
         sync: false
+      # Encrypts credentials saved on the Settings page. Keep it stable: changing it
+      # makes saved credentials unreadable until re-entered.
+      - key: SATHI_SECRETS_KEY
+        generateValue: true
+      - key: SATHI_SETTINGS_EDITABLE
+        value: "true"
       - key: SATHI_SMS_PROVIDER
         value: "simulated"
       - key: ALPHA_SMS_API_KEY
@@ -83,6 +89,14 @@ services:
       - type: rewrite
         source: /*
         destination: /index.html
+    headers:
+      # Revalidate the app shell so a new deploy shows up on reload; hashed assets are immutable.
+      - path: /*
+        name: Cache-Control
+        value: no-cache
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
     autoDeployTrigger: commit
     envVars:
       - key: NODE_VERSION

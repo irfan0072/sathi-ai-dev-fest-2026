@@ -2,7 +2,7 @@
 
 AI DEV FEST2026, DIU CPC × upay. Primary Track07 Open Innovation, extended across Track01 Trust & Risk, Track05 Merchant & Agent and Track04 Growth & Campaign. Team: Runtime Terrors.
 
-**Verified local synthetic prototype.** Full387backend tests/zero skips,44frontend tests, lint and production build pass (3 October, after live-mode extension). Browser roles, Bangla confirmation, terminal-only one-time codes, redemption/replay rejection, cash-gap review and ledger receipts work against the real API. Automatic startup preserves spent balances. Held-out assisted PR-AUC0.8091 versus rule0.6967; agent ensemble detects2/2 injected skimmers with0/4 honest high-volume false flags (small denominators). Public hosting remains pending; the human requested local work. See [verification record](docs/verification-record.md).
+**Verified local synthetic prototype.** Full395backend tests/zero skips,48frontend tests, lint and production build pass (3 October, after live-mode extension). Browser roles, Bangla confirmation, terminal-only one-time codes, redemption/replay rejection, cash-gap review and ledger receipts work against the real API. Automatic startup preserves spent balances. Held-out assisted PR-AUC0.8091 versus rule0.6967; agent ensemble detects2/2 injected skimmers with0/4 honest high-volume false flags (small denominators). Public hosting remains pending; the human requested local work. See [verification record](docs/verification-record.md).
 
 ## Overview and features
 
@@ -23,6 +23,7 @@ Sathi explores scoped, expiring, one-time cash-out authority instead of sharing 
 | Agent liquidity forecast (Track05) | LightGBM point + P90; holdout WAPE 0.90 vs 1.35 moving average; P90 coverage 0.897 |
 | Uplift targeting and budget optimizer (Track04) | T-learner beats response model on holdout (278.5 vs 253 true extra enrollments, top 20%) |
 | Fraud Command Center, prioritized queue with response targets, case timeline, agent watchlist | Live runtime data; watchlist forces the call channel, never blocks |
+| Settings page (analyst) | Runtime channels, risk bands, step-up, AI provider order, case targets, cost assumptions; audited; secrets and phone book env-only |
 | Bangladesh channels | `bd_http_ivr` JSON IVR adapter (vendor mapping pending) and Alpha SMS receipts; simulated outbox by default |
 | Public deployment | Pending human dashboard action; no live URL claimed |
 
@@ -71,6 +72,7 @@ Open [local console](http://127.0.0.1:13000) and [API health](http://127.0.0.1:1
 | `SATHI_INTELLIGENCE_DIR` | Hash-verified liquidity/uplift artifacts, default `data/artifacts/intelligence` |
 | `SATHI_VOICE_PROVIDER` | `simulated` (default), `twilio` or `bd_http_ivr` |
 | `SATHI_BD_IVR_BASE_URL`, `SATHI_BD_IVR_API_KEY`, `SATHI_BD_IVR_WEBHOOK_SECRET`, `SATHI_BD_IVR_LANGUAGE` | Bangladesh JSON IVR gateway adapter ([contract](docs/live-mode.md)) |
+| `SATHI_SETTINGS_EDITABLE` | `false` makes the Settings page read-only (default `true`) |
 | `SATHI_SMS_PROVIDER`, `ALPHA_SMS_API_KEY`, `ALPHA_SMS_SENDER_ID` | SMS receipts: simulated outbox or Alpha SMS (sms.net.bd) |
 | `SATHI_PUBLIC_API_URL` | Public HTTPS API origin used in Twilio webhook URLs |
 | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER` | Twilio credentials and caller number; secrets, never commit |

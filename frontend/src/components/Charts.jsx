@@ -61,18 +61,18 @@ export function ForecastChart({ days }) {
         </Tooltip>
       )}
       <div className="muted mt-1 flex flex-wrap gap-4">
-        <span className="flex items-center gap-1.5"><span className="inline-block size-2.5 rounded-sm" style={{ background: 'var(--viz-1)' }} />Expected demand</span>
-        <span className="flex items-center gap-1.5"><span className="inline-block h-0.5 w-3" style={{ background: 'var(--viz-text)' }} />P90 (busy-day) demand</span>
+        <span className="flex items-center gap-1.5"><span className="inline-block size-2.5 rounded-sm" style={{ background: 'var(--viz-1)' }} />Expected cash needed</span>
+        <span className="flex items-center gap-1.5"><span className="inline-block h-0.5 w-3" style={{ background: 'var(--viz-text)' }} />On a busy day</span>
       </div>
     </div>
   );
 }
 
 const policyStyle = {
-  uplift_t_learner: { label: 'Uplift model', color: 'var(--viz-1)' },
-  response_model: { label: 'Response model', color: 'var(--viz-2)' },
-  agent_dependence_rule: { label: 'Dependence rule', color: 'var(--viz-3)' },
-  random: { label: 'Random', color: 'var(--viz-ref)', dashed: true },
+  uplift_t_learner: { label: 'Sathi AI', color: 'var(--viz-1)' },
+  response_model: { label: 'Usual method', color: 'var(--viz-2)' },
+  agent_dependence_rule: { label: 'Simple rule', color: 'var(--viz-3)' },
+  random: { label: 'Random pick', color: 'var(--viz-ref)', dashed: true },
 };
 
 /** Qini curves: incremental enrollments as more customers are targeted. */
@@ -140,11 +140,11 @@ export function QiniChart({ policies }) {
       </svg>
       {hover !== null && (
         <Tooltip x={x(hover / (points - 1))} y="20%" width={W}>
-          <div className="font-semibold">Top {Math.round((hover / (points - 1)) * 100)}% targeted</div>
+          <div className="font-semibold">Inviting the top {Math.round((hover / (points - 1)) * 100)}%</div>
           {names.map((n) => <div key={n}>{policyStyle[n].label}: {policies[n].curve[hover].incremental.toFixed(0)}</div>)}
         </Tooltip>
       )}
-      <div className="muted mt-1">x: share of holdout customers contacted, ranked by each policy · y: observed extra enrollments vs. control.</div>
+      <div className="muted mt-1">Left to right: share of customers invited. Bottom to top: extra people who joined. Higher is better.</div>
     </div>
   );
 }
@@ -181,7 +181,7 @@ export function HourlyBars({ hours }) {
   const y = (v) => pad.t + ih - (v / max) * ih;
   return (
     <div className="relative w-full" role="figure">
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label="Mandates per hour, last 24 hours">
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label="Cash-out requests per hour, last 24 hours">
         {[0, max].map((t) => (
           <g key={t}>
             <line x1={pad.l} x2={W - pad.r} y1={y(t)} y2={y(t)} stroke="var(--viz-grid)" />
@@ -203,7 +203,7 @@ export function HourlyBars({ hours }) {
       {hover !== null && (
         <Tooltip x={pad.l + slot * hover + slot / 2} y="30%" width={W}>
           <div className="font-semibold">{slots[hover].at.getHours()}:00</div>
-          <div>{slots[hover].mandates} mandates · {slots[hover].confirmed} confirmed</div>
+          <div>{slots[hover].mandates} requests · {slots[hover].confirmed} confirmed</div>
         </Tooltip>
       )}
     </div>
@@ -213,7 +213,7 @@ export function HourlyBars({ hours }) {
 /** Proportion bar for an ordinal state set (status colors, always labelled). */
 export function StateBar({ parts }) {
   const total = parts.reduce((a, p) => a + p.value, 0);
-  if (!total) return <p className="muted">No data in this window.</p>;
+  if (!total) return <p className="muted">Nothing yet today.</p>;
   return (
     <div className="flex flex-col gap-2">
       <div className="flex h-3 w-full gap-0.5 overflow-hidden rounded-full">

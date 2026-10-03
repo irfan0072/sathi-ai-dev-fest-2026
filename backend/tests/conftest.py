@@ -155,3 +155,64 @@ def durable_service(
         yield service
     finally:
         set_mandate_service(None)
+
+
+# ---------------------------------------------------------------------------
+# Live (real-network) provider tests
+# ---------------------------------------------------------------------------
+# Tests in test_live_providers.py hit the real Twilio / Alpha SMS / Gemini /
+# OpenAI / BD-IVR endpoints. They are NEVER run by default. Opt in explicitly:
+#
+#   SATHI_LIVE_TESTS=1 pytest tests/test_live_providers.py
+#
+# Each live test further checks for its own provider's env vars and skips
+# individually if they are missing — so you can opt into one provider at a
+# time without having to set every credential.
+
+LIVE_TESTS_FLAG = "SATHI_LIVE_TESTS"
+
+
+def _live_tests_enabled() -> bool:
+    return os.environ.get(LIVE_TESTS_FLAG, "").strip() in ("1", "true", "yes")
+
+
+@pytest.fixture
+def live_tests_enabled() -> Generator[None, None, None]:
+    """Skip unless SATHI_LIVE_TESTS=1 is set in the environment."""
+    if not _live_tests_enabled():
+        pytest.skip(f"{LIVE_TESTS_FLAG}=1 not set; skipping live provider test")
+    yield
+
+
+def require_live_env(*names: str) -> None:
+    """Skip the current test if any required env var is missing.
+
+    Used by live tests to opt into one provider at a time without forcing
+    the caller to set every credential. Has no effect when live tests are
+    disabled.
+    """
+    if not _live_tests_enabled():
+        pytest.skip(f"{LIVE_TESTS_FLAG}=1 not set; skipping live provider test")
+    missing = [n for n in names if not os.environ.get(n)]
+    if missing:
+        pytest.skip(f"Live test requires env: {', '.join(missing)}")
+
+
+# Provider credentials, admin token and runtime toggles from a developer's .env must not
+# leak into hermetic tests. Live provider tests keep them on purpose.
+_HERMETIC_ENV = (
+    "SATHI_SECRETS_KEY", "SATHI_SETTINGS_EDITABLE",
+    "SATHI_VOICE_PROVIDER", "SATHI_SMS_PROVIDER", "SATHI_STEP_UP_ENFORCED",
+    "SATHI_PUBLIC_API_URL", "SATHI_VOICE_PHONE_BOOK",
+    "TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_FROM_NUMBER",
+    "SATHI_BD_IVR_BASE_URL", "SATHI_BD_IVR_API_KEY", "SATHI_BD_IVR_WEBHOOK_SECRET",
+    "ALPHA_SMS_API_KEY", "ALPHA_SMS_SENDER_ID", "GEMINI_API_KEY", "OPENAI_API_KEY",
+)
+
+
+@pytest.fixture(autouse=True)
+def _hermetic_provider_env(request, monkeypatch):
+    if request.node.module.__name__.endswith("test_live_providers"):
+        return
+    for name in _HERMETIC_ENV:
+        monkeypatch.delenv(name, raising=False)

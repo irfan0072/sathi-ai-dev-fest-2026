@@ -20,20 +20,50 @@ from app.mandates.router import get_mandate_service
 
 router = APIRouter(prefix="/api/v1", tags=["fraud-ops"])
 
-# Response-time targets per case reason (minutes). ASSUMPTIONS for the pilot playbook.
+# Case reason -> (priority, settings key for its response target in minutes).
 PRIORITY = {
-    "duress_signal": ("urgent", 15),
-    "customer_denied_request": ("high", 60),
-    "high_risk_request": ("high", 60),
-    "cash_gap_tolerance_exceeded": ("high", 240),
-    "repeated_code_failures_lockout": ("normal", 480),
-    "stated_amount_mismatch": ("normal", 480),
+    "duress_signal": ("urgent", "ops.sla_urgent_minutes"),
+    "customer_denied_request": ("high", "ops.sla_high_minutes"),
+    "high_risk_request": ("high", "ops.sla_high_minutes"),
+    "cash_gap_tolerance_exceeded": ("high", "ops.sla_cash_gap_minutes"),
+    "repeated_code_failures_lockout": ("normal", "ops.sla_normal_minutes"),
+    "stated_amount_mismatch": ("normal", "ops.sla_normal_minutes"),
 }
-DEFAULT_PRIORITY = ("normal", 1440)
+DEFAULT_TARGETS = {"ops.sla_urgent_minutes": 15, "ops.sla_high_minutes": 60,
+                   "ops.sla_cash_gap_minutes": 240, "ops.sla_normal_minutes": 480}
+UNKNOWN_REASON_MINUTES = 1440
 
 
-def case_priority(reason: str | None) -> tuple[str, int]:
-    return PRIORITY.get(reason or "", DEFAULT_PRIORITY)
+def response_targets() -> dict[str, int]:
+    from app.settings.router import get_settings
+
+    values = get_settings().values()
+    return {key: int(values[key]) for key in DEFAULT_TARGETS}
+
+
+def case_priority(reason: str | None, targets: dict[str, int] | None = None) -> tuple[str, int]:
+    targets = targets or DEFAULT_TARGETS
+    if reason not in PRIORITY:
+        return "normal", UNKNOWN_REASON_MINUTES
+    priority, key = PRIORITY[reason]
+    return priority, targets[key]
+
+
+REASON_TEXT = {
+    "duress_signal": "customer asked for help secretly",
+    "customer_denied_request": "customer said they did not ask for this",
+    "stated_amount_mismatch": "customer said a different amount",
+    "high_risk_request": "request looked risky",
+    "cash_gap_tolerance_exceeded": "customer got less cash than paid",
+    "repeated_code_failures_lockout": "too many wrong codes",
+}
+CALL_TEXT = {
+    "verified": "customer confirmed", "duress": "secret help signal",
+    "rejected": "customer refused",
+    "mismatch": "wrong amount", "no_answer": "no answer", "failed": "call failed",
+    "queued": "calling", "ringing": "ringing", "in_progress": "on the call",
+}
+SMS_TEXT = {"cashout_receipt": "receipt", "verification_call_missed": "missed-call note"}
 
 
 def _json(value: Any) -> Any:
@@ -81,15 +111,16 @@ def overview(
             "WHERE status IN ('open', 'escalated');"
         )
         open_cases = cur.fetchall()
+        targets = response_targets()
         breaches, by_reason = 0, {}
         for _cid, reason, _status, created, _agent in open_cases:
-            _priority, sla = case_priority(reason)
+            _priority, sla = case_priority(reason, targets)
             if (now - created).total_seconds() / 60 > sla:
                 breaches += 1
             by_reason[reason] = by_reason.get(reason, 0) + 1
         out["cases"] = {
             "open": len(open_cases),
-            "urgent": sum(1 for c in open_cases if case_priority(c[1])[0] == "urgent"),
+            "urgent": sum(1 for c in open_cases if case_priority(c[1], targets)[0] == "urgent"),
             "sla_breached": breaches,
             "by_reason": by_reason,
         }
@@ -144,9 +175,10 @@ def prioritized_cases(
         )
         rows = cur.fetchall()
     rank = {"urgent": 0, "high": 1, "normal": 2}
+    targets = response_targets()
     items = []
     for r in rows:
-        priority, sla = case_priority(r[3])
+        priority, sla = case_priority(r[3], targets)
         age = (now - r[6]).total_seconds() / 60
         items.append({
             "case_id": r[0], "mandate_id": str(r[1]) if r[1] else None, "agent_id": r[2],
@@ -173,7 +205,8 @@ def case_timeline(
         if not case:
             return JSONResponse(status_code=404, content={
                 "error": {"code": "CASE_NOT_FOUND", "message": f"Case {case_id} not found"}})
-        events = [{"at": case[1].isoformat(), "kind": "case", "label": f"Case opened: {case[2]}",
+        events = [{"at": case[1].isoformat(), "kind": "case",
+                   "label": f"Case opened: {REASON_TEXT.get(case[2], case[2])}",
                    "actor": "system"}]
         if case[0]:
             cur.execute(
@@ -188,20 +221,23 @@ def case_timeline(
                 (case[0],),
             )
             events += [{"at": r[0].isoformat(), "kind": "call",
-                        "label": f"Verification call ({r[2]}): {r[1]}", "actor": "server"}
+                        "label": f"Confirmation call: {CALL_TEXT.get(r[1], r[1])}",
+                        "actor": "Sathi"}
                        for r in cur.fetchall()]
             cur.execute(
                 "SELECT created_at, template, status FROM notifications WHERE mandate_id = %s;",
                 (case[0],),
             )
             events += [{"at": r[0].isoformat(), "kind": "sms",
-                        "label": f"SMS {r[1]}: {r[2]}", "actor": "server"}
+                        "label": f"SMS {SMS_TEXT.get(r[1], r[1])}: {r[2]}",
+                        "actor": "Sathi"}
                        for r in cur.fetchall()]
         cur.execute(
             "SELECT ts, reviewer, decision, note FROM review_actions WHERE case_id = %s;",
             (case_id,),
         )
-        events += [{"at": r[0].isoformat(), "kind": "review", "label": f"Decision: {r[2]}",
+        events += [{"at": r[0].isoformat(), "kind": "review",
+                    "label": f"Supervisor decided: {r[2]}",
                     "actor": r[1], "detail": {"note": r[3]}} for r in cur.fetchall()]
     events.sort(key=lambda e: e["at"])
     return {"case_id": case_id, "events": events}

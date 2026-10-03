@@ -8,10 +8,13 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 RUN apt-get update && apt-get install -y --no-install-recommends libgomp1 && rm -rf /var/lib/apt/lists/*
 
-COPY backend/pyproject.toml backend/requirements-dev.lock ./
-COPY backend/app ./app
+# Dependencies first, in their own layer: code edits no longer reinstall every package.
+COPY backend/requirements.txt backend/requirements-dev.lock ./
+RUN pip install --no-cache-dir -c requirements-dev.lock -r requirements.txt
 
-RUN pip install --no-cache-dir -c requirements-dev.lock .
+COPY backend/pyproject.toml ./
+COPY backend/app ./app
+RUN pip install --no-cache-dir --no-deps .
 
 COPY backend/migrations /app/migrations
 COPY data/config.yaml /app/data/config.yaml

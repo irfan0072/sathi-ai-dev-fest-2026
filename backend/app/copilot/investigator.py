@@ -168,16 +168,21 @@ class OpenAIClient:
         return data["choices"][0]["message"]["content"]
 
 
-def clients_from_env(env: dict[str, str] | None = None) -> list[Any]:
+def clients_from_env(env: dict[str, str] | None = None, order: str = "gemini_first",
+                     gemini_model: str | None = None,
+                     openai_model: str | None = None) -> list[Any]:
     env = env if env is not None else dict(os.environ)
-    clients: list[Any] = []
+    if order == "template_only":
+        return []
+    gemini = openai = None
     if env.get("GEMINI_API_KEY"):
-        clients.append(GeminiClient(env["GEMINI_API_KEY"],
-                                    env.get("SATHI_GEMINI_MODEL", "gemini-2.5-flash")))
+        gemini = GeminiClient(env["GEMINI_API_KEY"],
+                              gemini_model or env.get("SATHI_GEMINI_MODEL", "gemini-2.5-flash"))
     if env.get("OPENAI_API_KEY"):
-        clients.append(OpenAIClient(env["OPENAI_API_KEY"],
-                                    env.get("SATHI_OPENAI_MODEL", "gpt-4o")))
-    return clients
+        openai = OpenAIClient(env["OPENAI_API_KEY"],
+                              openai_model or env.get("SATHI_OPENAI_MODEL", "gpt-4o"))
+    ordered = [openai, gemini] if order == "openai_first" else [gemini, openai]
+    return [c for c in ordered if c is not None]
 
 
 def template_brief(evidence: dict[str, Any], facts: list[dict[str, Any]]) -> dict[str, Any]:

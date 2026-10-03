@@ -1,69 +1,126 @@
 import Icon from './Icon';
 
 const lifecycle = [
-  { step: 'requested', desc: 'Agent requests cash-out for customer', tone: 'badge-info' },
-  { step: 'verified', desc: 'Customer enters Bangla amount through the simulated keypad', tone: 'badge-secondary' },
-  { step: 'active', desc: 'Amount matches → one-time code issued to agent terminal', tone: 'badge-primary' },
-  { step: 'redeemed', desc: 'Agent enters code → cash disbursed', tone: 'badge-success' },
-  { step: 'review case', desc: 'Amount mismatch or cash gap → human supervisor reviews evidence', tone: 'badge-warning' },
-  { step: 'expired / revoked', desc: 'TTL expired or customer revokes before redemption', tone: 'badge-neutral' },
+  { step: '1. Request', desc: 'The agent types how much cash the customer wants.', tone: 'badge-info' },
+  { step: '2. Confirm', desc: 'The customer types the same amount on their own phone (in Bangla).', tone: 'badge-secondary' },
+  { step: '3. Code', desc: 'If the amounts match, the agent gets a code that works only once.', tone: 'badge-primary' },
+  { step: '4. Cash', desc: 'The agent types the code and gives the cash.', tone: 'badge-success' },
+  { step: 'Problem?', desc: 'If anything looks wrong, a supervisor checks it.', tone: 'badge-warning' },
+  { step: 'Stopped', desc: 'Requests expire after 15 minutes, and the customer can cancel any time.', tone: 'badge-neutral' },
 ];
 
 const principles = [
-  { title: 'No automated penalties', detail: 'Signals inform supervisor triage only. No automated account blocking, agent penalty, or beneficiary denial.' },
-  { title: 'Zero demographic inputs', detail: 'Gender, age, region and urban/rural are excluded from model features and used only for fairness evaluation.' },
-  { title: 'Calibration limits', detail: 'Calibration is an experimental objective on synthetic data. Live distribution shift needs ongoing validation.' },
-  { title: 'Pilot deployment path', detail: 'Amounts, caps and fees are simulation assumptions. Production needs banking integration and regulatory compliance.' },
+  {
+    title: 'People decide, not the AI',
+    detail: 'The AI only points out what to check. It never blocks an account or punishes an agent by itself.',
+  },
+  {
+    title: 'Fair to everyone',
+    detail: 'The AI never uses gender, age or where someone lives. We only use them to check it treats everyone fairly.',
+  },
+  {
+    title: 'Honest about limits',
+    detail: 'The AI was tested on made-up data. It must be checked again with real data before real use.',
+  },
+  {
+    title: 'Safe path to real use',
+    detail: 'Amounts, limits and fees here are estimates. Real use needs approval and a link to the real payment system.',
+  },
 ];
 
 const trackMap = [
-  { track: 'Track 07 · Open Innovation', what: 'Scoped one-time mandate confirmed on a call to the customer’s registered phone. No PIN sharing.' },
-  { track: 'Track 01 · Trust & Risk', what: 'Real-time risk with step-up verification, silent duress signal, AI investigation briefs for analysts.' },
-  { track: 'Track 05 · Merchant & Agent', what: '7-day cash-out demand forecast so agents open with enough cash; surge alerts.' },
-  { track: 'Track 04 · Growth & Campaign', what: 'Uplift targeting: invite customers the outreach actually persuades, within a fixed budget.' },
+  {
+    track: 'Safe cash-out · Track 07',
+    what: 'Customers get cash without sharing their PIN. They confirm the amount on their own phone.',
+  },
+  {
+    track: 'Fraud protection · Track 01',
+    what: 'Extra checks when something looks risky, a secret help signal, and AI summaries for supervisors.',
+  },
+  {
+    track: 'Help for agents · Track 05',
+    what: 'Tells each agent how much cash to keep ready for the next 7 days.',
+  },
+  {
+    track: 'More people using Sathi · Track 04',
+    what: 'Invites the customers who will really start using Sathi, within a fixed budget.',
+  },
 ];
 
 const pipeline = [
-  { layer: 'Synthetic data', desc: 'Zero PII or live data' },
-  { layer: 'Features', desc: 'Behavioral aggregates, no demographics' },
-  { layer: 'AI models', desc: 'Prototype classifiers, benchmark artifacts' },
-  { layer: 'Policy engine', desc: 'Deterministic rules, mandate lifecycle' },
-  { layer: 'Human review', desc: 'Supervisor console, audit log' },
+  { layer: 'Data', desc: 'Made-up customers and payments, no real people' },
+  { layer: 'Patterns', desc: 'How people usually pay and cash out' },
+  { layer: 'AI', desc: 'Spots unusual activity and predicts needs' },
+  { layer: 'Rules', desc: 'Fixed safety rules for every cash-out' },
+  { layer: 'People', desc: 'Supervisors make the final decision' },
 ];
 
 export default function ArchitecturePage() {
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-6">
       <div>
         <h2 className="page-title">How Sathi works</h2>
-        <p className="page-lead">Problem, solution and principles. All data and financial defaults are simulation assumptions.</p>
+        <p className="page-lead mt-1">
+          The problem we solve and how Sathi keeps cash-outs safe.
+        </p>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {trackMap.map((t) => (
-          <div key={t.track} className="panel"><div className="panel-body gap-1 p-4">
-            <div className="text-xs font-semibold text-primary">{t.track}</div>
-            <div className="text-sm opacity-80">{t.what}</div>
-          </div></div>
+          <div key={t.track} className="panel transition-colors hover:border-primary/40">
+            <div className="panel-body gap-1 p-4">
+              <div className="text-xs font-semibold text-primary">{t.track}</div>
+              <div className="text-sm text-base-content/80">{t.what}</div>
+            </div>
+          </div>
         ))}
       </div>
 
       <div className="grid gap-5 md:grid-cols-2">
-        <div className="panel border-error/30">
+        <div className="panel border-error/30 shadow-sm">
           <div className="panel-body">
-            <h3 className="flex items-center gap-2 font-semibold text-error"><Icon name="warning" />The problem: PIN disclosure</h3>
-            <p className="text-sm opacity-80">In this simulation, Rahima Begum, 70, receives an allowance through a mobile financial service. She cannot navigate USSD menus alone, so she tells her PIN to an agent and loses control of her account.</p>
-            <p className="text-sm opacity-80">Assisted use is assumed at <strong>30–50% of rural transactions</strong> (simulation assumption, not measured upay statistics).</p>
-            <blockquote lang="bn" className="rounded-box border-l-4 border-error bg-error/5 p-3 text-sm">“রহিমা তার পিন নম্বর এজেন্টকে বলে দিলেন — কারণ তিনি একা USSD মেনু পরিচালনা করতে পারেন না।”</blockquote>
+            <h3 className="flex items-center gap-2 font-semibold text-error">
+              <Icon name="warning" />
+              The problem: people share their PIN
+            </h3>
+            <p className="text-sm text-base-content/80">
+              Rahima, 70, gets a monthly allowance on her phone. She can&apos;t use the phone menus alone, so she tells her
+              PIN to the agent. Now someone else can take her money.
+            </p>
+            <p className="text-sm text-base-content/80">
+              We estimate <strong>30–50% of village cash-outs</strong> happen this way (our estimate, not official
+              upay numbers).
+            </p>
+            <blockquote
+              lang="bn"
+              className="rounded-box border-l-4 border-error bg-error/5 p-3 text-sm text-base-content"
+            >
+              “রহিমা তার পিন নম্বর এজেন্টকে বলে দিলেন — কারণ তিনি একা USSD মেনু পরিচালনা করতে পারেন না।”
+            </blockquote>
           </div>
         </div>
-        <div className="panel border-success/30">
+        <div className="panel border-success/30 shadow-sm">
           <div className="panel-body">
-            <h3 className="flex items-center gap-2 font-semibold text-success"><Icon name="check" />Sathi: scoped one-time mandate</h3>
-            <p className="text-sm opacity-80">Rahima never shares her PIN. She confirms the amount on a Bangla keypad. If it matches the agent&apos;s request, the agent terminal gets a single-use code.</p>
+            <h3 className="flex items-center gap-2 font-semibold text-success">
+              <Icon name="check" />
+              Our answer: confirm without a PIN
+            </h3>
+            <p className="text-sm text-base-content/80">
+              Rahima never shares her PIN. She types the amount on her own phone, in Bangla. If it matches what the
+              agent asked for, the agent gets a code that works only once.
+            </p>
             <ul className="flex flex-col gap-2 text-sm">
-              {['Single-use, 15-minute, agent-bound code', 'Server calls the registered phone; Bangla prompt never says the amount', 'Silent duress: type the amount with a leading 0 (e.g. 03000) — sounds normal, holds the payout, alerts an analyst', 'Amount mismatch goes to human review', 'Risk raises verification strength; humans decide'].map((item) => (
-                <li key={item} className="flex gap-2"><Icon name="check" className="mt-0.5 size-4 shrink-0 text-success" />{item}</li>
+              {[
+                'The code works once, for 15 minutes, only at that agent',
+                'We call her registered phone; the call never says the amount',
+                'Secret help: if forced, she types 0 first (like 03000). It looks normal, but the cash is stopped and a supervisor is alerted',
+                'A wrong amount goes to a supervisor',
+                'Risky requests need a phone call; people make the final decision',
+              ].map((item) => (
+                <li key={item} className="flex gap-2">
+                  <Icon name="check" className="mt-0.5 size-4 shrink-0 text-success" />
+                  {item}
+                </li>
               ))}
             </ul>
           </div>
@@ -71,27 +128,31 @@ export default function ArchitecturePage() {
       </div>
 
       <div className="grid gap-5 lg:grid-cols-2">
-        <div className="panel">
+        <div className="panel shadow-sm">
           <div className="panel-body">
-            <h3 className="font-semibold">Mandate lifecycle</h3>
+            <h3 className="font-semibold">Step by step</h3>
             <ul className="flex flex-col gap-3">
               {lifecycle.map((item) => (
                 <li key={item.step} className="flex items-start gap-3">
-                  <span className={`badge badge-soft ${item.tone} w-32 shrink-0 justify-center font-mono text-xs`}>{item.step}</span>
-                  <span className="text-sm opacity-80">{item.desc}</span>
+                  <span
+                    className={`badge badge-soft ${item.tone} w-32 shrink-0 justify-center font-mono text-xs`}
+                  >
+                    {item.step}
+                  </span>
+                  <span className="text-sm text-base-content/80">{item.desc}</span>
                 </li>
               ))}
             </ul>
           </div>
         </div>
-        <div className="panel">
+        <div className="panel shadow-sm">
           <div className="panel-body">
-            <h3 className="font-semibold">Responsible AI principles</h3>
+            <h3 className="font-semibold">Our promises</h3>
             <div className="grid gap-3 sm:grid-cols-2">
               {principles.map((item) => (
                 <div key={item.title} className="rounded-box bg-base-200 p-3">
                   <div className="text-sm font-semibold">{item.title}</div>
-                  <div className="mt-1 text-xs opacity-70">{item.detail}</div>
+                  <div className="mt-1 text-xs text-base-content/70">{item.detail}</div>
                 </div>
               ))}
             </div>
@@ -99,9 +160,9 @@ export default function ArchitecturePage() {
         </div>
       </div>
 
-      <div className="panel">
+      <div className="panel shadow-sm">
         <div className="panel-body">
-          <h3 className="font-semibold">Architecture: input → intelligence → action</h3>
+          <h3 className="font-semibold">How the system fits together</h3>
           <ul className="steps steps-vertical w-full md:steps-horizontal">
             {pipeline.map((item) => (
               <li key={item.layer} className="step step-primary">
@@ -112,7 +173,9 @@ export default function ArchitecturePage() {
               </li>
             ))}
           </ul>
-          <p className="muted text-center">Track 07 Submission — AI DEV FEST 2026 — DIU CPC × upay · Not connected to actual upay production infrastructure.</p>
+          <p className="muted text-center">
+            AI DEV FEST 2026 — DIU CPC × upay · Demo only, not connected to real upay accounts.
+          </p>
         </div>
       </div>
     </div>

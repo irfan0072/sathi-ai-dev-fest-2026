@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import os
 import urllib.parse
 from typing import Annotated, Any
 
@@ -21,23 +20,46 @@ from app.voice.service import VoiceError, VoiceService, load_phone_book
 router = APIRouter(prefix="/api/v1", tags=["voice"])
 
 _voice_service: VoiceService | None = None
+_injected = False
+_voice_fingerprint = ""
+VOICE_ENV_NAMES = (
+    "SATHI_VOICE_PROVIDER", "SATHI_PUBLIC_API_URL", "SATHI_VOICE_PHONE_BOOK",
+    "TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_FROM_NUMBER",
+    "SATHI_BD_IVR_BASE_URL", "SATHI_BD_IVR_API_KEY", "SATHI_BD_IVR_WEBHOOK_SECRET",
+    "SATHI_BD_IVR_LANGUAGE",
+)
 
 
 def get_voice_service() -> VoiceService:
+    """Provider follows the runtime setting; rebuilt when an analyst switches it."""
     global _voice_service
-    if _voice_service is None:
+    if _injected and _voice_service is not None:
+        return _voice_service
+    from app.settings.credentials import fingerprint, runtime_env
+    from app.settings.router import get_settings
+
+    global _voice_fingerprint
+    mandates = get_mandate_service()
+    env = runtime_env(mandates.get_connection)
+    choice = get_settings().get("voice.provider")
+    env["SATHI_VOICE_PROVIDER"] = choice
+    current = fingerprint(env, VOICE_ENV_NAMES)
+    if (_voice_service is None or _voice_fingerprint != current
+            or _voice_service.mandates is not mandates):
         _voice_service = VoiceService(
-            get_mandate_service(),
-            provider_from_env(),
-            public_base_url=os.getenv("SATHI_PUBLIC_API_URL", ""),
-            phone_book=load_phone_book(),
+            mandates,
+            provider_from_env(env),
+            public_base_url=env.get("SATHI_PUBLIC_API_URL", ""),
+            phone_book=load_phone_book(env),
         )
+        _voice_fingerprint = current
     return _voice_service
 
 
 def set_voice_service(service: VoiceService | None) -> None:
-    global _voice_service
+    global _voice_service, _injected
     _voice_service = service
+    _injected = service is not None
 
 
 def _error(err: VoiceError) -> JSONResponse:
@@ -67,14 +89,19 @@ def voice_config(
                          Depends(require_roles("agent", "customer_channel", "analyst"))],
 ) -> Any:
     """Which channel is live. Never returns credentials or phone numbers."""
-    provider = os.getenv("SATHI_VOICE_PROVIDER", "simulated").strip().lower()
+    from app.settings.credentials import runtime_env
+    from app.settings.router import get_settings
+
+    settings = get_settings().values()
+    provider = settings["voice.provider"]
+    env = runtime_env(get_mandate_service().get_connection)
     return {
         "provider": provider,
         "live_calls": provider in ("twilio", "bd_http_ivr"),
-        "public_webhook_configured": os.getenv("SATHI_PUBLIC_API_URL", "").startswith("https://"),
-        "step_up_enforced": os.getenv("SATHI_STEP_UP_ENFORCED", "false").lower() == "true",
+        "public_webhook_configured": env.get("SATHI_PUBLIC_API_URL", "").startswith("https://"),
+        "step_up_enforced": settings["risk.step_up_enforced"],
         "language": twiml.LANGUAGE,
-        "sms_provider": os.getenv("SATHI_SMS_PROVIDER", "simulated").strip().lower(),
+        "sms_provider": settings["sms.provider"],
     }
 
 

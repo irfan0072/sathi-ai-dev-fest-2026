@@ -66,8 +66,8 @@ class RiskAssessment:
         }
 
 
-def band_for(score: float) -> str:
-    for name, upper in BANDS:
+def band_for(score: float, bands: tuple = BANDS) -> str:
+    for name, upper in bands:
         if score < upper:
             return name
     return "high"
@@ -116,7 +116,9 @@ class MandateRiskEngine:
         agent_score_lookup: Callable[[str], float | None] | None = None,
         cap: Decimal | float = 5000,
         now: Callable[[], datetime.datetime] | None = None,
+        bands: tuple = BANDS,
     ) -> None:
+        self._bands = bands
         self._get_connection = get_connection
         self._agent_score_lookup = agent_score_lookup
         self._cap = float(cap)
@@ -299,7 +301,7 @@ class MandateRiskEngine:
                         cur, user_id, agent_id, float(amount), mandate_id
                     )
                     score, trace = score_signals(signals)
-                    band = band_for(score)
+                    band = band_for(score, self._bands)
                     if signals.get("agent_watchlisted", {}).get("strength") and band == "low":
                         band = "medium"  # watchlist always requires the call channel
                     result = RiskAssessment(mandate_id, score, band, STEP_UP[band], trace)

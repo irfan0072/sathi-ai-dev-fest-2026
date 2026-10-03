@@ -1,0 +1,99 @@
+// Plain-language labels shared across the console. Users are agents, customers and
+// supervisors, not engineers, so every code-like value gets a human name here.
+
+export const roleName = {
+  agent: 'Agent',
+  customer_channel: 'Customer',
+  analyst: 'Supervisor',
+};
+
+export const caseReason = {
+  duress_signal: 'Customer asked for help secretly',
+  customer_denied_request: 'Customer said “I didn’t ask for this”',
+  stated_amount_mismatch: 'Customer said a different amount',
+  high_risk_request: 'Request looked risky',
+  cash_gap_tolerance_exceeded: 'Customer got less cash than paid',
+  repeated_code_failures_lockout: 'Too many wrong codes at the agent',
+};
+export const reasonLabel = (reason) => caseReason[reason] || String(reason || '').replaceAll('_', ' ');
+
+export const caseStatus = {
+  open: 'Open', escalated: 'Escalated', approved: 'Approved', denied: 'Denied',
+};
+
+export const priorityName = { urgent: 'Urgent', high: 'High', normal: 'Normal' };
+
+export const requestStatus = {
+  requested: 'Waiting for customer',
+  verified: 'Customer confirmed',
+  active: 'Code given to agent',
+  redeemed: 'Cash paid',
+  rejected: 'Stopped',
+  expired: 'Expired',
+  revoked: 'Cancelled',
+};
+export const statusLabel = (s) => requestStatus[s] || s;
+
+export const callStatus = {
+  queued: 'Calling…',
+  ringing: 'Phone is ringing…',
+  in_progress: 'Customer is on the call',
+  verified: 'Customer confirmed',
+  not_verified: 'Customer did not confirm',
+  no_answer: 'No answer',
+  failed: 'Call failed',
+  duress: 'Secret help signal',
+  rejected: 'Customer refused',
+  mismatch: 'Wrong amount',
+};
+
+export const riskLevel = { low: 'Low risk', medium: 'Medium risk', high: 'High risk' };
+
+export const checkNeeded = {
+  keypad_or_call: 'Customer can confirm in the app or by phone call',
+  call_required: 'Customer must confirm by phone call',
+  call_and_review: 'Customer must confirm by phone call, and a supervisor will review it',
+};
+
+// Audit log actions, as a person would say them.
+export const eventName = {
+  mandate_requested: 'Agent asked for a cash-out',
+  mandate_verified: 'Customer confirmed the amount',
+  mandate_code_issued: 'Agent got the one-time code',
+  mandate_redeemed: 'Cash paid out',
+  mandate_revoked: 'Request cancelled',
+  mandate_expired: 'Request expired',
+  mandate_verification_mismatch: 'Customer said a different amount',
+  voice_call_placed: 'Confirmation call started',
+  voice_call_failed: 'Confirmation call failed',
+  voice_duress_signal: 'Customer asked for help secretly',
+  voice_customer_denied_request: 'Customer said “I didn’t ask for this”',
+  case_brief_generated: 'AI summary created',
+  agent_watchlisted: 'Agent put under extra checks',
+  agent_unwatchlisted: 'Extra checks removed',
+  settings_updated: 'Settings changed',
+  settings_reset: 'Setting reset',
+  credentials_updated: 'Service keys updated',
+  credential_cleared: 'Service key removed',
+  provider_tested: 'Service connection tested',
+  provider_test_call: 'Test call made',
+  provider_test_sms: 'Test SMS sent',
+};
+export const eventLabel = (action) => eventName[action] || String(action || '').replaceAll('_', ' ');
+
+// Names for the behaviours the AI models look at.
+export const featureName = {
+  fee_ratio_vs_official: 'Fee charged compared with the official fee',
+  allowance_spike_ratio: 'Extra cash-outs on allowance days',
+  agent_assisted_tx_ratio: 'How often an agent does it for them',
+  balance_mean: 'Usual account balance',
+  credit_to_cashout_hours_mean: 'Time between getting money and cashing out',
+  credit_to_cashout_hours_median: 'Usual time between getting money and cashing out',
+  credit_to_cashout_hours_min: 'Fastest cash-out after getting money',
+  fee_to_amount_ratio: 'Fee compared with the amount',
+  pin_entry_seconds_mean: 'Time taken to type the PIN',
+  pin_entry_seconds_median: 'Usual time taken to type the PIN',
+  session_steps_mean: 'Steps needed to finish a payment',
+  withdrawn_balance_ratio_max: 'Share of the balance withdrawn at once',
+};
+export const featureLabel = (f) => featureName[f] || String(f || '').replaceAll('_', ' ');

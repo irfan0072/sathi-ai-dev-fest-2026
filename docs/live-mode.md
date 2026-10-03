@@ -203,6 +203,73 @@ ASSUMPTIONS. It never contacts customers with non-positive predicted uplift. Exp
 extra enrollments versus spending the same budget on response-model IVR calls:
 278 vs 226 at ৳2,000, 623 vs 583 at ৳10,000, and 832 vs 537 at ৳50,000.
 
+## Settings page (analyst)
+
+**System → Settings** edits runtime options without a redeploy. A value set here overrides
+the matching environment variable, which overrides the built-in default. Each field shows
+its source. **Reset** removes the override. Every change writes a `settings_updated` or
+`settings_reset` audit row with old and new values. Set `SATHI_SETTINGS_EDITABLE=false`
+to make the page read-only on a deployment.
+
+| Group | Options |
+|---|---|
+| Channels | Verification call provider (simulated / Twilio / Bangladesh IVR), SMS provider (simulated / Alpha). A real provider can be chosen only after its secrets and an https `SATHI_PUBLIC_API_URL` are set |
+| Risk policy | Enforce call for medium/high risk; low and medium band upper bounds (low must stay below medium) |
+| AI assistant | Provider order (Gemini first, GPT-4o first, template only); model ids |
+| Case response targets | Urgent, high, cash-gap and normal targets in minutes |
+| Cost assumptions | USD→BDT, Twilio $/min, Bangladesh IVR ৳/call, SMS ৳, average call length; the Command Center cost card uses them |
+
+### Provider credentials on the Settings page
+
+Twilio, the Bangladesh IVR gateway, Alpha SMS, Gemini, OpenAI, the public webhook URL and
+the registered phone book can all be entered under **Settings → Provider credentials**.
+
+- Values are encrypted at rest with `SATHI_SECRETS_KEY` (server env, 32+ characters;
+  `make init-env` generates it, Render generates it from `render.yaml`). Keep it stable:
+  changing it makes saved values unreadable until re-entered.
+- Write-only: the page shows only the last 4 characters (phones masked). A saved value
+  overrides the env variable of the same name; **Clear** falls back to the env.
+- **Test connection** runs a free, read-only check (account, balance or model lookup).
+  **Place test call** / **Send test SMS** cost money and are limited to 5 per hour.
+- Every save, clear and test is written to the audit log without the value.
+- Demo analyst PINs are public. On a public deployment, enter the credentials, then set
+  `SATHI_SETTINGS_EDITABLE=false` so settings and credentials become read-only.
+
+Production go-live order: save the credentials, press **Test connection** on each card,
+place one test call and one test SMS to your own phone, pick the providers under
+**Channels**, then check **Go-live readiness** shows every selected provider as ready.
+
+Not editable on the page:
+
+- **Ledger policy** in `data/config.yaml` (caps, fees, attempts, expiry): hash-locked to
+  the verified model bundle.
+
+Values are stored in `app_settings` (migration 005). API: `GET /api/v1/settings`,
+`PUT /api/v1/settings` with `{"changes": {key: value}}`, `DELETE /api/v1/settings/{key}`.
+All three require the analyst role.
+
+### Go-live readiness panel
+
+The Settings page renders a "Go-live readiness" section below the secrets and phone-book
+panels. For each provider currently selected in Settings (Twilio, Bangladesh IVR, Alpha
+SMS, Gemini, OpenAI) it shows which environment variables are set on the server, which
+are still missing, and a one-line hint telling the operator exactly what to put in
+`.env` before flipping the matching selector. The panel does not touch the network;
+it is cheap enough to render on every page open.
+
+The **Run live probe** button calls `GET /api/v1/settings/probe`, which runs the same
+auth-only probes as `scripts/preflight.py` against each provider, in real time. Twilio
+and Alpha probes use the providers' own magic numbers / test endpoints (no call placed,
+no SMS sent); Gemini and OpenAI use a one-token handshake. The probe results land in
+each provider's panel card with a "re-run" button for that single provider. The
+panel is the analyst's single-page endpoint: the analyst's single view of what is
+actually wired up before flipping a selector in production.
+
+| Method | Path | Role | Purpose |
+|---|---|---|---|
+| GET | /settings/readiness | analyst | Env-var status per provider + selection summary; no network calls |
+| GET | /settings/probe?only=<name>&timeout=<s> | analyst | In-process auth-only probe of one or all providers |
+
 ## Reproduce
 
 ```sh
@@ -240,14 +307,54 @@ model runs at request time.
 `engine_version`). With `SATHI_STEP_UP_ENFORCED=true`, `POST /mandates/{id}/verify`
 returns `403 STEP_UP_REQUIRED` unless the mandate's step-up is `keypad_or_call`.
 
+## Go-live checklist (run before deploy)
+
+The project ships a one-shot preflight script and a guarded live-test
+module. Use them after filling in `.env`:
+
+```sh
+# 1. Probe every configured provider without exercising any application code.
+make live-preflight
+
+# 2. Run the live (real-network) provider test module. Skipped unless
+#    SATHI_LIVE_TESTS=1 + the matching provider env vars are set.
+SATHI_LIVE_TESTS=1 make live-tests
+
+# 3. (Optional) Roundtrip the BD-IVR webhook contract end-to-end against a
+#    local stand-in. Only useful until a real vendor confirms the contract.
+docker compose --profile live up -d bd_ivr_standin
+SATHI_LIVE_TESTS=1 SATHI_BD_IVR_API_KEY=... SATHI_BD_IVR_WEBHOOK_SECRET=... \
+    PYTHONPATH=backend pytest backend/tests/test_live_providers.py -v -k bd_ivr
+```
+
+### Credentials
+
+| Integration | Env vars (place in `.env`) | Probe target |
+|---|---|---|
+| Twilio voice | `SATHI_VOICE_PROVIDER=twilio`, `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER`, `SATHI_PUBLIC_API_URL` | `https://api.twilio.com/2010-04-01/Accounts/{sid}/Calls.json` |
+| Alpha SMS receipts | `SATHI_SMS_PROVIDER=alpha`, `ALPHA_SMS_API_KEY`, `ALPHA_SMS_SENDER_ID` | `https://api.sms.net.bd/sendsms` |
+| Gemini case brief | `GEMINI_API_KEY`, `SATHI_GEMINI_MODEL=gemini-2.5-flash` | `https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent` |
+| OpenAI case brief (fallback) | `OPENAI_API_KEY`, `SATHI_OPENAI_MODEL=gpt-4o` | `https://api.openai.com/v1/chat/completions` |
+| Bangladesh IVR (vendor pending) | `SATHI_VOICE_PROVIDER=bd_http_ivr`, `SATHI_BD_IVR_BASE_URL`, `SATHI_BD_IVR_API_KEY`, `SATHI_BD_IVR_WEBHOOK_SECRET` (≥16 chars), `SATHI_BD_IVR_LANGUAGE=bn-BD` | `{base}/calls` + signed callback |
+
+`scripts/preflight.py` probes each row with auth-only requests; it never
+places a call or sends an SMS. `backend/tests/test_live_providers.py` is
+the per-provider counterpart that hits the same wire formats from Python.
+
 ## Limits
 
 - Twilio and the `bd_http_ivr` adapter are covered by request-shape, signature and
-  end-to-end webhook tests. Neither has been run against a live account. No Bangladesh
-  vendor has confirmed the JSON contract yet.
-- Alpha SMS is tested against its documented request and response format, not live.
-- No LLM key was used in verification; the template path and the provider-chain contract
-  are tested with stub clients.
+  end-to-end webhook tests. Twilio is now probed live against the real API
+  with magic-number credentials (no real call placed). No Bangladesh vendor
+  has confirmed the JSON contract yet — the local stand-in gateway at
+  `scripts/bd_ivr_standin.py` roundtrips the webhook contract without a
+  vendor.
+- Alpha SMS is tested against its documented request and response format
+  AND probed live against the real `sendsms` endpoint (no real SMS sent to
+  a customer).
+- The Gemini and OpenAI clients are probed live with a 1-token handshake
+  when `SATHI_LIVE_TESTS=1`; the regular test suite uses stub clients so
+  no LLM credits are consumed by CI.
 - Liquidity and uplift results come from synthetic data with injected patterns. They
   show the method works, not real-world impact.
 - Duress protection depends on the customer remembering the rule. Like all confirmation,

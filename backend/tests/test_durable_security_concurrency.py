@@ -540,7 +540,7 @@ def test_daily_cashout_limit_rechecked_at_redemption_under_user_lock(
                 INSERT INTO transactions (
                     user_id, agent_id, txn_type, amount, fee, balance_after, channel, ts
                 ) VALUES (%s, %s, 'cash_out', 22000.00, 330.00, 27670.00, 'agent_initiated',
-                          now() AT TIME ZONE 'Asia/Dhaka');
+                          now());
                 """,
                 (user_id, agent_id),
             )

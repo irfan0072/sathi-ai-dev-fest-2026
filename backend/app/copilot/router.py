@@ -10,7 +10,7 @@ from fastapi.responses import JSONResponse
 
 from app.auth.dependencies import require_roles
 from app.auth.models import AuthenticatedPrincipal
-from app.copilot.investigator import CaseInvestigator
+from app.copilot.investigator import CaseInvestigator, clients_from_env
 from app.mandates.router import get_mandate_service
 from app.mandates.service import MandateService
 
@@ -20,10 +20,17 @@ _investigator: CaseInvestigator | None = None
 
 
 def get_investigator() -> CaseInvestigator:
-    global _investigator
-    if _investigator is None:
-        _investigator = CaseInvestigator()
-    return _investigator
+    """Injected investigator (tests) or one built from the runtime AI settings."""
+    if _investigator is not None:
+        return _investigator
+    from app.settings.credentials import runtime_env
+    from app.settings.router import get_settings
+
+    v = get_settings().values()
+    env = runtime_env(get_mandate_service().get_connection)
+    return CaseInvestigator(clients_from_env(env, order=v["ai.provider_order"],
+                                             gemini_model=v["ai.gemini_model"],
+                                             openai_model=v["ai.openai_model"]))
 
 
 def set_investigator(investigator: CaseInvestigator | None) -> None:

@@ -40,6 +40,8 @@ services:
       SATHI_BD_IVR_WEBHOOK_SECRET: ${SATHI_BD_IVR_WEBHOOK_SECRET:-}
       SATHI_BD_IVR_LANGUAGE: ${SATHI_BD_IVR_LANGUAGE:-bn-BD}
       SATHI_SMS_PROVIDER: ${SATHI_SMS_PROVIDER:-simulated}
+      SATHI_SETTINGS_EDITABLE: ${SATHI_SETTINGS_EDITABLE:-true}
+      SATHI_SECRETS_KEY: ${SATHI_SECRETS_KEY:-}
       ALPHA_SMS_API_KEY: ${ALPHA_SMS_API_KEY:-}
       ALPHA_SMS_SENDER_ID: ${ALPHA_SMS_SENDER_ID:-}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
@@ -62,6 +64,37 @@ services:
       - "127.0.0.1:${FRONTEND_PORT:-13000}:80"
     depends_on:
       - api
+
+  # Local stand-in for the Bangladesh JSON IVR vendor. Used ONLY by live
+  # integration tests to roundtrip the Sathi API's bd_http_ivr webhook
+  # contract without depending on a real (unconfirmed) vendor. Started only
+  # when the user runs `docker compose --profile live up`. Default behavior
+  # is unchanged.
+  bd_ivr_standin:
+    image: python:3.13-slim
+    restart: "no"
+    profiles: ["live"]
+    working_dir: /srv
+    command: ["python", "bd_ivr_standin.py", "--host", "0.0.0.0", "--port", "18443"]
+    environment:
+      SATHI_BD_IVR_API_KEY: ${SATHI_BD_IVR_API_KEY:-demo-bd-ivr-api-key-for-live-integration-only-please-rotate}
+      SATHI_BD_IVR_WEBHOOK_SECRET: ${SATHI_BD_IVR_WEBHOOK_SECRET:-demo-bd-ivr-webhook-secret-please-rotate-16-chars-min}
+      SATHI_BD_IVR_STANDIN_SCENARIO: ${SATHI_BD_IVR_STANDIN_SCENARIO:-digits}
+      SATHI_BD_IVR_CALL_DELAY: ${SATHI_BD_IVR_CALL_DELAY:-0.5}
+    volumes:
+      - ./scripts/bd_ivr_standin.py:/srv/bd_ivr_standin.py:ro
+    ports:
+      - "127.0.0.1:${BD_IVR_STANDIN_PORT:-18443}:18443"
+    # The stand-in only needs the python interpreter; install httpx/uvicorn
+    # at runtime so the image stays tiny and we do not pin new dependencies
+    # in the main backend Dockerfile.
+    entrypoint: ["sh", "-c", "pip install --quiet --no-cache-dir 'fastapi>=0.110.0' 'uvicorn[standard]>=0.28.0' 'httpx>=0.27.0' && exec \"$@\"", "--"]
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import urllib.request,sys; r=urllib.request.urlopen(\"http://127.0.0.1:18443/health\",timeout=2); sys.exit(0 if r.status==200 else 1)'"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
 volumes:
   postgres_data:

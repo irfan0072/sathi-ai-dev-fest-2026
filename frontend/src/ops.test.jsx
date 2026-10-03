@@ -11,14 +11,14 @@ const clean = (html) => html.replace(/<!-- -->/g, '');
 describe('Fraud operations UI', () => {
   it('command center starts in a loading state without invented numbers', () => {
     const html = renderToString(<CommandCenter />);
-    expect(html).toContain('Fraud Command Center');
-    expect(html).toContain('Loading live operations');
+    expect(html).toContain('Today at a glance');
+    expect(html).toContain('Loading today’s activity');
     expect(html).not.toContain('৳');
   });
 
   it('review queue offers priority filters', () => {
     const html = renderToString(<ReviewQueue />);
-    for (const label of ['Open', 'Urgent', 'Past target', 'All']) expect(html).toContain(label);
+    for (const label of ['Open', 'Urgent', 'Late', 'All']) expect(html).toContain(label);
   });
 
   it('watch button explains its effect', () => {
@@ -29,14 +29,21 @@ describe('Fraud operations UI', () => {
   it('state bar always labels each state with its count', () => {
     const html = clean(renderToString(<StateBar parts={[{ label: 'Low', value: 3, color: 'red' }, { label: 'High', value: 1, color: 'blue' }]} />));
     expect(html).toContain('Low <strong>3</strong>');
-    expect(renderToString(<StateBar parts={[{ label: 'Low', value: 0, color: 'red' }]} />)).toContain('No data');
+    expect(renderToString(<StateBar parts={[{ label: 'Low', value: 0, color: 'red' }]} />)).toContain('Nothing yet');
   });
 
   it('sms inbox explains when receipts arrive', () => {
-    expect(renderToString(<SmsInbox />)).toContain('receipt SMS arrives after every cash-out');
+    expect(renderToString(<SmsInbox />)).toContain('receipt SMS after every cash-out');
   });
 
-  it('navigation lists the command center', () => {
-    expect(renderToString(<App />)).toContain('Command Center');
+  it('navigation lists the command center', async () => {
+    const { api } = await import('./api');
+    const original = api.getSession();
+    api.__setSessionForTests({ role: 'analyst', subject: 'demo_analyst', allowed_users: [] });
+    try {
+      expect(renderToString(<App />)).toContain('Dashboard');
+    } finally {
+      api.__setSessionForTests(original);
+    }
   });
 });

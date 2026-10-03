@@ -375,7 +375,7 @@ def test_integration_migrate_twice(test_db_schema):
     applied1 = run_migrations(test_db_url, schema=schema_name)
     assert applied1 == [
         "001_initial.sql", "002_durable_mandates.sql", "003_live_channels.sql",
-        "004_fraud_ops.sql",
+        "004_fraud_ops.sql", "005_app_settings.sql", "006_provider_credentials.sql",
     ]
 
     # Second migration run: should no-op
@@ -390,7 +390,7 @@ def test_integration_migrate_twice(test_db_schema):
                 "SELECT version, checksum FROM schema_migrations ORDER BY version ASC;"
             )
             rows = cur.fetchall()
-            assert len(rows) == 4
+            assert len(rows) == 6
             assert rows[0][0] == "001_initial.sql"
             assert len(rows[0][1]) == 64
             assert rows[1][0] == "002_durable_mandates.sql"

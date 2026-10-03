@@ -19,8 +19,17 @@ RUN printf '%s\n' \
     '    listen 80;' \
     '    server_name localhost;' \
     '' \
+    '    root /usr/share/nginx/html;' \
+    '' \
+    '    # Hashed build assets never change: cache them for a year.' \
+    '    location /assets/ {' \
+    '        add_header Cache-Control "public, max-age=31536000, immutable";' \
+    '        try_files $uri =404;' \
+    '    }' \
+    '' \
+    '    # The app shell must be revalidated so a rebuild is picked up on reload.' \
     '    location / {' \
-    '        root /usr/share/nginx/html;' \
+    '        add_header Cache-Control "no-cache";' \
     '        index index.html index.htm;' \
     '        try_files $uri $uri/ /index.html;' \
     '    }' \
