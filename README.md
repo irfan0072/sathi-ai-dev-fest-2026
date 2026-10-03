@@ -2,7 +2,7 @@
 
 AI DEV FEST2026, DIU CPC × upay, Track07 Open Innovation. Team: Runtime Terrors.
 
-**Synthetic prototype, verified local API and evaluation.** T023b:335backend tests/zero skips,17frontend tests,lint/build and final reproduction pass. Held-out assisted PR-AUC0.8091 versus rule0.6967; anomaly recall2/2 injected skimmers,0/4 honest high-volume false flags (small denominators). Durable authenticated API verifiedT024. Console authentication/artifact wiring and public deployment remain pendingT025/T026. See [handoff](docs/handoff.md).
+**Verified local synthetic prototype.** Full352backend tests/zero skips,30frontend tests, lint and production build pass. Browser roles, Bangla confirmation, terminal-only one-time codes, redemption/replay rejection, cash-gap review and ledger receipts work against the real API. Automatic startup preserves spent balances. Held-out assisted PR-AUC0.8091 versus rule0.6967; agent ensemble detects2/2 injected skimmers with0/4 honest high-volume false flags (small denominators). Public hosting remains pending; the human requested local work. See [verification record](docs/verification-record.md).
 
 ## Overview and features
 
@@ -14,9 +14,10 @@ Sathi explores scoped, expiring, one-time cash-out authority instead of sharing 
 | Assisted rule/LightGBM with disjoint calibration and faithful SHAP | T023b verified results and saved models |
 | Agent fee rule, train-derived volume peers and Isolation Forest | T023b verified rules/model/report-signal comparisons |
 | Scoped synthetic JWT, durable mandates/attempts/locks/ledger/audit | T024 local API verified |
-| Keypad/Bangla digits, terminal-only code, cash reports, real receipts/cases | T024 actual API flow verified; console integration pending |
-| React console | Existing layout retained; illustrative cards labelled and missing metrics unavailable |
-| Public deployment, final video/report package | Pending |
+| Keypad/Bangla digits, terminal-only code, cash reports, real receipts/cases | Actual API/browser flow verifiedT025 |
+| React console | Scoped in-memory role login; verified saved outreach/risk/metrics; unavailable evidence fails closed |
+| Local walkthrough/report package | [Recorded walkthrough](docs/demo-walkthrough.html), [MP4](docs/demo-walkthrough.mp4), [report](docs/report-draft.md) |
+| Public deployment | Pending human dashboard action; no live URL claimed |
 
 Financial figures are **ASSUMPTIONS**, never actual upay rates. All identities/data/transactions are synthetic. Amount confirmation cannot establish coercion, honesty, speaker identity or physical cash delivery. No real upay integration, voice recognition or external LLM is implemented in the verified flow.
 
@@ -36,16 +37,14 @@ python3 -m venv .venv
 npm --prefix frontend ci
 make init-env
 docker compose up --build -d
-docker compose exec -T api python -m app.data.cli migrate
-docker compose exec -T api python -m app.data.cli demo-seed
 make smoke-skeleton
 ```
 
-The repository currently requires authenticated Git access; the human must make it public before submission. Installation/checks were verified from a Phase0 clean clone; a final repaired-version clean-clone run remains pendingT027. Migration/demo-seed commands above were independently run against the current API and returned no-op, preserving existing records/spent balances. T026 will add automatic startup bootstrap; until then these explicit commands are needed for a new database.
+The repository currently requires authenticated Git access; make it public before submission. Final committed source was checked independently from a clean checkout with locked dependencies. Compose startup validates signing/config/artifacts before writes, applies existing migrations and seeds only the small namespace777 demo. It never generates training data or replenishes spent balances. The local production-shaped bootstrap and repeated restart are verified; Render itself has not been deployed.
 
 `make init-env` creates ignored `.env` and generates a random signing secret without printing it; valid existing values are preserved. Runtime Compose reads `.env`. Do not override it with `--env-file .env.example`: the example signing placeholder fails authentication. Database data persist in the named volume; `docker compose stop` preserves them. Do not remove volumes to troubleshoot.
 
-Open [local console](http://127.0.0.1:13000) and [API health](http://127.0.0.1:18000/health). The current console's authenticated flow is pendingT025; use the verified API contracts meanwhile. Rebuild the API after code/config edits. For host development, `make run-api` and `make run-console` require explicitly supplied environment variables; Make does not source `.env`. Vite prints its development port, which can differ from the container's13000.
+Open [local console](http://127.0.0.1:13000) and [API health](http://127.0.0.1:18000/health). Sign in using the public synthetic fixture roles below. Rebuild the API after code/config edits. For host development, `make run-api` and `make run-console` require explicitly supplied environment variables; Make does not source `.env`. Vite prints its development port, which can differ from the container's13000.
 
 ## Environment names
 
@@ -55,6 +54,8 @@ Open [local console](http://127.0.0.1:13000) and [API health](http://127.0.0.1:1
 | `DATABASE_URL` | API database connection; Compose constructs its internal DSN |
 | `JWT_SECRET` | Required server signing secret, generated locally or by Render; never commit/share |
 | `SATHI_CONFIG` | Configuration path, default `data/config.yaml` |
+| `SATHI_ARTIFACTS_DIR` | Trusted local curated bundle, default `data/artifacts/deployment`; verified before use, no runtime model loading |
+| `PORT` | Bootstrap container/hosting port, default8000; Compose maps to host18000 |
 | `API_PORT`, `FRONTEND_PORT`, `POSTGRES_PORT` | Host bindings, defaults18000/13000/5432 |
 | `API_URL`, `FRONTEND_URL` | Smoke-test URLs |
 | `CORS_ORIGINS` | Explicit allowed console origins; production needs the actual public HTTPS origin |
@@ -70,7 +71,7 @@ Open [local console](http://127.0.0.1:13000) and [API health](http://127.0.0.1:1
 | `demo_customer` | `5678` | Own amount verification/cash report/receipt; no terminal code |
 | `demo_analyst` | `9012` | Human-review cases and saved synthetic evidence; no redemption |
 
-Log in through `POST /auth/demo-login` using the API contract. These public fixture PINs are synthetic demo data, separate from the private signing secret. The initial assumed50,000BDT credit is never replenished by repeated seeding. A3,000BDT mandate has assumed45BDT fee and3,045BDT debit. See [API contracts](docs/api-contracts.md) and [demo script](docs/demo-script.md).
+Use the console’s role selector or `POST /api/v1/auth/demo-login` using the API contract. JWTs remain in browser memory; switching roles/signing out clears them. These public fixture PINs are synthetic demo data, separate from the private signing secret. The initial assumed50,000BDT credit is never replenished by repeated seeding. A3,000BDT mandate has assumed45BDT fee and3,045BDT debit. See [API contracts](docs/api-contracts.md) and [demo script](docs/demo-script.md).
 
 ## Tests and build
 
@@ -82,7 +83,7 @@ make test lint build-console
 make smoke-skeleton
 ```
 
-If the test database already exists, retain it. Tests use isolated disposable schemas in that dedicated database. The Makefile's local example DSN uses the example local password; if your local password/port differs, set `SATHI_TEST_DATABASE_URL` accordingly without committing it. Backend checks cover determinism, leakage, disjointness, models, authentication, parsing, persistence/concurrency, replay/lockout and receipts; frontend checks cover the current console. Hosted CI status remains unverified; a push is not evidence of CI success.
+If the test database already exists, retain it. Tests use isolated disposable schemas in that dedicated database. The Makefile's local example DSN uses the example local password; if your local password/port differs, set `SATHI_TEST_DATABASE_URL` accordingly without committing it. Backend checks cover determinism, leakage, disjointness, models, authentication, parsing, persistence/concurrency, replay/lockout and receipts; frontend checks cover the current console. GitHub CI for code db41989 is independently verified completed/success in the [verification record](docs/verification-record.md); later commits need their own CI confirmation.
 
 ## Simulation and reproducibility
 
@@ -100,6 +101,6 @@ This generates disjoint train/validation/test and separate shifted data, checks 
 
 ## Deployment and disclosures
 
-Public runtime URL: pending. Work remains local until the verified guide and human dashboard deployment. See [Render preparation](docs/deploy-guide.md); never use guessed service URLs or send credentials. Final report/video/compliance checks remain pending in [report draft](docs/report-draft.md), [task board](tasks/BOARD.md) and [rules checklist](docs/rules-checklist.md).
+Public runtime URL: pending. Work remains local until the verified guide and human dashboard deployment. See [Render preparation](docs/deploy-guide.md); never use guessed service URLs or send credentials. Package and remaining human compliance facts are recorded in [report draft](docs/report-draft.md), [task board](tasks/BOARD.md) and [rules checklist](docs/rules-checklist.md).
 
-Codex orchestrates, edits docs/config, independently reviews/tests and manages Git; it completed narrowly approved implementation corrections during an Antigravity quota outage. Antigravity IDE produced inherited work and is paused; Antigravity CLI(agy) implements current tasks. See [complete development history](docs/ai-dev-log.md) and [decisions](docs/decisions.md). Source planning/schema/config preceded implementation as disclosed. No real PII, upay data, external dataset, paid runtime API or pretrained external model weights are used. Dependencies are open source; GitHub hosts source and Render is planned hosting. A bounded qualitative study informs the problem framing and is cited in the report; it does not validate simulation accuracy or national prevalence.
+Codex orchestrated, edited docs/config, independently reviewed/tested and managed Git. With explicit human approval it also implemented repairs and the final console/bootstrap when Antigravity quota was exhausted or CLI transport stalled. Antigravity IDE produced inherited work and remains paused; Antigravity CLI(agy1.2.15) completed earlier implementation tasks. See [complete development history](docs/ai-dev-log.md) and [decisions](docs/decisions.md). Source planning/schema/config preceded implementation as disclosed. No real PII, upay data, external dataset, paid runtime API or pretrained external model weights are used. Dependencies are open source; GitHub hosts source and Render is planned hosting. A bounded qualitative study informs the problem framing and is cited in the report; it does not validate simulation accuracy or national prevalence.

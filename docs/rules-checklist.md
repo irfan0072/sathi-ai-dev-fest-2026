@@ -1,29 +1,35 @@
-# Rulebook Compliance Checklist (AI DEV FEST 2026, AI Hackathon)
+# Rulebook compliance — evidence and remaining human facts
 
-## Before T+0
-- [ ] Confirm T+0 time, submission channel and file formats with organizers
-- [ ] Do NOT build a substantially complete challenge-specific solution early (rules 4.3, 9.3). Scaffolding and planning documents only.
-- [ ] All team members officially registered; no substitutions (2.2)
-- [ ] Devices, backup internet, institutional ID cards ready
+Updated3October2026. This checklist records verified evidence without certifying unknown organizer/team facts. Submission deadline4October10:00Asia/Dhaka; internal target08:00. Human-confirmedT+0:1October10:00Asia/Dhaka.
 
-## During the 72 hours
-- [ ] Public GitHub repository; small, frequent commits from the first hour (5.1-5.3)
-- [ ] Code pushed before the initial deadline (5.5)
-- [ ] Every member can explain design, implementation and AI components (4.5, 9.4)
-- [ ] Keep AI tool prompt/development history available (General Rules 5.6)
-- [ ] Use own AI accounts only; no sharing of code, prompts or credentials with other teams (General Rules 4.2, 5.3)
-- [ ] Disclose significant datasets, APIs, services and pre-existing components if asked (4.4)
+## Before T+0 / team
 
-## Submission (by T+72h)
-- [ ] Video demonstration (7.2)
-- [ ] Project report (7.3)
-- [ ] Public repo link with source, project files and complete README (5.4, 6)
-- [ ] README includes: overview, features, stack, requirements, setup, env vars (placeholders), run/build commands, live URL, testing, other configuration
-- [ ] No secrets committed
-- [ ] Check the submission is complete and accessible before the deadline; late submissions are not accepted (General Rules 6)
+- [x] T+0 confirmed by human; recorded in [decisions](decisions.md).
+- [ ] Pre-start compliance declaration: source/planning history is disclosed; human must confirm organizers accept it. No invented certification of rules4.3/9.3.
+- [ ] Official team registration/no substitutions, institutional IDs/devices/backup internet: human confirmation required.
+- [ ] Organizer submission channel and exact report/video formats: human confirmation required.
 
-## On-site (7 October)
-- [ ] Config-driven policy and pluggable features so updates are quick
-- [ ] Continuous commits during the update window; push within the allotted time (5.2, 8.3)
-- [ ] Prepare for the 90-minute second evaluation: demo updated project, explain new work, answer questions (8.4)
-- [ ] Judging weights are announced separately; both evaluations count (8.5)
+## Development
+
+- [x] Small source commits and authenticated pushes before stated deadline; [GitHub repository](https://github.com/irfan0072/sathi-ai-dev-fest-2026).
+- [ ] Public repository requirement: authenticated API confirms private=true; human must change visibility and anonymous access must be rechecked.
+- [x] Full AI prompt/task/feedback/test/commit history available in [AI development log](ai-dev-log.md) and task briefs; Codex fallback disclosed.
+- [x] Datasets/APIs/services/pre-existing components and tools disclosed in README/report; only synthetic generated data used.
+- [x] Models support outreach/review; deterministic rules and durable ledger govern mandates; demographics evaluation-only; leakage tests pass.
+- [ ] Own AI accounts/no sharing with other teams: human declaration required.
+- [ ] Every member can explain design/implementation/AI: human rehearsal confirmation required.
+
+## Submission package
+
+- [x] Local video demonstration: [3-minute MP4](demo-walkthrough.mp4), [captioned player](demo-walkthrough.html), [script](demo-script.md). Assembled actual UI captures, not continuous real-time screen recording; organizer format acceptance pending.
+- [x] [Project report draft](report-draft.md) covers problem, idea, implementation, AI, results, intended impact and limitations with actual values.
+- [x] README covers overview/features/stack/requirements/setup/environment/run/build/testing/config/disclosures. Public URL explicitly pending, never fabricated.
+- [x] Clean committed-source352backend/30frontend tests,lint/build and deterministic one-command reproduction verified; [record](verification-record.md).
+- [x] Reviewed tracked/staged files and known-secret patterns; ignored.env/raw data/JWT/code logs excluded. Public fixture PINs intentionally disclosed.
+- [ ] Public live URL/remote smoke if required: human requested local work; no hosting-account action authorized/performed.
+- [ ] Organizer accepts the report/video files, all links accessible anonymously, and final submission received before deadline: human action/evidence required.
+
+## On-site7October
+
+- [x] Config/feature guard/update checklist and local fallback prepared in [on-site readiness](on-site-readiness.md).
+- [ ] Continuous update-window commits/pushes,90-minute presentation/questions and announced judging weights: future organizer/human facts, not pre-ticked.

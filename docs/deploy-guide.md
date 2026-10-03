@@ -35,6 +35,6 @@ For the final days, an always-on API compute plan would reduce cold-start risk; 
 - Reproducible inference bundle: committed69a48eb, frozen run sourceac18e14; exact clean-clone numerical/data-hash reproduction verified.
 - Startup bootstrap: verifiedT026; repeated startup preserves43910BDT spent balance and five cases, no ML imports. Full352backend/30frontend tests,lint/build pass.
 - Blueprint: YAML syntax parsed, fields reviewed against official docs; no Render server/account validation performed.
-- Public URLs, remote flow and recorded fallback: pending human deployment; local recorded walkthrough/package verification continues.
+- Public URLs, remote flow and recorded fallback: pending human deployment; [local recorded walkthrough](demo-walkthrough.html) and [verification record](verification-record.md) are available.
 
 References checked3October2026. No token, password or SSH key is needed in chat.

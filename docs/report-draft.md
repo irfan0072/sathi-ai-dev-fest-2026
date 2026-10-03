@@ -1,12 +1,12 @@
 # Sathi — submission report draft
 
-Status: engineering draft, 3 October 2026. Synthetic simulation only. Final evaluation and the durable local API are verified; console/public deployment and final demo evidence remain pending. No real upay customer data, rates or transactions are used.
+Status: engineering draft, 3 October 2026. Synthetic simulation only. Final evaluation and the durable local API are verified; local console/startup/demo evidence are verified; public deployment and organizer/manual facts remain pending. No real upay customer data, rates or transactions are used.
 
 ## Summary
 
 Sathi explores a cash-out flow in which a customer confirms an amount and an agent receives a scoped, expiring, one-time code. Behavioral models suggest outreach and agent review; deterministic policy governs the mandate. A synthetic simulation lets us compare rules and models without collecting customer PINs or personal financial data.
 
-Verified evaluation checkpoint T023b:335 backend tests with zero skips,17 frontend tests, lint/build and one-command reproduction pass; T024 rebuilt Docker API and actual flow pass. The actual local API flow exercised scoped login, amount confirmation, one-time agent code, redemption, replay rejection, cash reporting, receipt and persisted review/lockout state across restart. All preexisting simulation rows and migration001 were preserved. The console's authenticated flow is still pending T025. Engineering checks do not establish fraud reduction or real-world accuracy. Held-out assisted PR-AUC is0.8091 versus rule0.6967; simulated agent ensemble detects2/2 injected skimmers and flags0/4 honest high-volume agents. These agent denominators are small; precision@15 is2/15.
+Verified evaluation checkpoint T023b:335 backend tests with zero skips,17 frontend tests, lint/build and one-command reproduction pass; T024 rebuilt Docker API and actual flow pass. The actual local API flow exercised scoped login, amount confirmation, one-time agent code, redemption, replay rejection, cash reporting, receipt and persisted review/lockout state across restart. All preexisting simulation rows and migration001 were preserved. The authenticated console is verifiedT025; T026 full352backend/zero skips and30frontend checks pass. Engineering checks do not establish fraud reduction or real-world accuracy. Held-out assisted PR-AUC is0.8091 versus rule0.6967; simulated agent ensemble detects2/2 injected skimmers and flags0/4 honest high-volume agents. These agent denominators are small; precision@15 is2/15.
 
 ## Problem and proposed idea
 
@@ -14,9 +14,9 @@ Consider an illustrative customer who needs assistance using a financial service
 
 A qualitative study published21August2025 examined68 interviews with older adults and widows in Kurigram and described assistance needs and PIN sharing when accessing mobile allowances. This supports investigating assisted use; it does not establish national prevalence or validate Sathi's simulation percentages. [Shitol et al., Experiences of older adults and widows with government allowance programmes](https://onlinelibrary.wiley.com/doi/10.1111/ijsw.70033).
 
-## Implemented solution and remaining repairs
+## Implemented solution
 
-The project contains a configurable synthetic generator, agent/seed-based splits, rule baselines, LightGBM and anomaly model code, a React console and a FastAPI service. The local console now distinguishes illustrative samples from verified outputs and shows unavailable metrics when evaluation artifacts are missing.
+The project contains a configurable synthetic generator, agent/seed-based splits, rule baselines, LightGBM and anomaly model code, a React console and a FastAPI service. The console displays verified saved predictions, reasons and evaluation results with frozen source/seed/window provenance. Unavailable or tampered artifacts fail closed without substituting sample metrics. Customer, agent and analyst roles are separate.
 
 Verified local API capabilities include durable PostgreSQL mandate state, server-side attempts, scoped synthetic authentication, terminal-only code issuance, exact ledger fees and actual receipts. A3,000BDT synthetic redemption debited3,045BDT with an assumed45BDT fee. Public deployment has not been verified.
 
@@ -93,10 +93,20 @@ The contribution is the combination of scoped cash-out authority, independent am
 
 ## Disclosures
 
-Development tools: Codex orchestration/review, Antigravity IDE for inherited work, and Antigravity CLI(agy) for implementation repairs. Application components include Python/FastAPI/PostgreSQL, React/Vite, LightGBM/scikit-learn/SHAP and standard open-source dependencies. Data are generated locally. No external inference API is required for the current verified console; receipts use validated templates. GitHub hosts source; Render deployment is planned through the human's dashboard and remains unverified.
+Development tools: Codex orchestration/review/documentation and explicitly approved implementation fallback during quota/CLI outages; Antigravity IDE for inherited work (paused); Antigravity CLI(agy1.2.15) for earlier implementation repairs. Application components include Python/FastAPI/PostgreSQL, React/Vite, LightGBM/scikit-learn/SHAP and standard open-source dependencies. Data are generated locally. No external inference API is required for the current verified console; receipts use validated templates. GitHub hosts source; Render deployment is planned through the human's dashboard and remains unverified.
 
 ## Appendix and completion items
 
 Repository: https://github.com/irfan0072/sathi-ai-dev-fest-2026
 
-Before submission: finish console/bootstrap gates and screenshots; verify the final README from clean clone; dry-run/record the actual demo; obtain human public-deployment, registration and submission-channel/format evidence. No account visibility, live URL or video claim is inferred from local success.
+Local browser dry run: transactions424200038067/424200038068, customer৩,০০০ confirmation, terminal-only issuance, duplicate/replay rejection,2800 report/200gap(case5), ledger receipt and human escalation. Separate2500 mismatch createdcases6/7 and rejected on second attempt. Bootstrap/restarts preserve balances/cases. Screenshots below and a captioned [local walkthrough](demo-walkthrough.html)/[MP4](demo-walkthrough.mp4) provide evidence. The walkthrough is assembled from actual UI captures, not continuous real-time screen recording; active codes are omitted. Final clean-checkout evidence is recorded in [verification record](verification-record.md).
+
+Before submission: obtain human public-repository, deployment (if required), registration and submission-channel/format evidence. No account visibility, live URL or video claim is inferred from local success.
+
+## Local evidence
+
+![Customer amount confirmation](evidence/customer-confirmation.jpg)
+
+![Actual Bangla ledger receipt; physical delivery is not proved](evidence/customer-receipt.jpg)
+
+![Verified saved evaluation metrics](evidence/evaluation-metrics.jpg)
