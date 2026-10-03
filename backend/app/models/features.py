@@ -10,6 +10,7 @@ from __future__ import annotations
 import datetime
 import math
 from collections import defaultdict
+from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
@@ -23,8 +24,12 @@ def extract_user_features(
     users_data: list[dict[str, Any]],
     transactions_data: list[dict[str, Any]],
     sessions_data: list[dict[str, Any]],
+    as_of: str | datetime.datetime | None = None,
+    window_days: int | None = None,
+    config: dict[str, Any] | None = None,
+    config_path: str | Path | None = None,
 ) -> tuple[pd.DataFrame, pd.Series, pd.DataFrame, list[str]]:
-    """Extract behavioral features for customers.
+    """Extract behavioral features for customers within configured feature window.
 
     Returns:
         X (pd.DataFrame): Pure numeric behavioral features adhering to guard allowlist.
@@ -32,13 +37,72 @@ def extract_user_features(
         slices (pd.DataFrame): Evaluation slices (gender, age_band, region, urban_rural).
         user_ids (list[str]): Customer IDs preserving alignment.
     """
-    # Group transactions and sessions by user_id
-    tx_by_user: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    from app.data.config import load_config, validate_config
+
+    cfg = load_config(config_path) if config is None else validate_config(config)
+    if window_days is not None:
+        if isinstance(window_days, bool) or not isinstance(window_days, int) or window_days <= 0:
+            raise ValueError("window_days must be a positive integer")
+        w_days = window_days
+    else:
+        w_days = cfg["models"]["assisted_classifier"]["features_window_days"]
+
+    if as_of is not None:
+        if isinstance(as_of, str):
+            as_of_dt = datetime.datetime.fromisoformat(as_of.replace("Z", "+00:00"))
+        elif isinstance(as_of, datetime.datetime):
+            as_of_dt = as_of
+        else:
+            raise ValueError(f"as_of must be an ISO string or datetime, got {type(as_of).__name__}")
+        if as_of_dt.tzinfo is None:
+            as_of_dt = as_of_dt.replace(tzinfo=datetime.timezone.utc)
+    else:
+        sim_cfg = cfg["simulation"]
+        if "start_timestamp" not in sim_cfg or "days" not in sim_cfg:
+            raise ValueError("config simulation must contain start_timestamp and days.")
+        start_dt = datetime.datetime.fromisoformat(
+            str(sim_cfg["start_timestamp"]).replace("Z", "+00:00")
+        )
+        if start_dt.tzinfo is None:
+            start_dt = start_dt.replace(tzinfo=datetime.timezone.utc)
+        as_of_dt = start_dt + datetime.timedelta(days=int(sim_cfg["days"]))
+    cutoff_dt = as_of_dt - datetime.timedelta(days=w_days)
+
+    # Valid history: transactions occurring strictly on or before as_of (no future leakage)
+    valid_txs: list[dict[str, Any]] = []
+    windowed_txs: list[dict[str, Any]] = []
+    windowed_txn_ids: set[int] = set()
     for tx in transactions_data:
+        t_dt = datetime.datetime.fromisoformat(tx["ts"].replace("Z", "+00:00"))
+        if t_dt.tzinfo is None:
+            t_dt = t_dt.replace(tzinfo=datetime.timezone.utc)
+        if t_dt <= as_of_dt:
+            valid_txs.append(tx)
+            if t_dt >= cutoff_dt:
+                windowed_txs.append(tx)
+                windowed_txn_ids.add(tx["txn_id"])
+
+    windowed_sessions: list[dict[str, Any]] = []
+    for sess in sessions_data:
+        s_dt = datetime.datetime.fromisoformat(sess["ts"].replace("Z", "+00:00"))
+        if s_dt.tzinfo is None:
+            s_dt = s_dt.replace(tzinfo=datetime.timezone.utc)
+        if cutoff_dt <= s_dt <= as_of_dt:
+            tid = sess.get("txn_id")
+            if tid is None or tid in windowed_txn_ids:
+                windowed_sessions.append(sess)
+
+    # Group windowed transactions, all valid historical transactions, and sessions by user_id
+    tx_by_user: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for tx in windowed_txs:
         tx_by_user[tx["user_id"]].append(tx)
 
+    all_tx_by_user: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for tx in valid_txs:
+        all_tx_by_user[tx["user_id"]].append(tx)
+
     sessions_by_user: dict[str, list[dict[str, Any]]] = defaultdict(list)
-    for sess in sessions_data:
+    for sess in windowed_sessions:
         sessions_by_user[sess["user_id"]].append(sess)
 
     records: list[dict[str, Any]] = []
@@ -112,16 +176,21 @@ def extract_user_features(
         cr_total = float(sum(cr_amounts))
         cr_mean = float(np.mean(cr_amounts)) if cr_amounts else 0.0
 
-        # 4. Credit to cashout hours delay
+        # 4. Credit to cashout hours delay: preserve last preceding credit context
+        # for an in-window cashout without counting it as a windowed credit
+        user_hist_txs = sorted(all_tx_by_user.get(uid, []), key=lambda t: t["ts"])
+        all_prior_credits = [t for t in user_hist_txs if t["txn_type"] == "credit"]
         delays_hours: list[float] = []
         for co in cashouts:
-            co_dt = datetime.datetime.fromisoformat(co["ts"])
+            co_dt = datetime.datetime.fromisoformat(co["ts"].replace("Z", "+00:00"))
             preceding_credits = [
-                c for c in credits if datetime.datetime.fromisoformat(c["ts"]) <= co_dt
+                c
+                for c in all_prior_credits
+                if datetime.datetime.fromisoformat(c["ts"].replace("Z", "+00:00")) <= co_dt
             ]
             if preceding_credits:
                 last_cr = preceding_credits[-1]
-                last_cr_dt = datetime.datetime.fromisoformat(last_cr["ts"])
+                last_cr_dt = datetime.datetime.fromisoformat(last_cr["ts"].replace("Z", "+00:00"))
                 diff_sec = (co_dt - last_cr_dt).total_seconds()
                 delays_hours.append(max(0.0, diff_sec / 3600.0))
 
@@ -228,6 +297,10 @@ def extract_user_features(
         records.append(row)
 
     df_X = pd.DataFrame(records)
+    # Record feature provenance on DataFrame attrs
+    df_X.attrs["as_of"] = as_of_dt.isoformat()
+    df_X.attrs["cutoff"] = cutoff_dt.isoformat()
+    df_X.attrs["window_days"] = w_days
     # Strictly enforce feature guard
     assert_feature_columns(df_X)
 
@@ -243,6 +316,8 @@ def extract_agent_features(
     allowance_day_of_cycle: int | None = None,
     config: dict[str, Any] | None = None,
     config_path: str | Path | None = None,
+    reports_data: dict[str, Any] | list[dict[str, Any]] | None = None,
+    include_cash_reports: bool = False,
 ) -> tuple[pd.DataFrame, pd.Series, pd.DataFrame, list[str]]:
     """Extract behavioral features for agents.
 
@@ -336,6 +411,37 @@ def extract_agent_features(
         if aid:
             tx_by_agent[aid].append(tx)
 
+    policy_cfg = cfg.get("policy", {})
+    cash_gap_cfg = policy_cfg.get("cash_gap", {})
+    gap_min_bdt = float(cash_gap_cfg.get("min_bdt", 50.0))
+    gap_rate = float(cash_gap_cfg.get("rate", 0.02))
+
+    has_cash_reports = (reports_data is not None) or include_cash_reports
+    reported_cash_by_tx: dict[int, float] = {}
+    if reports_data is not None:
+        if isinstance(reports_data, dict):
+            raw_obs = reports_data.get("transaction_observations", reports_data)
+        elif isinstance(reports_data, list):
+            raw_obs = {item.get("txn_id"): item for item in reports_data}
+        else:
+            raw_obs = {}
+        for key, entry in raw_obs.items():
+            if isinstance(entry, dict):
+                tid = entry.get("txn_id", key)
+                val = entry.get("cash_received_reported")
+                if val is None:
+                    val = entry.get("reported_cash")
+            elif isinstance(entry, (int, float, Decimal)):
+                tid = key
+                val = entry
+            else:
+                continue
+            if val is not None:
+                try:
+                    reported_cash_by_tx[int(tid)] = float(val)
+                except (ValueError, TypeError):
+                    pass
+
     records: list[dict[str, Any]] = []
     targets: list[int] = []
     agent_ids: list[str] = []
@@ -352,6 +458,8 @@ def extract_agent_features(
             fee_ratios: list[float] = []
             days_set: set[str] = set()
             allowance_tx_count = 0
+            rep_cashout_count = 0
+            gap_anomaly_count = 0
             for t in txs:
                 if t.get("txn_type") == "cash_out":
                     amt = float(t["amount"])
@@ -359,6 +467,14 @@ def extract_agent_features(
                     expected_fee = amt * fee_rate
                     if expected_fee > 0:
                         fee_ratios.append(fee / expected_fee)
+                    tid = t.get("txn_id")
+                    if has_cash_reports and tid in reported_cash_by_tx:
+                        rep_cashout_count += 1
+                        rep_val = reported_cash_by_tx[tid]
+                        gap = amt - rep_val
+                        tol = max(gap_min_bdt, gap_rate * amt)
+                        if gap > tol:
+                            gap_anomaly_count += 1
                 dt_str = t["ts"][:10]
                 days_set.add(dt_str)
                 # Allowance day check: determined by configured start_timestamp + cycle
@@ -369,33 +485,59 @@ def extract_agent_features(
                     elif dt.tzinfo is not None and start_dt.tzinfo is None:
                         start_dt = start_dt.replace(tzinfo=dt.tzinfo)
                     day_offset = (dt.date() - start_dt.date()).days
-                    if (
-                        day_offset >= 0
-                        and (day_offset % cycle_days) == day_of_cycle
-                    ):
+                    if day_offset >= 0 and (day_offset % cycle_days) == day_of_cycle:
                         allowance_tx_count += 1
                 except Exception:
                     pass
 
+            total_co_count = sum(1 for t in txs if t.get("txn_type") == "cash_out")
             fee_ratio_over_official = float(np.mean(fee_ratios)) if fee_ratios else 1.0
             num_days = max(1, len(days_set))
             volume_daily_mean = float(len(txs)) / float(num_days)
             non_allowance_tx = len(txs) - allowance_tx_count
             allowance_ratio = float(allowance_tx_count) / max(1, non_allowance_tx)
+            cash_gap_rate = (
+                float(gap_anomaly_count) / float(rep_cashout_count)
+                if rep_cashout_count > 0
+                else 0.0
+            )
+            cash_report_coverage = (
+                float(rep_cashout_count) / float(total_co_count) if total_co_count > 0 else 0.0
+            )
+            cash_gap_missing = 1.0 if rep_cashout_count == 0 else 0.0
+            cash_gap_has_reports = 1.0 if rep_cashout_count > 0 else 0.0
         else:
             fee_ratio_over_official = 1.0
             volume_daily_mean = 0.0
             allowance_ratio = 1.0
+            cash_gap_rate = 0.0
+            gap_anomaly_count = 0
+            rep_cashout_count = 0
+            cash_report_coverage = 0.0
+            cash_gap_missing = 1.0
+            cash_gap_has_reports = 0.0
 
-        records.append(
-            {
-                "agent_fee_ratio_over_official": fee_ratio_over_official,
-                "agent_volume_daily_mean": volume_daily_mean,
-                "agent_allowance_day_volume_ratio": allowance_ratio,
-            }
-        )
+        row = {
+            "agent_fee_ratio_over_official": fee_ratio_over_official,
+            "agent_volume_daily_mean": volume_daily_mean,
+            "agent_allowance_day_volume_ratio": allowance_ratio,
+        }
+        if has_cash_reports:
+            row["agent_cash_gap_rate"] = cash_gap_rate
+            row["cash_gap_reported_count"] = float(gap_anomaly_count)
+            row["agent_cash_report_count"] = float(rep_cashout_count)
+            row["agent_cash_report_coverage"] = cash_report_coverage
+            row["agent_cash_gap_missing"] = cash_gap_missing
+            row["agent_cash_gap_has_reports"] = cash_gap_has_reports
+        records.append(row)
 
     df_X = pd.DataFrame(records)
+    if has_cash_reports:
+        df_X.attrs["report_feature_provenance"] = (
+            "Finite neutral placeholder (0.0) with explicit missingness indicator "
+            "(agent_cash_gap_missing) and coverage aggregate (agent_cash_report_coverage) "
+            "for agents with zero reported cashouts."
+        )
     assert_feature_columns(df_X)
 
     meta_df = pd.DataFrame(

@@ -1,5 +1,32 @@
-"""Evaluation package for Sathi experiments and fairness auditing."""
+"""Lightweight artifact exports; offline evaluation is imported only on demand."""
 
-from app.evaluation.suite import EvaluationRunner
+from typing import Any
 
-__all__ = ["EvaluationRunner"]
+from app.evaluation.artifacts import (
+    ArtifactError,
+    ArtifactLoader,
+    ArtifactUnavailableError,
+    ArtifactVerificationError,
+    SanityCeilingExceededError,
+    export_deployment_bundle,
+    validate_manifest_and_metadata,
+)
+
+__all__ = [
+    "ArtifactError",
+    "ArtifactLoader",
+    "ArtifactUnavailableError",
+    "ArtifactVerificationError",
+    "EvaluationRunner",
+    "SanityCeilingExceededError",
+    "export_deployment_bundle",
+    "validate_manifest_and_metadata",
+]
+
+
+def __getattr__(name: str) -> Any:
+    if name == "EvaluationRunner":
+        from app.evaluation.suite import EvaluationRunner
+
+        return EvaluationRunner
+    raise AttributeError(name)

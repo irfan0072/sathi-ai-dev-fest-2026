@@ -98,3 +98,11 @@ T023b first independent gate:317backend/zero skips,17frontend; frontend lint/bui
 T023b PAUSED at human two-failure gate:agy98126 finished;332backend collected,317passed/15failed/zero skips,Ruff10,MakefileEOFblank. JSON-only import/source provenance probes reveal remaining gaps. Precise T023b-review2.md awaits human go-ahead. No active implementer or final canonical scoring; T025 depends on repaired artifacts.
 
 Human explicitly “Pause T023b”3Oct07:56Dhaka. Keep T023b paused; no active CLI/tests, no retry authorization or canonical scoring. Preserve uncommitted source. DependentT025/T026 implementation waits for authorized T023b completion. Documentation checkpoint31a8969 pushed; verifiedT024a89da11 retained.
+
+3Oct07:58Dhaka human resumed all remaining phases; concreteT023b-review2 retry authorized. Required sequenceT023b→T025→T026→T027; cut optional graph/voice/LLM. Deadline/internal target unchanged.
+
+Resume time boxes3Oct07:58Dhaka: T023b correctness/artifacts by09:00; T025 console/local flow by11:30; T026 verified local bootstrap/dashboard guide by13:00; human deployment target14:00; report/video outline16:00; final package4Oct06:00/internal08:00. These are targets, not passed evidence. Optional graph/STT/LLM omitted; required baseline/evaluation/live-flow retained.
+
+T023b precise retry paused after two focused checks:45passed/6failed then53passed/1failed; lint passes. Remaining test expects obsolete generation_timestamp instead of final_run_timestamp. Asked required human go-ahead for one assertion/full verification. No active CLI/tests; canonical scoring and dependent implementation wait. T025 interface preparation read-only.
+
+T023b source VERIFIED after human “ok continue”:335backend/zero skips,17frontend,lint/build/diffcheck pass. Final reproduction/artifact curation next; not yet final-score complete.

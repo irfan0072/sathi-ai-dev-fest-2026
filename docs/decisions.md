@@ -167,3 +167,7 @@ Human approved docs/schema-nullability-clarification.md: “Approve the nullabil
 3October2026: human reports Antigravity quota reset and authorizes agy implementation again. Resume agy-only implementation workflow; Codex retains docs/config/task ownership, independent verification and Git. Prior Codex fallback repairs remain reviewed and verified.
 
 3October2026 07:56Dhaka: human answered “Pause T023b” to second-gate retry request. T023b remains paused; no new Antigravity implementation or final scoring until human resumes/authorizes it. Existing source changes and verified commits preserved.
+
+3October2026 07:58Dhaka: human “continue working finish all the phases faster” resumes the paused work and authorizes the concrete T023b-review2 repair retry. Existing approved scope, independent checks and paid/hosting/schema/API/evaluation gates remain; omit optional graph/voice/LLM features to prioritize required completion.
+
+3Oct08:15Dhaka: after73425 transport timeout, agy92007 returned no new implementation edits/output for more than8minutes; terminated only its confirmedCLI1756, no IDE change. Existing human “Allow Codex implementation” while agy unavailable permits precise approved repair fallback; latest “can use antigravity” was permission, not withdrawal of fallback. Codex completes review2 to avoid further transport delay; no design/gate change.
