@@ -90,18 +90,21 @@ def test_jwt_secret_unconfigured_fail_closed(monkeypatch):
 
 
 def test_health_check_diagnostic_without_credentials(monkeypatch):
-    """Health endpoint returns diagnostic status without leaking secrets."""
+    """Health endpoint diagnoses unavailable database without leaking secrets."""
+    from app import bootstrap
+    monkeypatch.setattr(bootstrap, "database_ready", lambda config: False)
     monkeypatch.setenv("JWT_SECRET", TEST_JWT_SECRET)
     resp = client.get("/health")
-    assert resp.status_code == 200
+    assert resp.status_code == 503
     data = resp.json()
+    assert data["database"] == "unavailable"
     assert data["auth_signing"] == "configured"
     assert "secret" not in data
     assert TEST_JWT_SECRET not in resp.text
 
     monkeypatch.setenv("JWT_SECRET", "CHANGE_ME")
     resp_deg = client.get("/health")
-    assert resp_deg.status_code == 200
+    assert resp_deg.status_code == 503
     assert resp_deg.json()["auth_signing"] == "unconfigured"
     assert resp_deg.json()["status"] == "degraded"
 
@@ -359,11 +362,13 @@ def test_empty_allowed_users_denies_agent_access():
     assert data["error"]["code"] == "FORBIDDEN_SCOPE"
 
 
-def test_no_secret_leaks_in_responses_or_errors():
+def test_no_secret_leaks_in_responses_or_errors(monkeypatch):
     """Ensure signing secret is never leaked in health, auth, or errors."""
-    # 1. Health check response
+    # 1. Health check response with unavailable database
+    from app import bootstrap
+    monkeypatch.setattr(bootstrap, "database_ready", lambda config: False)
     health_resp = client.get("/health")
-    assert health_resp.status_code == 200
+    assert health_resp.status_code == 503
     assert TEST_JWT_SECRET not in health_resp.text
 
     # 2. Failed demo login

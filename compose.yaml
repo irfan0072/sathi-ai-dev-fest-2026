@@ -24,8 +24,10 @@ services:
     restart: unless-stopped
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-sathi}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-sathi}
-      JWT_SECRET: ${JWT_SECRET:-CHANGE_ME}
+      JWT_SECRET: ${JWT_SECRET:?Run make init-env to create a valid ignored signing secret}
       SATHI_CONFIG: ${SATHI_CONFIG:-data/config.yaml}
+      SATHI_ARTIFACTS_DIR: data/artifacts/deployment
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:13000,http://127.0.0.1:13000}
     ports:
       - "127.0.0.1:${API_PORT:-18000}:8000"
     depends_on:

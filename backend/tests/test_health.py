@@ -1,32 +1,38 @@
-"""Tests for infrastructure health check endpoint."""
-
-from __future__ import annotations
+"""Health must distinguish real readiness from merely configured environment."""
 
 import pytest
+from app import bootstrap
 from app.main import app
 from fastapi.testclient import TestClient
 
 
-def test_health_configured(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Test that GET /health returns ok when database and signing are configured."""
-    monkeypatch.setenv("DATABASE_URL", "postgresql://sathi:secret@localhost:5432/sathi")
+@pytest.fixture
+def ready_checks(monkeypatch):
+    monkeypatch.setattr(bootstrap, "verify_artifacts", lambda: None)
+    monkeypatch.setattr(bootstrap, "database_ready", lambda config: True)
     monkeypatch.setenv("JWT_SECRET", "a" * 64)
-    client = TestClient(app)
-    response = client.get("/health")
+
+
+def test_health_ready(ready_checks):
+    response = TestClient(app).get("/health")
     assert response.status_code == 200
     assert response.json() == {
-        "status": "ok",
-        "database": "configured",
-        "auth_signing": "configured",
+        "status": "ok", "database": "ready", "auth_signing": "configured",
+        "artifacts": "verified",
     }
 
 
-def test_health_degraded_when_secret_unconfigured(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Test that GET /health returns degraded when signing secret is unconfigured."""
-    monkeypatch.delenv("JWT_SECRET", raising=False)
-    client = TestClient(app)
-    response = client.get("/health")
-    assert response.status_code == 200
-    data = response.json()
-    assert data["status"] == "degraded"
-    assert data["auth_signing"] == "unconfigured"
+@pytest.mark.parametrize("failure", ["database", "artifacts", "signing"])
+def test_health_failures_are_safe_503(ready_checks, monkeypatch, failure):
+    if failure == "database":
+        monkeypatch.setattr(bootstrap, "database_ready", lambda config: False)
+    elif failure == "artifacts":
+        def unavailable():
+            raise ValueError("SECRET=do-not-leak")
+        monkeypatch.setattr(bootstrap, "verify_artifacts", unavailable)
+    else:
+        monkeypatch.delenv("JWT_SECRET")
+    response = TestClient(app).get("/health")
+    assert response.status_code == 503
+    assert response.json()["status"] == "degraded"
+    assert "do-not-leak" not in response.text

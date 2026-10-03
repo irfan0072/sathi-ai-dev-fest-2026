@@ -38,3 +38,7 @@ Confirmation field: cash_received. Only redeemed mandates qualify. Identical rep
 Model signals support outreach/human review only. Gender, age band, region, group labels and agent types never influence features, calibration, peer scoring or authorization. Artifact rows describe a fixed synthetic snapshot, separate from runtime demo balances. SHAP explains fitted base-model raw log-odds, not calibrated probability contributions. Missing artifacts are unavailable.
 
 Attempts, verification events, cases, ledger records and audit logs are PostgreSQL-backed. Signing secrets belong only in ignored environment configuration. Public synthetic demo PINs are fixtures, not real customer credentials.
+
+## Runtime readiness (T026)
+
+`GET /health` returns200 only when signing is configured, the curated bundle passes hashes/current-config validation, and the database probe finds migrations, configured demo principals and their ledger. Payload keys: `status`, `database` (`ready`/`unavailable`), `auth_signing`, `artifacts` (`verified`/`unavailable`). Unready state returns503/degraded without underlying exceptions or credentials. Existing business routes and schema are unchanged. Startup validates before database writes, applies001/002 idempotently and seeds only namespace777 without replenishing spent balances.

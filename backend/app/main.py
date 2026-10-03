@@ -82,8 +82,8 @@ async def validation_exception_handler(
 
 
 from app.analytics.router import router as analytics_router  # noqa: E402
-from app.auth.jwt import is_jwt_secret_configured  # noqa: E402
 from app.auth.router import router as auth_router  # noqa: E402
+from app.bootstrap import readiness  # noqa: E402
 from app.mandates.router import router as mandates_router  # noqa: E402
 
 app.include_router(auth_router)
@@ -92,14 +92,10 @@ app.include_router(analytics_router)
 
 
 @app.get("/health")
-def health() -> dict[str, Any]:
-    """Health check endpoint returning diagnostic status fail-closed without credentials."""
-    db_configured = bool(os.getenv("DATABASE_URL") or os.getenv("SATHI_TEST_DATABASE_URL"))
-    signing_configured = is_jwt_secret_configured()
-    overall_status = "ok" if (db_configured and signing_configured) else "degraded"
-
-    return {
-        "status": overall_status,
-        "database": "configured" if db_configured else "unconfigured",
-        "auth_signing": "configured" if signing_configured else "unconfigured",
-    }
+def health() -> JSONResponse:
+    """Check actual database, signing and curated artifact readiness."""
+    diagnostics = readiness()
+    return JSONResponse(
+        status_code=200 if diagnostics["status"] == "ok" else 503,
+        content=diagnostics,
+    )
