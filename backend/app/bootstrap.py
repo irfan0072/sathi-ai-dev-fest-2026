@@ -68,6 +68,14 @@ def readiness() -> dict[str, str]:
     }
 
 
+def _seed_staff(url: str, schema: str | None, config: dict[str, Any]) -> None:
+    """Mirror config staff and demo supervisors into the staff table (idempotent)."""
+    from app.staff.service import StaffService
+
+    StaffService(lambda: get_connection(url, schema=schema)).seed(
+        config["auth"].get("principals", {}))
+
+
 def prepare_runtime(db_url: str | None = None, schema: str | None = None) -> None:
     """Validate before writes, then preserve existing migrations, balances and cases."""
     url = db_url or os.getenv("DATABASE_URL")
@@ -84,6 +92,10 @@ def prepare_runtime(db_url: str | None = None, schema: str | None = None) -> Non
     try:
         run_migrations(url, schema=schema)
         seed_demo_fixtures(url, schema=schema)
+        _seed_staff(url, schema, config)
+        from app.live.rebase import rebase_ledger
+
+        rebase_ledger(lambda: get_connection(url, schema=schema))
         if not database_ready(config, db_url=url, schema=schema):
             raise ValueError("Database not ready")
     except Exception as exc:

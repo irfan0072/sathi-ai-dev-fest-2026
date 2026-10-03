@@ -26,7 +26,7 @@ from typing import Any
 
 from app.mandates.service import MandateError, MandateService
 from app.verification.keypad import KeypadParseError
-from app.voice import twiml
+from app.voice import scripts, twiml
 from app.voice.providers import VoiceProvider, VoiceProviderError
 
 LIVE_STATUSES = ("queued", "ringing", "in_progress")
@@ -114,7 +114,8 @@ class VoiceService:
 
         return self._place_call(record.user_id, agent_id, "mandate_id", mandate_id, "mandate")
 
-    def start_check_call(self, check_id: int, actor: str) -> dict[str, Any]:
+    def start_check_call(self, check_id: int, actor: str,
+                         automatic: bool = True) -> dict[str, Any]:
         """Call the customer after a completed cash-out to confirm the amount."""
         from app.txn.service import OPEN_STATUSES, TxnCheckService
 
@@ -130,6 +131,9 @@ class VoiceService:
             checks.set_error(check_id, err.message)
             raise
         checks.set_calling(check_id)
+        from app.callcenter.service import CallCenterService
+
+        CallCenterService(self.mandates).on_call_placed(check_id, automatic=automatic)
         return call
 
     def _place_call(self, user_id: str, actor: str, target_col: str, target_id: Any,
@@ -153,6 +157,9 @@ class VoiceService:
 
         call_id = str(uuid.uuid4())
         token = secrets.token_urlsafe(24)
+        from app.lang.detect import LanguagePrefs
+
+        language = LanguagePrefs(self.mandates.get_connection).get(user_id)
         conn = self.mandates.get_connection()
         try:
             with conn.transaction():
@@ -169,11 +176,12 @@ class VoiceService:
                     cur.execute(
                         f"""
                         INSERT INTO voice_calls (
-                            call_id, {target_col}, user_id, provider, to_masked, token_hash, status
-                        ) VALUES (%s, %s, %s, %s, %s, %s, 'queued');
+                            call_id, {target_col}, user_id, provider, to_masked, token_hash,
+                            status, language
+                        ) VALUES (%s, %s, %s, %s, %s, %s, 'queued', %s);
                         """,
                         (call_id, target_id, user_id, self.provider.name, to_masked,
-                         _hash_token(token)),
+                         _hash_token(token), language),
                     )
         finally:
             conn.close()
@@ -215,7 +223,7 @@ class VoiceService:
                 cur.execute(
                     f"""
                     SELECT v.call_id, v.mandate_id, COALESCE(m.agent_id, c.agent_id), v.status,
-                           v.created_at, v.check_id
+                           v.created_at, v.check_id, v.language
                     FROM voice_calls v
                     LEFT JOIN mandates m ON m.mandate_id = v.mandate_id
                     LEFT JOIN txn_checks c ON c.check_id = v.check_id
@@ -232,7 +240,9 @@ class VoiceService:
             {"call_id": str(r[0]), "mandate_id": str(r[1]) if r[1] else None,
              "check_id": r[5], "kind": "transaction" if r[5] else "request",
              "agent_id": r[2], "status": r[3], "created_at": r[4].isoformat(),
-             "prompt_bn": twiml.CHECK_PROMPT if r[5] else twiml.PROMPT}
+             "prompt_bn": twiml.CHECK_PROMPT if r[5] else twiml.PROMPT,
+             "language": r[6],
+             "prompt": scripts.line(r[6], "check_prompt" if r[5] else "mandate_prompt")}
             for r in rows
         ]
 
@@ -242,7 +252,7 @@ class VoiceService:
             with conn.cursor() as cur:
                 cur.execute(
                     "SELECT call_id, mandate_id, user_id, provider, to_masked, status, "
-                    "digit_attempts, created_at, updated_at, check_id "
+                    "digit_attempts, created_at, updated_at, check_id, language, no_input_count "
                     f"FROM voice_calls {where};",
                     params,
                 )
@@ -256,6 +266,7 @@ class VoiceService:
             "check_id": r[9], "user_id": r[2], "provider": r[3],
             "to": r[4], "status": r[5], "digit_attempts": r[6],
             "created_at": r[7].isoformat(), "updated_at": r[8].isoformat(),
+            "language": r[10], "no_input_count": r[11],
         }
 
     # ---------------------------------------------------------------- authentication
@@ -282,14 +293,15 @@ class VoiceService:
 
     @staticmethod
     def prompt_for(call: dict[str, Any]) -> str:
-        return twiml.CHECK_PROMPT if call.get("check_id") else twiml.PROMPT
+        return scripts.line(call.get("language"), scripts.prompt_key(call))
 
     def answer(self, call_id: str, gather_url: str) -> str:
         call = self.get_call(call_id)
         if call["status"] not in LIVE_STATUSES:
-            return twiml.close()
+            return twiml.close(call.get("language", "bn"))
         self._set_status(call_id, "in_progress")
-        return twiml.gather(gather_url, self.prompt_for(call))
+        return twiml.gather(gather_url, self.prompt_for(call), speech=bool(call.get("check_id")),
+                            language=call.get("language", "bn"))
 
     def provider_status(self, call_id: str, provider_status: str) -> dict[str, Any]:
         call = self.get_call(call_id)
@@ -306,17 +318,30 @@ class VoiceService:
                 self._no_answer(call)
         return self.get_call(call_id)
 
-    def handle_digits(self, call_id: str, digits: str | None, gather_url: str) -> DigitResult:
+    def handle_digits(self, call_id: str, digits: str | None, gather_url: str,
+                      speech: str | None = None, confidence: float | None = None,
+                      no_input: bool = False) -> DigitResult:
+        """Apply one customer answer. `no_input` means the gather timed out in silence,
+        which is never treated as "I did not do this"."""
         call = self.get_call(call_id)
+        lang = call.get("language", "bn")
         if call["status"] not in LIVE_STATUSES:
-            return DigitResult(call["status"], twiml.close(), [twiml.NEUTRAL_CLOSE], None)
+            return DigitResult(call["status"], twiml.close(lang), [scripts.line(lang, "close")],
+                               None)
+        raw = (digits or "").strip()
         digits = re.sub(r"[^0-9]", "", digits or "")
         mandate_id, user_id = call["mandate_id"], call["user_id"]
         attempts = call["digit_attempts"] + 1
         self._set_status(call_id, "in_progress", digit_attempts=attempts)
 
         if call.get("check_id"):
-            return self._check_digits(call_id, call["check_id"], digits[:8], gather_url)
+            if no_input and not (speech or "").strip():
+                return self._no_input(call, gather_url)
+            special = self._check_keys(call, raw, speech, gather_url)
+            if special is not None:
+                return special
+            return self._check_digits(call_id, call["check_id"], raw[:12], gather_url,
+                                      speech=speech, confidence=confidence, language=lang)
 
         if digits == "":
             status = self._reject(
@@ -324,7 +349,7 @@ class VoiceService:
                 {"channel": "voice", "call_id": call_id},
             )
             self._set_status(call_id, "rejected")
-            return DigitResult("rejected", twiml.close(), [twiml.NEUTRAL_CLOSE], status)
+            return DigitResult("rejected", twiml.close(lang), [scripts.line(lang, "close")], status)
 
         if len(digits) > 1 and digits.startswith("0"):
             record = self.mandates.mandates.get(mandate_id)
@@ -340,7 +365,7 @@ class VoiceService:
                 },
             )
             self._set_status(call_id, "duress")
-            return DigitResult("duress", twiml.close(), [twiml.NEUTRAL_CLOSE], status)
+            return DigitResult("duress", twiml.close(lang), [scripts.line(lang, "close")], status)
 
         try:
             result = self.mandates.verify_mandate(
@@ -348,34 +373,129 @@ class VoiceService:
             )
         except (MandateError, KeypadParseError):
             self._set_status(call_id, "failed")
-            return DigitResult("failed", twiml.close(), [twiml.NEUTRAL_CLOSE], None)
+            return DigitResult("failed", twiml.close(lang), [scripts.line(lang, "close")], None)
 
         if result["outcome"] == "match":
             self._set_status(call_id, "verified")
-            return DigitResult("verified", twiml.close(), [twiml.NEUTRAL_CLOSE], "verified")
+            return DigitResult("verified", twiml.close(lang), [scripts.line(lang, "close")],
+                               "verified")
         if result["status"] == "requested":
             return DigitResult(
-                "in_progress", twiml.gather(gather_url, twiml.RETRY), [twiml.RETRY], "requested"
+                "in_progress", twiml.gather(gather_url, scripts.line(lang, "mandate_retry"),
+                                            language=lang),
+                [scripts.line(lang, "mandate_retry")], "requested"
             )
         self._set_status(call_id, "mismatch")
-        return DigitResult("mismatch", twiml.close(), [twiml.NEUTRAL_CLOSE], result["status"])
+        return DigitResult("mismatch", twiml.close(lang), [scripts.line(lang, "close")],
+                           result["status"])
 
-    def _check_digits(self, call_id: str, check_id: int, digits: str,
-                      gather_url: str) -> DigitResult:
+    def _no_input(self, call: dict[str, Any], gather_url: str) -> DigitResult:
+        """Silence: ask once more kindly, then end and let the scheduler retry later."""
+        from app.callcenter.service import CallCenterService
+
+        lang = call.get("language", "bn")
+        count = call.get("no_input_count", 0) + 1
+        self._bump_no_input(call["call_id"], count)
+        CallCenterService(self.mandates).record_response(
+            call["check_id"], "no_input", call_id=call["call_id"])
+        if count < 2:
+            return DigitResult("in_progress",
+                               twiml.gather(gather_url, scripts.line(lang, "no_input"),
+                                            speech=True, language=lang),
+                               [scripts.line(lang, "no_input")], None)
+        self._set_status(call["call_id"], "no_answer")
+        self._no_answer(call)
+        text = scripts.line(lang, "goodbye_no_input")
+        return DigitResult("no_answer", twiml.close(lang, text), [text], "no_answer")
+
+    def _check_keys(self, call: dict[str, Any], raw: str, speech: str | None,
+                    gather_url: str) -> DigitResult | None:
+        """Key 9: talk to a person. Key 8: switch language. Speech teaches the language."""
+        from app.callcenter.service import CallCenterService
+        from app.lang.detect import LanguagePrefs
+
+        prefs = LanguagePrefs(self.mandates.get_connection)
+        if (speech or "").strip():
+            prefs.learn(call["user_id"], speech, "speech")
+        keys = raw.replace("#", "")
+        lang = call.get("language", "bn")
+        center = CallCenterService(self.mandates)
+        if keys == "9":
+            center.record_response(call["check_id"], "human_requested", call_id=call["call_id"],
+                                   raw=raw)
+            center.request_human(call["check_id"], "customer_requested_human")
+            self._set_status(call["call_id"], "completed")
+            text = scripts.line(lang, "handoff")
+            return DigitResult("completed", twiml.close(lang, text), [text], "manual_review")
+        if keys == "8":
+            new = scripts.NEXT_LANGUAGE[scripts.normalize(lang)]
+            self._set_language(call["call_id"], new)
+            prefs.set(call["user_id"], new, "call_keypad")
+            center.record_response(call["check_id"], "language_switch", call_id=call["call_id"],
+                                   raw=new)
+            prompt = scripts.line(new, "check_prompt")
+            return DigitResult("in_progress",
+                               twiml.gather(gather_url, prompt, speech=True, language=new),
+                               [prompt], None)
+        return None
+
+    def _check_digits(self, call_id: str, check_id: int, raw: str, gather_url: str,
+                      speech: str | None = None, confidence: float | None = None,
+                      language: str = "bn") -> DigitResult:
+        from app.callcenter.interpret import interpret
+        from app.callcenter.service import CallCenterService
         from app.txn.service import TxnCheckService
 
         checks = TxnCheckService(self.mandates)
+        center = CallCenterService(self.mandates)
+        answer = interpret(raw, speech, confidence,
+                           min_confidence=center.policy()["unclear_confidence"])
+        if answer.kind == "unclear":
+            result = checks.handle_unclear(check_id)
+            center.on_unclear(check_id, call_id, answer.raw, answer.confidence,
+                              final=result != "retry")
+            if result == "retry":
+                text = scripts.line(language, "unclear")
+                return DigitResult("in_progress",
+                                   twiml.gather(gather_url, text, speech=True, language=language),
+                                   [text], None)
+            self._set_status(call_id, "unclear")
+            return DigitResult("unclear", twiml.close(language),
+                               [scripts.line(language, "close")], result)
+
+        digits = answer.digits if answer.kind == "amount" else ""
         result = checks.handle_answer(check_id, digits)
+        interpreted = "denied" if answer.kind == "denied" else (
+            "duress" if len(digits) > 1 and digits.startswith("0") else "amount")
+        center.record_response(check_id, interpreted, call_id=call_id, raw=answer.raw,
+                               amount=int(digits) if digits else None,
+                               confidence=answer.confidence)
         if result == "retry":
-            return DigitResult("in_progress", twiml.gather(gather_url, twiml.CHECK_RETRY),
-                               [twiml.CHECK_RETRY], None)
+            text = scripts.line(language, "retry")
+            return DigitResult("in_progress",
+                               twiml.gather(gather_url, text, speech=True, language=language),
+                               [text], None)
         check = checks.get(check_id) or {}
+        center.on_resolved(check_id, check.get("status", ""))
         call_status = {"match": "verified", "mismatch": "mismatch", "denied": "rejected",
                        "duress": "duress"}.get(check.get("outcome"), "failed")
         self._set_status(call_id, call_status)
-        return DigitResult(call_status, twiml.close(), [twiml.NEUTRAL_CLOSE], check.get("status"))
+        return DigitResult(call_status, twiml.close(language), [scripts.line(language, "close")],
+                           check.get("status"))
 
     # ---------------------------------------------------------------- persistence helpers
+    def _set_language(self, call_id: str, language: str) -> None:
+        with self.mandates.get_connection() as conn, conn.cursor() as cur:
+            cur.execute("UPDATE voice_calls SET language = %s, updated_at = now() "
+                        "WHERE call_id = %s;", (language, call_id))
+            conn.commit()
+
+    def _bump_no_input(self, call_id: str, count: int) -> None:
+        with self.mandates.get_connection() as conn, conn.cursor() as cur:
+            cur.execute("UPDATE voice_calls SET no_input_count = %s, updated_at = now() "
+                        "WHERE call_id = %s;", (count, call_id))
+            conn.commit()
+
     def _set_status(self, call_id: str, status: str, provider_call_sid: str | None = None,
                     digit_attempts: int | None = None) -> None:
         conn = self.mandates.get_connection()
@@ -397,9 +517,11 @@ class VoiceService:
 
     def _no_answer(self, call: dict[str, Any]) -> None:
         if call.get("check_id"):
+            from app.callcenter.service import CallCenterService
             from app.txn.service import TxnCheckService
 
             TxnCheckService(self.mandates).set_no_answer(call["check_id"])
+            CallCenterService(self.mandates).on_no_answer(call["check_id"], call["call_id"])
         else:
             self._record_no_answer(call["mandate_id"])
 

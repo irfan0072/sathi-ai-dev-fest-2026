@@ -51,7 +51,8 @@ class TxnCheckService:
         return self.mandates.get_connection()
 
     # ------------------------------------------------------------------ record cash-out
-    def record_cashout(self, agent_id: str, user_id: str, amount: Any) -> dict[str, Any]:
+    def record_cashout(self, agent_id: str, user_id: str, amount: Any,
+                       source: str = "agent") -> dict[str, Any]:
         try:
             value = parse_keypad_amount(amount)
         except KeypadParseError as exc:
@@ -112,11 +113,16 @@ class TxnCheckService:
                     )
                     txn_id = cur.fetchone()[0]
                     cur.execute(
-                        "INSERT INTO txn_checks (txn_id, user_id, agent_id, amount, status) "
-                        "VALUES (%s, %s, %s, %s, 'pending') RETURNING check_id;",
-                        (txn_id, user_id, agent_id, value),
+                        "INSERT INTO txn_checks (txn_id, user_id, agent_id, amount, status, "
+                        "source) VALUES (%s, %s, %s, %s, 'pending', %s) RETURNING check_id;",
+                        (txn_id, user_id, agent_id, value, source),
                     )
                     check_id = cur.fetchone()[0]
+                    cur.execute(
+                        "INSERT INTO call_tasks (check_id, user_id, agent_id) "
+                        "VALUES (%s, %s, %s);",
+                        (check_id, user_id, agent_id),
+                    )
                     cur.execute(
                         """
                         INSERT INTO audit_log (
@@ -138,7 +144,7 @@ class TxnCheckService:
     _SELECT = """
         SELECT c.check_id, c.txn_id, c.user_id, c.agent_id, c.amount, c.status, c.outcome,
                c.stated_amount, c.attempts, c.recommendation, c.case_id, c.last_error,
-               c.created_at, c.updated_at, t.fee, t.ts, t.balance_after
+               c.created_at, c.updated_at, t.fee, t.ts, t.balance_after, c.source
         FROM txn_checks c JOIN transactions t USING (txn_id)
     """
 
@@ -155,6 +161,7 @@ class TxnCheckService:
             "created_at": r[12].isoformat(), "updated_at": r[13].isoformat(),
             "fee": _money(r[14] or 0), "ts": r[15].isoformat(),
             "balance_after": _money(r[16]) if r[16] is not None else None,
+            "source": r[17],
         }
 
     def get(self, check_id: int) -> dict[str, Any] | None:
@@ -261,54 +268,142 @@ class TxnCheckService:
                         else:
                             outcome = "mismatch"
 
-                    context = self._agent_context(cur, agent_id)
-                    rec = recommendation(outcome, amount, stated, context)
-                    status = "verified" if outcome == "match" else "suspicious"
-                    case_id = None
-                    if status == "suspicious":
-                        evidence = {
-                            "txn_id": txn_id, "check_id": check_id,
-                            "ledger_amount": float(amount),
-                            "stated_amount": float(stated) if stated is not None else None,
-                            "difference": float(amount - stated) if stated is not None
-                            and outcome == "mismatch" else None,
-                            "channel": "phone call after cash-out",
-                            "recommendation": rec["label"],
-                            "reasons": [r["text"] for r in rec["reasons"]],
-                        }
-                        if outcome == "duress":
-                            evidence["priority"] = "urgent"
-                            evidence["guidance"] = ("Customer used the secret help signal. Call "
-                                                    "them on the registered number, away from "
-                                                    "the agent.")
-                        cur.execute(
-                            """
-                            INSERT INTO cases (mandate_id, agent_id, reason, evidence, status,
-                                               created_at)
-                            VALUES (NULL, %s, %s, %s::jsonb, 'open', now()) RETURNING case_id;
-                            """,
-                            (agent_id, REASON_BY_OUTCOME[outcome], json.dumps(evidence)),
-                        )
-                        case_id = cur.fetchone()[0]
+                    return self._finalize(cur, check_id, txn_id, user_id, agent_id, amount,
+                                          outcome, stated, attempts, actor=user_id,
+                                          channel="phone call after cash-out")
+        finally:
+            conn.close()
+
+    def _finalize(self, cur: Any, check_id: int, txn_id: int, user_id: str,
+                  agent_id: str | None, amount: Decimal, outcome: str,
+                  stated: Decimal | None, attempts: int, actor: str, channel: str,
+                  note: str | None = None) -> str:
+        """Close a check as verified or suspicious; suspicious opens a case automatically."""
+        context = self._agent_context(cur, agent_id)
+        rec = recommendation(outcome, amount, stated, context)
+        status = "verified" if outcome == "match" else "suspicious"
+        case_id = None
+        if status == "suspicious":
+            evidence = {
+                "txn_id": txn_id, "check_id": check_id,
+                "ledger_amount": float(amount),
+                "stated_amount": float(stated) if stated is not None else None,
+                "difference": float(amount - stated) if stated is not None
+                and outcome == "mismatch" else None,
+                "channel": channel,
+                "recommendation": rec["label"],
+                "reasons": [r["text"] for r in rec["reasons"]],
+            }
+            if note:
+                evidence["supervisor_note"] = note
+            if outcome == "duress":
+                evidence["priority"] = "urgent"
+                evidence["guidance"] = ("Customer used the secret help signal. Call "
+                                        "them on the registered number, away from "
+                                        "the agent.")
+            cur.execute(
+                """
+                INSERT INTO cases (mandate_id, agent_id, reason, evidence, status,
+                                   created_at)
+                VALUES (NULL, %s, %s, %s::jsonb, 'open', now()) RETURNING case_id;
+                """,
+                (agent_id, REASON_BY_OUTCOME[outcome], json.dumps(evidence)),
+            )
+            case_id = cur.fetchone()[0]
+            if note:
+                cur.execute(
+                    "INSERT INTO case_notes (case_id, author, note_type, body) "
+                    "VALUES (%s, %s, 'call_log', %s);",
+                    (case_id, actor, note[:4000]),
+                )
+        cur.execute(
+            """
+            UPDATE txn_checks SET status = %s, outcome = %s, stated_amount = %s,
+                attempts = %s, recommendation = %s::jsonb, case_id = %s,
+                updated_at = now()
+            WHERE check_id = %s;
+            """,
+            (status, outcome, stated, attempts, json.dumps(rec), case_id, check_id),
+        )
+        cur.execute(
+            """
+            INSERT INTO audit_log (
+                actor, action, entity, entity_id, policy_version, detail, ts
+            ) VALUES (%s, %s, 'transaction', %s, 'v1.0', %s::jsonb, now());
+            """,
+            (actor, f"txn_check_{status}", str(txn_id),
+             json.dumps({"check_id": check_id, "case_id": case_id, "channel": channel})),
+        )
+        return status
+
+    def handle_unclear(self, check_id: int) -> str:
+        """The answer could not be understood. Re-ask once, then hand to a person."""
+        with self._conn() as conn, conn.cursor() as cur:
+            cur.execute(
+                "SELECT status, attempts FROM txn_checks WHERE check_id = %s FOR UPDATE;",
+                (check_id,),
+            )
+            row = cur.fetchone()
+            if not row or row[0] not in OPEN_STATUSES:
+                return row[0] if row else "missing"
+            attempts = row[1] + 1
+            if attempts < MAX_ATTEMPTS:
+                cur.execute("UPDATE txn_checks SET attempts = %s, status = 'calling', "
+                            "updated_at = now() WHERE check_id = %s;", (attempts, check_id))
+                conn.commit()
+                return "retry"
+            cur.execute("UPDATE txn_checks SET attempts = %s, status = 'manual_review', "
+                        "updated_at = now() WHERE check_id = %s;", (attempts, check_id))
+            conn.commit()
+            return "manual_review"
+
+    def set_status(self, check_id: int, status: str, from_statuses: tuple[str, ...]) -> bool:
+        with self._conn() as conn, conn.cursor() as cur:
+            cur.execute("UPDATE txn_checks SET status = %s, updated_at = now() "
+                        "WHERE check_id = %s AND status = ANY(%s);",
+                        (status, check_id, list(from_statuses)))
+            conn.commit()
+            return cur.rowcount > 0
+
+    def apply_manual_outcome(self, check_id: int, outcome: str, stated: Any,
+                             actor: str, note: str | None) -> str:
+        """A supervisor spoke to the customer and records what they said."""
+        if outcome not in ("match", "mismatch", "denied", "duress"):
+            raise CheckError("INVALID_OUTCOME", "Unknown outcome.", 422)
+        conn = self._conn()
+        try:
+            with conn.transaction():
+                with conn.cursor() as cur:
                     cur.execute(
-                        """
-                        UPDATE txn_checks SET status = %s, outcome = %s, stated_amount = %s,
-                            attempts = %s, recommendation = %s::jsonb, case_id = %s,
-                            updated_at = now()
-                        WHERE check_id = %s;
-                        """,
-                        (status, outcome, stated, attempts, json.dumps(rec), case_id, check_id),
+                        "SELECT txn_id, user_id, agent_id, amount, status, attempts "
+                        "FROM txn_checks WHERE check_id = %s FOR UPDATE;",
+                        (check_id,),
                     )
-                    cur.execute(
-                        """
-                        INSERT INTO audit_log (
-                            actor, action, entity, entity_id, policy_version, detail, ts
-                        ) VALUES (%s, %s, 'transaction', %s, 'v1.0', %s::jsonb, now());
-                        """,
-                        (user_id, f"txn_check_{status}", str(txn_id),
-                         json.dumps({"check_id": check_id, "case_id": case_id})),
-                    )
-                    return status
+                    row = cur.fetchone()
+                    if not row:
+                        raise CheckError("CHECK_NOT_FOUND", "Transaction check not found.", 404)
+                    if row[4] in ("verified", "suspicious"):
+                        raise CheckError("CHECK_CLOSED", "This transaction is already closed.",
+                                         409)
+                    txn_id, user_id, agent_id, amount, _status, attempts = row
+                    amount = Decimal(str(amount))
+                    stated_value: Decimal | None = None
+                    if stated not in (None, ""):
+                        try:
+                            stated_value = parse_keypad_amount(stated)
+                        except KeypadParseError as exc:
+                            raise CheckError("INVALID_AMOUNT", f"Amount is not valid: {exc}",
+                                             422) from None
+                    if outcome in ("match", "mismatch") and stated_value is None:
+                        raise CheckError("AMOUNT_REQUIRED",
+                                         "Type the amount the customer said they received.", 422)
+                    if outcome == "match" and stated_value != amount:
+                        outcome = "mismatch"
+                    if outcome == "mismatch" and stated_value == amount:
+                        outcome = "match"
+                    return self._finalize(cur, check_id, txn_id, user_id, agent_id, amount,
+                                          outcome, stated_value, attempts, actor=actor,
+                                          channel="supervisor call", note=note)
         finally:
             conn.close()
 

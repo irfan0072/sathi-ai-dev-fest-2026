@@ -29,6 +29,7 @@ PRIORITY = {
     "high_risk_request": ("high", "ops.sla_high_minutes"),
     "cash_gap_tolerance_exceeded": ("high", "ops.sla_cash_gap_minutes"),
     "repeated_code_failures_lockout": ("normal", "ops.sla_normal_minutes"),
+    "customer_help_request": ("high", "ops.sla_high_minutes"),
     "stated_amount_mismatch": ("normal", "ops.sla_normal_minutes"),
 }
 DEFAULT_TARGETS = {"ops.sla_urgent_minutes": 15, "ops.sla_high_minutes": 60,
@@ -60,6 +61,7 @@ REASON_TEXT = {
     "post_txn_amount_mismatch": "customer typed a different amount after the cash-out",
     "customer_denied_transaction": "customer says they did not make this cash-out",
     "repeated_code_failures_lockout": "too many wrong codes",
+    "customer_help_request": "customer asked for help in the Sathi assistant",
 }
 CALL_TEXT = {
     "verified": "customer confirmed", "duress": "secret help signal",
@@ -76,7 +78,7 @@ def _json(value: Any) -> Any:
 
 @router.get("/ops/overview")
 def overview(
-    principal: Annotated[AuthenticatedPrincipal, Depends(require_roles("analyst"))],
+    principal: Annotated[AuthenticatedPrincipal, Depends(require_roles("analyst", "super_admin"))],
 ) -> Any:
     service = get_mandate_service()
     now = datetime.datetime.now(datetime.timezone.utc)
@@ -185,9 +187,11 @@ def overview(
 
 @router.get("/ops/cases")
 def prioritized_cases(
-    principal: Annotated[AuthenticatedPrincipal, Depends(require_roles("analyst"))],
+    principal: Annotated[AuthenticatedPrincipal,
+                         Depends(require_roles("analyst", "super_admin", "supervisor"))],
 ) -> Any:
-    """Open cases ordered by priority, then by remaining time to the response target."""
+    """Open cases ordered by priority, then by remaining time to the response target.
+    Readable by analyst, super_admin and supervisor (supervisor is read-only)."""
     service = get_mandate_service()
     now = datetime.datetime.now(datetime.timezone.utc)
     with service.get_connection() as conn, conn.cursor() as cur:
@@ -217,8 +221,10 @@ def prioritized_cases(
 @router.get("/cases/{case_id}/timeline")
 def case_timeline(
     case_id: int,
-    principal: Annotated[AuthenticatedPrincipal, Depends(require_roles("analyst"))],
+    principal: Annotated[AuthenticatedPrincipal,
+                         Depends(require_roles("analyst", "super_admin", "supervisor"))],
 ) -> Any:
+    """Ordered case events. Readable by analyst, super_admin and supervisor."""
     service = get_mandate_service()
     with service.get_connection() as conn, conn.cursor() as cur:
         cur.execute("SELECT mandate_id, created_at, reason FROM cases WHERE case_id = %s;",
@@ -293,7 +299,7 @@ class WatchlistRequest(BaseModel):
 
 @router.get("/watchlist")
 def list_watchlist(
-    principal: Annotated[AuthenticatedPrincipal, Depends(require_roles("analyst"))],
+    principal: Annotated[AuthenticatedPrincipal, Depends(require_roles("analyst", "super_admin"))],
 ) -> Any:
     service = get_mandate_service()
     with service.get_connection() as conn, conn.cursor() as cur:
@@ -308,9 +314,9 @@ def list_watchlist(
 def add_watchlist(
     agent_id: str,
     body: WatchlistRequest,
-    principal: Annotated[AuthenticatedPrincipal, Depends(require_roles("analyst"))],
+    principal: Annotated[AuthenticatedPrincipal, Depends(require_roles("analyst", "super_admin"))],
 ) -> Any:
-    """Analyst puts an agent on enhanced verification. Their mandates then need a call."""
+    """Analyst or super_admin puts an agent on enhanced verification (mandates need a call)."""
     service = get_mandate_service()
     with service.get_connection() as conn:
         with conn.cursor() as cur:
@@ -337,7 +343,7 @@ def add_watchlist(
 @router.delete("/watchlist/{agent_id}")
 def remove_watchlist(
     agent_id: str,
-    principal: Annotated[AuthenticatedPrincipal, Depends(require_roles("analyst"))],
+    principal: Annotated[AuthenticatedPrincipal, Depends(require_roles("analyst", "super_admin"))],
 ) -> Any:
     service = get_mandate_service()
     with service.get_connection() as conn:

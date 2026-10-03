@@ -4,7 +4,7 @@ import { api } from './api';
 import Header from './components/Header';
 import DemoLogin from './components/DemoLogin';
 import LoginScreen, { landingTabForRole } from './components/LoginScreen';
-import NavTabs, { canOpen, tabs } from './components/NavTabs';
+import NavTabs, { canOpen, findTab } from './components/NavTabs';
 import Icon from './components/Icon';
 import ErrorBoundary from './components/ErrorBoundary';
 import AgentCashout from './components/AgentCashout';
@@ -19,14 +19,19 @@ import LiquidityPage from './components/LiquidityPage';
 import UpliftPage from './components/UpliftPage';
 import CommandCenter from './components/CommandCenter';
 import SettingsPage from './components/SettingsPage';
+import AdminDashboard from './components/ops/AdminDashboard';
+import CallCenter from './components/ops/CallCenter';
+import CaseWorkbench from './components/ops/CaseWorkbench';
+import {
+  AgentsDirectory, AuditLogPage, LedgerPage, ReportsPage, StaffPage, SupervisorDesk, UsersPage,
+} from './components/ops/Directories';
 
 const TAB_KEY = 'sathi_tab';
 const savedTab = (session) => {
   if (!session) return 'architecture';
   try {
     const id = window.sessionStorage.getItem(TAB_KEY);
-    const tab = tabs.find((t) => t.id === id);
-    if (tab && canOpen(tab, session)) return id;
+    if (canOpen(findTab(id, session), session)) return id;
   } catch { /* storage unavailable */ }
   return landingTabForRole(session.role);
 };
@@ -58,7 +63,7 @@ export default function App() {
   const closeLogin = () => setLogin(null);
 
   const selectTab = (id) => {
-    if (!canOpen(tabs.find((t) => t.id === id), session)) return;
+    if (!canOpen(findTab(id, session), session)) return;
     setActiveTab(id);
     rememberTab(id);
     if (typeof document !== 'undefined') {
@@ -101,26 +106,37 @@ export default function App() {
   }
 
   // ── Authenticated: render the role-scoped dashboard. ──
-  const tab = tabs.find((item) => item.id === activeTab);
+  const tab = findTab(activeTab, session);
   // Defensive: if a user types a tab they can't open (e.g. via stale URL),
   // fall back to their landing tab rather than rendering AnalystGate.
-  const effectiveTab = tab && canOpen(tab, session) ? tab : tabs.find((t) => t.id === landingTabForRole(session.role));
+  const effectiveTab = tab && canOpen(tab, session) ? tab : findTab(landingTabForRole(session.role), session);
   const showTab = effectiveTab || tab;
 
+  const caseTab = session.role === 'analyst' ? 'cases' : 'casework';
   const content = () => {
     const id = showTab?.id;
     if (id === 'architecture') return <ArchitecturePage />;
     if (id === 'cashout') return <AgentCashout session={session} />;
     if (id === 'account') return <CustomerAccount />;
-    if (id === 'transactions') return <TransactionsPage onOpenCases={(caseId) => { setFocusCase(caseId || null); selectTab('cases'); }} />;
-    if (id === 'command') return <CommandCenter onOpenCases={() => selectTab('cases')} onOpenTransactions={() => selectTab('transactions')} />;
+    if (id === 'transactions') return <TransactionsPage onOpenCases={(caseId) => { setFocusCase(caseId || null); selectTab(caseTab); }} />;
+    if (id === 'command') return <CommandCenter onOpenCases={() => selectTab(caseTab)} onOpenTransactions={() => selectTab('transactions')} />;
     if (id === 'liquidity') return <LiquidityPage session={session} />;
     if (id === 'campaign') return <UpliftPage />;
-    if (id === 'cases') return <ReviewQueue initialCaseId={focusCase} />;
+    if (id === 'cases') return <ReviewQueue initialCaseId={focusCase} session={session} />;
     if (id === 'outreach') return <OutreachList />;
     if (id === 'agents') return <AgentRiskBoard />;
     if (id === 'metrics') return <MetricsPage />;
     if (id === 'settings') return <SettingsPage />;
+    if (id === 'admin') return <AdminDashboard onOpen={selectTab} />;
+    if (id === 'desk') return <SupervisorDesk session={session} onOpen={selectTab} />;
+    if (id === 'callcenter') return <CallCenter session={session} />;
+    if (id === 'casework') return <CaseWorkbench session={session} initialCaseId={focusCase} />;
+    if (id === 'ledger') return <LedgerPage />;
+    if (id === 'reports') return <ReportsPage session={session} />;
+    if (id === 'users') return <UsersPage />;
+    if (id === 'agents-dir') return <AgentsDirectory />;
+    if (id === 'staff') return <StaffPage />;
+    if (id === 'auditlog') return <AuditLogPage />;
     // Fallback: render a small empty state if nothing matches.
     return (
       <div className="panel mx-auto max-w-md text-center shadow-sm">
@@ -148,8 +164,8 @@ export default function App() {
           role="region"
           aria-label="Demo warning"
         >
-          DEMO · All people and money here are made up, and prices are estimates (ASSUMPTIONS).
-          The AI never approves a cash-out by itself.
+          Live system on synthetic customers (no real upay accounts). The AI only recommends;
+          a person makes every decision.
         </div>
         <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-5 sm:px-6 sm:py-6 lg:py-8">
           <div
@@ -160,7 +176,7 @@ export default function App() {
           </div>
         </main>
         <footer className="border-t border-base-300 bg-base-100 px-4 py-3 text-center text-xs text-base-content/60 sm:px-6">
-          Sathi demo · AI DEV FEST 2026 · DIU CPC × upay
+          Sathi · AI DEV FEST 2026 · DIU CPC × upay
         </footer>
       </div>
       <div className="drawer-side z-40">

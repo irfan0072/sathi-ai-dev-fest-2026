@@ -86,10 +86,19 @@ def metrics(actual: np.ndarray, predicted: np.ndarray) -> dict[str, float]:
 
 
 def train_and_evaluate(data: dict[str, Any], seed: int = 42,
-                       external: dict[str, Any] | None = None) -> dict[str, Any]:
+                       external: dict[str, Any] | None = None,
+                       daily: pd.DataFrame | None = None,
+                       train_agents: list[str] | None = None,
+                       assumptions: list[str] | None = None) -> dict[str, Any]:
+    """Train on history and forecast the next 7 days from the last observed day.
+
+    `daily` lets the live service pass agent x day totals aggregated in PostgreSQL;
+    `train_agents` limits fitting to a sample of agents (forecasts still cover everyone).
+    """
     import lightgbm as lgb
 
-    daily = daily_cashout(data)
+    daily = daily if daily is not None else daily_cashout(data)
+    fit_daily = daily[daily["agent_id"].isin(train_agents)] if train_agents else daily
     days = sorted(daily["day"].unique())
     # Time split by forecast origin. Targets of the last training origin end before the
     # first test origin, so no test-window demand is used for fitting.
@@ -97,8 +106,8 @@ def train_and_evaluate(data: dict[str, Any], seed: int = 42,
     train_end = test_origins[0] - pd.Timedelta(days=HORIZON)
     train_origins = [pd.Timestamp(d) for d in days if 27 <= days.index(d) and
                      pd.Timestamp(d) <= train_end]
-    train = build_examples(daily, data["agents"], train_origins)
-    test = build_examples(daily, data["agents"], test_origins)
+    train = build_examples(fit_daily, data["agents"], train_origins)
+    test = build_examples(fit_daily, data["agents"], test_origins)
 
     params = dict(n_estimators=300, learning_rate=0.05, num_leaves=31, min_child_samples=40,
                   subsample=0.8, subsample_freq=1, colsample_bytree=0.9, random_state=seed,
@@ -200,7 +209,7 @@ def train_and_evaluate(data: dict[str, Any], seed: int = 42,
         ],
         "agents": agents_out,
         "cohorts": cohorts,
-        "assumptions": [
+        "assumptions": assumptions or [
             "Synthetic 90-day ledger; dates are simulation coordinates, not live days.",
             "Recommended float rounds the peak P90 demand up to 500 BDT.",
             "Forecasts guide cash planning only; they never limit a customer's cash-out.",

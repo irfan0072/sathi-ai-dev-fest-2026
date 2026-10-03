@@ -86,6 +86,10 @@ def demo_login(body: DemoLoginRequest) -> Any:
                 break
 
     if target_info is None or target_key is None:
+        staff = _staff_login(req_key or req_sub, body.pin)
+        if staff is not None:
+            return _issue(staff["staff_id"], staff["role"], staff["staff_id"], [], ttl_seconds,
+                          display_name=staff["display_name"])
         return JSONResponse(
             status_code=status.HTTP_401_UNAUTHORIZED,
             content={
@@ -115,11 +119,42 @@ def demo_login(body: DemoLoginRequest) -> Any:
     role = target_info.get("role", "")
     subject = target_info.get("subject", "")
     allowed_users = target_info.get("allowed_users", [])
+    if role in ("supervisor", "super_admin") and _staff_disabled(subject):
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={"error": {"code": "ACCOUNT_DISABLED",
+                               "message": "This staff account has been deactivated."}},
+        )
+    return _issue(subject, role, target_key, allowed_users, ttl_seconds)
 
+
+def _staff_login(staff_id: str | None, pin: str) -> dict[str, Any] | None:
+    """Staff accounts created by a super admin live in the database, not in config."""
+    if not staff_id:
+        return None
+    try:
+        from app.staff.service import get_staff_service
+
+        return get_staff_service().authenticate(staff_id.strip().lower(), str(pin).strip())
+    except Exception:
+        return None
+
+
+def _staff_disabled(subject: str) -> bool:
+    try:
+        from app.staff.service import get_staff_service
+
+        return get_staff_service().is_active(subject) is False
+    except Exception:
+        return False
+
+
+def _issue(subject: str, role: str, principal: str, allowed_users: list[str],
+           ttl_seconds: int, display_name: str = "") -> Any:
     token_claims = {
         "sub": subject,
         "role": role,
-        "principal": target_key,
+        "principal": principal,
         "allowed_users": allowed_users,
         "scope": "synthetic_demo",
     }
@@ -144,4 +179,5 @@ def demo_login(body: DemoLoginRequest) -> Any:
         role=role,
         subject=subject,
         allowed_users=allowed_users,
+        display_name=display_name or principal,
     )

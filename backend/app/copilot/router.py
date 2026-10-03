@@ -135,7 +135,8 @@ def collect_case_evidence(service: MandateService, case_id: int) -> dict[str, An
 @router.post("/{case_id}/brief")
 def generate_brief(
     case_id: int,
-    principal: Annotated[AuthenticatedPrincipal, Depends(require_roles("analyst"))],
+    principal: Annotated[AuthenticatedPrincipal,
+                         Depends(require_roles("analyst", "super_admin", "supervisor"))],
 ) -> Any:
     service = get_mandate_service()
     evidence = collect_case_evidence(service, case_id)

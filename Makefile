@@ -6,7 +6,7 @@ CONFIG ?= data/config.yaml
 SPLITS_DIR ?= data/generated/splits
 EVAL_DIR ?= data/generated/evaluation
 
-.PHONY: test lint check-structure test-api lint-api run-api test-console lint-console build-console run-console smoke-skeleton migrate seed generate split init-env demo-seed reproduce live-preflight live-tests live-tests-bd-ivr-standin live-standin-up live-standin-down
+.PHONY: test lint check-structure test-api lint-api run-api test-console lint-console build-console run-console smoke-skeleton migrate seed generate split init-env demo-seed reproduce live-preflight live-tests live-tests-bd-ivr-standin live-standin-up live-standin-down scale-seed smoke-roles
 
 test: check-structure test-api test-console
 
@@ -92,3 +92,12 @@ live-standin-down:
 # Assumes .env has SATHI_BD_IVR_API_KEY + SATHI_BD_IVR_WEBHOOK_SECRET set.
 live-tests-bd-ivr-standin:
 	SATHI_LIVE_TESTS=1 PYTHONPATH=backend $(PYTHON) -m pytest backend/tests/test_live_providers.py -v -k bd_ivr
+
+# Load a platform-scale synthetic population (default 5,000,000 customers) into DATABASE_URL.
+SCALE_USERS ?= 5000000
+scale-seed:
+	$(PYTHON) scripts/scale_seed.py --users $(SCALE_USERS)
+
+# Role-split smoke test against the running API.
+smoke-roles:
+	bash scripts/smoke_roles.sh

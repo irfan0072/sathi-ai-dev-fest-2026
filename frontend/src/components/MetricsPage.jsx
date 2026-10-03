@@ -568,7 +568,7 @@ export default function MetricsPage({ initialData = null }) {
         <div className="min-w-0">
           <h2 className="page-title">How well the AI works</h2>
           <p className="page-lead mt-1">
-            Test results on made-up data, for judges and technical reviewers. Every number comes from the verified frozen run.
+            Offline test results of the AI models on a held-out test set, for judges and technical reviewers. These are fixed on purpose so anyone can reproduce them; the same trained models score the live data on the Agent risk and Customers pages.
           </p>
         </div>
       </div>

@@ -22,7 +22,7 @@ PLACEHOLDER_SECRETS = {
     "CHANGEME",
 }
 MIN_SECRET_LENGTH = 32
-ALLOWED_ROLES = {"agent", "customer_channel", "analyst"}
+ALLOWED_ROLES = {"agent", "customer_channel", "analyst", "supervisor", "super_admin"}
 ALLOWED_SCOPES = {"synthetic_demo"}
 
 

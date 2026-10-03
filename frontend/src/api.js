@@ -82,7 +82,7 @@ export const restoreSession = (store = storage(), now = Date.now()) => {
       store?.removeItem(SESSION_KEY);
       return null;
     }
-    if (!['agent', 'customer_channel', 'analyst'].includes(saved.session.role)) return null;
+    if (!['agent', 'customer_channel', 'analyst', 'supervisor', 'super_admin'].includes(saved.session.role)) return null;
     return saved;
   } catch { return null; }
 };
@@ -99,6 +99,13 @@ let accessToken = restored?.token || '';
 let session = restored?.session || null;
 const sessionListeners = new Set();
 const notifySession = () => sessionListeners.forEach((listener) => listener(session));
+
+export const qs = (params = {}) => {
+  const parts = Object.entries(params)
+    .filter(([, v]) => v !== undefined && v !== null && v !== '')
+    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`);
+  return parts.length ? `?${parts.join('&')}` : '';
+};
 
 const request = async (path, { method = 'GET', body, authenticated = true } = {}) => {
   if (!API_BASE_URL) throw new Error('API unavailable: configure the public API URL.');
@@ -145,11 +152,14 @@ export const api = {
     const data = await request('/api/v1/auth/demo-login', {
       method: 'POST', body: { principal, pin }, authenticated: false,
     });
-    if (!data.access_token || !['agent', 'customer_channel', 'analyst'].includes(data.role)) {
+    if (!data.access_token || !['agent', 'customer_channel', 'analyst', 'supervisor', 'super_admin'].includes(data.role)) {
       throw new Error('Invalid demo login response.');
     }
     accessToken = data.access_token;
-    session = { role: data.role, subject: data.subject, allowed_users: data.allowed_users || [] };
+    session = {
+      role: data.role, subject: data.subject, allowed_users: data.allowed_users || [],
+      display_name: data.display_name || data.subject,
+    };
     persistSession(accessToken, session);
     notifySession();
     return session;
@@ -170,6 +180,7 @@ export const api = {
   revokeMandate: (mandateId) => request(`/api/v1/mandates/${encodeURIComponent(mandateId)}/revoke`, { method: 'POST' }),
   getUserAssistedScore: (id) => request(`/api/v1/users/${encodeURIComponent(id)}/assisted-score`),
   getAgentRisk: (id) => request(`/api/v1/agents/${encodeURIComponent(id)}/risk`),
+  getAgentRiskBoard: ({ level, limit = 200 } = {}) => request(`/api/v1/agents/risk-board${qs({ level, limit })}`),
   getOutreachList: () => request('/api/v1/outreach'),
   getCases: () => request('/api/v1/cases'),
   decideCase: ({ caseId, decision, note }) => request(`/api/v1/cases/${encodeURIComponent(caseId)}/decision`, {
@@ -184,9 +195,13 @@ export const api = {
   placeCall: (mandateId) => request(`/api/v1/mandates/${encodeURIComponent(mandateId)}/call`, { method: 'POST' }),
   getCall: (mandateId) => request(`/api/v1/mandates/${encodeURIComponent(mandateId)}/call`),
   getIncomingCalls: () => request('/api/v1/voice/incoming'),
-  answerSimulatedCall: ({ callId, digits }) => request(`/api/v1/voice/calls/${encodeURIComponent(callId)}/simulated-answer`, {
-    method: 'POST', body: { digits },
+  answerSimulatedCall: ({ callId, digits, noInput = false }) => request(`/api/v1/voice/calls/${encodeURIComponent(callId)}/simulated-answer`, {
+    method: 'POST', body: { digits, no_input: noInput },
   }),
+  assistantChat: (message) => request('/api/v1/assistant/chat', { method: 'POST', body: { message } }),
+  getAssistantHistory: () => request('/api/v1/assistant/history'),
+  getMyLanguage: () => request('/api/v1/me/language'),
+  setMyLanguage: (language) => request('/api/v1/me/language', { method: 'PUT', body: { language } }),
   generateCaseBrief: (caseId) => request(`/api/v1/cases/${encodeURIComponent(caseId)}/brief`, { method: 'POST' }),
   getLiquidityOverview: () => request('/api/v1/liquidity/overview'),
   getAgentLiquidity: (agentId) => request(`/api/v1/liquidity/agents/${encodeURIComponent(agentId)}`),
@@ -215,6 +230,43 @@ export const api = {
   resetSetting: (key) => request(`/api/v1/settings/${encodeURIComponent(key)}`, { method: 'DELETE' }),
   optimizeCampaign: (budgetBdt) => request('/api/v1/campaigns/optimize', {
     method: 'POST', body: { budget_bdt: budgetBdt },
+  }),
+  // ── Super admin ──
+  getAdminOverview: () => request('/api/v1/admin/overview'),
+  getAdminUsers: ({ q, after, limit = 50 } = {}) => request(`/api/v1/admin/users${qs({ q, after, limit })}`),
+  getAdminUser: (id) => request(`/api/v1/admin/users/${encodeURIComponent(id)}`),
+  getAdminAgents: ({ q, after, region, limit = 50 } = {}) => request(`/api/v1/admin/agents${qs({ q, after, region, limit })}`),
+  getAdminAgent: (id) => request(`/api/v1/admin/agents/${encodeURIComponent(id)}`),
+  getAdminTransactions: (params = {}) => request(`/api/v1/admin/transactions${qs(params)}`),
+  getAuditLog: (params = {}) => request(`/api/v1/admin/audit-log${qs(params)}`),
+  getStaff: (role) => request(`/api/v1/admin/staff${qs({ role })}`),
+  createStaff: (body) => request('/api/v1/admin/staff', { method: 'POST', body }),
+  updateStaff: (id, body) => request(`/api/v1/admin/staff/${encodeURIComponent(id)}`, { method: 'PATCH', body }),
+  setSimulator: (body) => request('/api/v1/admin/simulator', { method: 'PUT', body }),
+  // ── Call management ──
+  getCallQueue: (params = {}) => request(`/api/v1/callcenter/queue${qs(params)}`),
+  getCallStats: () => request('/api/v1/callcenter/stats'),
+  getCallTask: (id) => request(`/api/v1/callcenter/tasks/${encodeURIComponent(id)}`),
+  claimCall: (id) => request(`/api/v1/callcenter/tasks/${encodeURIComponent(id)}/claim`, { method: 'POST' }),
+  startCall: (id) => request(`/api/v1/callcenter/tasks/${encodeURIComponent(id)}/start`, { method: 'POST' }),
+  releaseCall: (id) => request(`/api/v1/callcenter/tasks/${encodeURIComponent(id)}/release`, { method: 'POST' }),
+  assignCall: (id, staffId) => request(`/api/v1/callcenter/tasks/${encodeURIComponent(id)}/assign`, { method: 'POST', body: { staff_id: staffId } }),
+  escalateCall: (id) => request(`/api/v1/callcenter/tasks/${encodeURIComponent(id)}/escalate`, { method: 'POST' }),
+  distributeCalls: () => request('/api/v1/callcenter/distribute', { method: 'POST' }),
+  recordCallOutcome: (id, body) => request(`/api/v1/callcenter/tasks/${encodeURIComponent(id)}/outcome`, { method: 'POST', body }),
+  // ── Case work ──
+  getDeskSummary: () => request('/api/v1/workdesk/summary'),
+  getCaseQueue: (params = {}) => request(`/api/v1/workdesk/cases${qs(params)}`),
+  getCaseFile: (id) => request(`/api/v1/cases/${encodeURIComponent(id)}/file`),
+  claimCase: (id) => request(`/api/v1/cases/${encodeURIComponent(id)}/claim`, { method: 'POST' }),
+  releaseCase: (id) => request(`/api/v1/cases/${encodeURIComponent(id)}/release`, { method: 'POST' }),
+  assignCase: (id, staffId) => request(`/api/v1/cases/${encodeURIComponent(id)}/assign`, { method: 'POST', body: { staff_id: staffId } }),
+  distributeCases: () => request('/api/v1/cases/distribute', { method: 'POST' }),
+  addCaseNote: (id, body) => request(`/api/v1/cases/${encodeURIComponent(id)}/notes`, { method: 'POST', body }),
+  submitAuditReport: (id, body) => request(`/api/v1/cases/${encodeURIComponent(id)}/audit-report`, { method: 'POST', body }),
+  getAuditReports: () => request('/api/v1/workdesk/reports'),
+  answerSimulatedSpeech: ({ callId, speech, confidence }) => request(`/api/v1/voice/calls/${encodeURIComponent(callId)}/simulated-answer`, {
+    method: 'POST', body: { digits: '', speech, confidence },
   }),
   async checkHealth() {
     if (!API_BASE_URL) return false;

@@ -10,11 +10,23 @@ describe('Settings page', () => {
     expect(html).toContain('Loading settings');
   });
 
-  it('is analyst-only in navigation', () => {
+  it('is super-admin-only in navigation', () => {
     const settings = tabs.find((t) => t.id === 'settings');
-    expect(canOpen(settings, { role: 'analyst' })).toBe(true);
+    expect(canOpen(settings, { role: 'analyst' })).toBe(false);
     expect(canOpen(settings, { role: 'agent' })).toBe(false);
     expect(canOpen(settings, { role: 'customer_channel' })).toBe(false);
+  });
+
+  it('grants the new super_admin and supervisor roles per the role-split', () => {
+    // Super admin reaches every analyst page (settings here) and Cases.
+    const settings = tabs.find((t) => t.id === 'settings');
+    expect(canOpen(settings, { role: 'super_admin' })).toBe(true);
+    // Supervisor works the call queue and cases.
+    const casework = tabs.filter((t) => t.id === 'casework');
+    expect(casework.some((t) => canOpen(t, { role: 'supervisor' }))).toBe(true);
+    expect(tabs.filter((t) => t.id === 'callcenter').some((t) => canOpen(t, { role: 'supervisor' }))).toBe(true);
+    // Supervisor is locked out of settings.
+    expect(canOpen(settings, { role: 'supervisor' })).toBe(false);
   });
 });
 

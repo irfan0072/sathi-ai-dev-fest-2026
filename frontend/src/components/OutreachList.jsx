@@ -49,8 +49,11 @@ export default function OutreachList({ initialData = null }) {
   const [error, setError] = useState('');
   useEffect(() => {
     let live = true;
-    if (!initialData) api.getOutreachList().then((value) => { if (live) setData(value); }).catch((err) => { if (live) { setData(null); setError(err.message); } });
-    return () => { live = false; };
+    if (initialData) return () => { live = false; };
+    const load = () => api.getOutreachList().then((value) => { if (live) { setData(value); setError(''); } }).catch((err) => { if (live) setError(err.message); });
+    load();
+    const timer = setInterval(load, 60000);
+    return () => { live = false; clearInterval(timer); };
   }, [initialData]);
   const select = async (id) => {
     setScore(null); setError(''); setSelected(id);
@@ -62,7 +65,9 @@ export default function OutreachList({ initialData = null }) {
       <div>
         <h2 className="page-title">Customers who may need help</h2>
         <p className="page-lead mt-1">
-          People who may need someone to help them pay, so we can offer Sathi to them first (frozen synthetic snapshot of demo data).
+          Customers active in the last 30 days who may need someone to help them pay, so we can offer Sathi to them first.
+          Scored live by the trained AI from their real activity
+          {data?.computed_at ? ` · updated ${new Date(data.computed_at).toLocaleTimeString()}` : ''}.
         </p>
       </div>
       {error && (
@@ -73,14 +78,14 @@ export default function OutreachList({ initialData = null }) {
       {!data ? (
         <p className="flex items-center gap-2 text-sm text-base-content/70">
           <span className="loading loading-dots loading-sm" />
-          Unavailable — waiting for verified saved evidence.
+          Scoring active customers…
         </p>
       ) : (
         <div className="grid gap-5 lg:grid-cols-2">
           <div className="panel shadow-sm">
             <div className="panel-body p-2 sm:p-4">
               <p className="muted px-2">
-                {data.total} customers, most likely first
+                {data.scored_customers?.toLocaleString() ?? data.total} customers scored · {data.likely_assisted ?? '—'} likely need help · top {data.items.length} shown
               </p>
               <div className="overflow-x-auto">
                 <table className="table table-sm">
@@ -109,7 +114,7 @@ export default function OutreachList({ initialData = null }) {
                               value={item.assisted_score * 100}
                               max="100"
                             />
-                            <span className="font-mono text-xs">{(item.assisted_score * 100).toFixed(2)}%</span>
+                            <span className="font-mono text-xs">{(item.assisted_score * 100).toFixed(1)}%</span>
                           </div>
                         </td>
                         <td className="text-right">

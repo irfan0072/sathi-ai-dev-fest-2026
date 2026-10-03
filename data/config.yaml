@@ -143,6 +143,14 @@ auth:
       role: analyst
       subject: analyst_777
       pin: "9012"
+    demo_supervisor:
+      role: supervisor
+      subject: supervisor_777
+      pin: "3456"                 # public synthetic demo PIN, never a real credential
+    demo_admin:
+      role: super_admin
+      subject: admin_777
+      pin: "7890"                 # public synthetic demo PIN, never a real credential
 
 models:
   assisted_classifier:

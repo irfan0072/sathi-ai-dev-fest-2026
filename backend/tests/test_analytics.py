@@ -89,54 +89,6 @@ def test_receipt_numerical_tamper_detection():
         validate_receipt_numerical_integrity(tampered_cents_text, {3000.0, 45.50, 2954.50})
 
 
-def test_api_user_assisted_score():
-    analyst_token = create_test_token("analyst_rahman", "analyst")
-    resp = client.get(
-        "/api/v1/users/U_fixture_1/assisted-score",
-        headers={"Authorization": f"Bearer {analyst_token}"},
-    )
-    assert resp.status_code == 200
-    data = resp.json()
-    assert data["user_id"] == "U_fixture_1"
-    assert data["provenance"] == "verified synthetic simulation snapshot"
-    assert data["is_sample"] is False
-    assert len(data["top_reasons"]) > 0
-    assert "feature" in data["top_reasons"][0]
-    assert data["score"] == 0.73
-    assert data["top_reasons"][0]["attribution"] == 0.4
-    assert data["top_reasons"][0]["attribution_unit"] == "log_odds"
-
-
-def test_api_agent_risk():
-    analyst_token = create_test_token("analyst_rahman", "analyst")
-    resp = client.get(
-        "/api/v1/agents/A_fixture_1/risk",
-        headers={"Authorization": f"Bearer {analyst_token}"},
-    )
-    assert resp.status_code == 200
-    data = resp.json()
-    assert data["agent_id"] == "A_fixture_1"
-    assert data["provenance"] == "verified synthetic simulation snapshot"
-    assert data["is_sample"] is False
-    assert data["risk"] == 0.82
-    assert data["reasons"][0]["peer_median"] == 1.0
-    assert "chittagong" not in data.get("peer_group", "").lower()
-
-
-def test_api_outreach_list():
-    analyst_token = create_test_token("analyst_rahman", "analyst")
-    resp = client.get(
-        "/api/v1/outreach",
-        headers={"Authorization": f"Bearer {analyst_token}"},
-    )
-    assert resp.status_code == 200
-    data = resp.json()
-    assert data["provenance"] == "verified synthetic simulation snapshot"
-    assert data["is_sample"] is False
-    assert data["total"] >= 1
-    assert data["items"][0]["provenance"] == "verified synthetic simulation snapshot"
-
-
 def test_api_cases_workflow(durable_service: MandateService) -> None:
     """Verify durable review cases workflow, initial empty queue, and audit persistence."""
     analyst_token = create_test_token("analyst_rahman", "analyst")

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { api } from '../api';
 import Icon from './Icon';
 import { IncomingCall, SmsInbox } from './LiveCall';
+import AssistantChat, { CallLanguage } from './AssistantChat';
 import { takaFmt } from '../copy';
 
 const customerCheck = {
@@ -29,8 +30,8 @@ export default function CustomerAccount() {
       <div>
         <h2 className="page-title">My account</h2>
         <p className="page-lead mt-1">
-          After every cash-out, Sathi calls you. Type the amount of cash you got and press #. If you did not take any
-          cash, just press #.
+          After every cash-out, Sathi calls you in your language. Type or say the cash you got and press #. If you did not
+          take any cash, just press #. Press 9 to talk to a person. Questions? Ask Sathi Sahayak below.
         </p>
       </div>
       {error && <div role="alert" className="alert alert-error alert-soft text-sm">{error}</div>}
@@ -45,6 +46,10 @@ export default function CustomerAccount() {
                 <div className="text-3xl font-bold">{data ? takaFmt(data.balance) : '…'}</div>
               </div>
             </div>
+          </div>
+
+          <div className="panel shadow-sm">
+            <div className="panel-body"><AssistantChat onAction={load} /></div>
           </div>
 
           <div className="panel shadow-sm">
@@ -73,6 +78,9 @@ export default function CustomerAccount() {
               <h3 className="font-semibold">My phone</h3>
               <IncomingCall key={phoneKey} onFinished={() => { load(); setTimeout(() => setPhoneKey((k) => k + 1), 2500); }} />
             </div>
+          </div>
+          <div className="panel shadow-sm">
+            <div className="panel-body"><CallLanguage /></div>
           </div>
           <div className="panel shadow-sm">
             <div className="panel-body"><SmsInbox /></div>

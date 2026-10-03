@@ -24,7 +24,8 @@ from app.settings.service import SettingsError, SettingsService
 router = APIRouter(prefix="/api/v1/settings", tags=["settings"])
 
 PAID_TESTS_PER_HOUR = 5
-Analyst = Annotated[AuthenticatedPrincipal, Depends(require_roles("analyst"))]
+# Settings change providers, credentials and policy for the whole platform: super admin only.
+Analyst = Annotated[AuthenticatedPrincipal, Depends(require_roles("super_admin"))]
 
 
 def get_settings() -> SettingsService:

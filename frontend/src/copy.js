@@ -4,7 +4,9 @@
 export const roleName = {
   agent: 'Agent',
   customer_channel: 'Customer',
-  analyst: 'Supervisor',
+  analyst: 'Fraud analyst',
+  supervisor: 'Supervisor',
+  super_admin: 'Super admin',
 };
 
 export const caseReason = {
@@ -88,6 +90,7 @@ export const eventLabel = (action) => eventName[action] || String(action || '').
 
 // Names for the behaviours the AI models look at.
 export const featureName = {
+  agent_cash_gap_rate: 'Customers who got less cash than paid',
   fee_ratio_vs_official: 'Fee charged compared with the official fee',
   allowance_spike_ratio: 'Extra cash-outs on allowance days',
   agent_assisted_tx_ratio: 'How often an agent does it for them',

@@ -50,7 +50,7 @@ def set_notification_service(service: NotificationService | None) -> None:
 @router.get("/notifications")
 def list_notifications(
     principal: Annotated[AuthenticatedPrincipal,
-                         Depends(require_roles("customer_channel", "analyst"))],
+                         Depends(require_roles("customer_channel", "analyst", "super_admin"))],
 ) -> Any:
     service = get_notification_service()
     user = None if principal.role == "analyst" else principal.subject

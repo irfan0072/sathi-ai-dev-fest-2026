@@ -2,21 +2,41 @@ import Icon from './Icon';
 import ThemeToggle from './ThemeToggle';
 
 export const tabs = [
-  { id: 'command', label: 'Dashboard', icon: 'chart', group: 'Daily work', title: 'Today at a glance', roles: ['analyst'] },
+  // Super admin
+  { id: 'admin', label: 'Control center', icon: 'chart', group: 'Overview', title: 'Control center', roles: ['super_admin'] },
+  { id: 'callcenter', label: 'Call management', icon: 'phone', group: 'Operations', title: 'Call management', roles: ['super_admin'] },
+  { id: 'casework', label: 'Cases', icon: 'cases', group: 'Operations', title: 'Cases', roles: ['super_admin'] },
+  { id: 'ledger', label: 'All transactions', icon: 'receipt', group: 'Operations', title: 'All transactions', roles: ['super_admin'] },
+  { id: 'reports', label: 'Audit reports', icon: 'shield', group: 'Operations', title: 'Audit reports', roles: ['super_admin'] },
+  { id: 'users', label: 'Customers', icon: 'users', group: 'Directory', title: 'Customers', roles: ['super_admin'] },
+  { id: 'agents-dir', label: 'Agents', icon: 'store', group: 'Directory', title: 'Agents', roles: ['super_admin'] },
+  { id: 'staff', label: 'Supervisors', icon: 'shield', group: 'Directory', title: 'Supervisors and admins', roles: ['super_admin'] },
+  // Supervisor
+  { id: 'desk', label: 'My desk', icon: 'chart', group: 'My work', title: 'My desk', roles: ['supervisor'] },
+  { id: 'callcenter', label: 'Call queue', icon: 'phone', group: 'My work', title: 'Call queue', roles: ['supervisor'] },
+  { id: 'casework', label: 'Cases', icon: 'cases', group: 'My work', title: 'Cases to review', roles: ['supervisor'] },
+  { id: 'reports', label: 'My audit reports', icon: 'shield', group: 'My work', title: 'My audit reports', roles: ['supervisor'] },
+  // Fraud analytics (analyst and super admin)
+  { id: 'command', label: 'Fraud dashboard', icon: 'radar', group: 'Analytics', title: 'Today at a glance', roles: ['analyst', 'super_admin'] },
+  { id: 'transactions', label: 'Confirmations', icon: 'receipt', group: 'Analytics', title: 'Cash-outs confirmed by customers', roles: ['analyst', 'super_admin'] },
+  { id: 'cases', label: 'Cases to review', icon: 'cases', group: 'Analytics', title: 'Cases to review', roles: ['analyst'] },
+  { id: 'agents', label: 'Agent risk (AI)', icon: 'radar', group: 'Analytics', title: 'Agents with unusual activity', roles: ['analyst', 'super_admin'] },
+  { id: 'liquidity', label: 'Cash planning', icon: 'store', group: 'Analytics', title: 'How much cash agents will need', roles: ['agent', 'analyst', 'super_admin'] },
+  { id: 'outreach', label: 'Customers who need help', icon: 'users', group: 'Analytics', title: 'Customers who may need help', roles: ['analyst', 'super_admin'] },
+  { id: 'campaign', label: 'Invite planner', icon: 'users', group: 'Analytics', title: 'Who to invite to Sathi', roles: ['analyst', 'super_admin'] },
+  { id: 'metrics', label: 'AI test results', icon: 'chart', group: 'Analytics', title: 'How well the AI works', roles: ['analyst', 'super_admin'] },
+  // Agent and customer
   { id: 'cashout', label: 'Cash-out', icon: 'flow', group: 'Daily work', title: 'Cash-out', roles: ['agent'] },
   { id: 'account', label: 'My account', icon: 'phone', group: 'Daily work', title: 'My account', roles: ['customer_channel'] },
-  { id: 'transactions', label: 'Transactions', icon: 'receipt', group: 'Daily work', title: 'Cash-outs confirmed by customers', roles: ['analyst'] },
-  { id: 'cases', label: 'Cases to review', icon: 'cases', group: 'Daily work', title: 'Cases to review', roles: ['analyst'] },
-  { id: 'liquidity', label: 'Cash planning', icon: 'store', group: 'Agents', title: 'How much cash agents will need', roles: ['agent', 'analyst'] },
-  { id: 'agents', label: 'Agent check', icon: 'radar', group: 'Agents', title: 'Agents with unusual activity', roles: ['analyst'] },
-  { id: 'outreach', label: 'Customers who need help', icon: 'users', group: 'Customers', title: 'Customers who may need help', roles: ['analyst'] },
-  { id: 'campaign', label: 'Invite planner', icon: 'users', group: 'Customers', title: 'Who to invite to Sathi', roles: ['analyst'] },
-  { id: 'metrics', label: 'AI test results', icon: 'chart', group: 'Reports', title: 'How well the AI works', roles: ['analyst'] },
-  { id: 'settings', label: 'Settings', icon: 'settings', group: 'System', title: 'Settings', roles: ['analyst'] },
+  // System
+  { id: 'auditlog', label: 'Audit log', icon: 'lock', group: 'System', title: 'Audit log', roles: ['super_admin'] },
+  { id: 'settings', label: 'Settings', icon: 'settings', group: 'System', title: 'Settings', roles: ['super_admin'] },
   { id: 'architecture', label: 'How it works', icon: 'info', group: 'Help', title: 'How Sathi keeps cash-outs safe' },
 ];
 
-export const canOpen = (tab, session) => !tab.roles || tab.roles.includes(session?.role);
+export const findTab = (id, session) => tabs.find((t) => t.id === id && canOpen(t, session)) || tabs.find((t) => t.id === id);
+
+export const canOpen = (tab, session) => Boolean(tab) && (!tab.roles || tab.roles.includes(session?.role));
 
 export default function NavTabs({ activeTab, onSelectTab, session = null }) {
   // Locked tabs are hidden, not dimmed. This prevents role-leakage in the sidebar.
@@ -46,7 +66,7 @@ export default function NavTabs({ activeTab, onSelectTab, session = null }) {
               .map((tab) => {
                 const selected = activeTab === tab.id;
                 return (
-                  <li key={tab.id}>
+                  <li key={`${tab.id}-${tab.group}`}>
                     <button
                       className={`group gap-3 rounded-lg py-2.5 pl-3 pr-2 transition focus-ring ${
                         selected ? 'menu-active font-medium' : 'hover:bg-base-200/70'
@@ -66,7 +86,8 @@ export default function NavTabs({ activeTab, onSelectTab, session = null }) {
 
       <div className="m-3 mt-2 flex items-center justify-between gap-2 rounded-box border border-base-300 bg-base-200/60 p-3 text-[11px] leading-relaxed text-base-content/80">
         <span className="flex-1">
-          Demo version with made-up data. Not connected to real upay accounts.
+          {session?.display_name ? <><strong>{session.display_name}</strong><br /></> : null}
+          Synthetic data. Not connected to real upay accounts.
         </span>
         <ThemeToggle />
       </div>

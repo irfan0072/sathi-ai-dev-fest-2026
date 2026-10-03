@@ -121,10 +121,15 @@ export function IncomingCall({ onFinished }) {
     return () => { live = false; clearInterval(timer); };
   }, [answered]);
 
-  const send = async () => {
+  const [said, setSaid] = useState('');
+  const send = async (speech = null, { confidence = 0.32, noInput = false } = {}) => {
     setError('');
     try {
-      const result = await api.answerSimulatedCall({ callId: incoming.call_id, digits });
+      const result = noInput
+        ? await api.answerSimulatedCall({ callId: incoming.call_id, digits: '', noInput: true })
+        : speech
+          ? await api.answerSimulatedSpeech({ callId: incoming.call_id, speech, confidence })
+          : await api.answerSimulatedCall({ callId: incoming.call_id, digits });
       setSpoken(result.spoken_bn); setDigits('');
       if (result.call_ended) {
         setEnded(true);
@@ -171,10 +176,10 @@ export function IncomingCall({ onFinished }) {
       ) : (
         <>
           <p
-            lang="bn"
+            lang={incoming?.language === 'en' ? 'en' : 'bn'}
             className="mt-3 rounded-box bg-base-200 p-2 text-sm leading-relaxed"
           >
-            {spoken.length ? spoken.join(' ') : incoming.prompt_bn}
+            {spoken.length ? spoken.join(' ') : (incoming.prompt || incoming.prompt_bn)}
           </p>
           {!ended && (
             <>
@@ -204,6 +209,36 @@ export function IncomingCall({ onFinished }) {
               <p className="muted mt-2">
                 Type the cash you got, then press #. If you did not take any cash, just press #.
               </p>
+              {!incoming.mandate_id && (
+                <>
+                  <p className="muted mt-1 text-center text-[11px]">9 # talk to a person · 8 # English / বাংলা</p>
+                  <form
+                    className="join mt-2 w-full"
+                    onSubmit={(e) => { e.preventDefault(); if (said.trim()) { send(said.trim(), { confidence: 0.9 }); setSaid(''); } }}
+                  >
+                    <input
+                      className="input input-bordered input-sm join-item w-full focus-ring"
+                      placeholder="Or say it: আড়াই হাজার / tin hajar / 3000"
+                      value={said}
+                      onChange={(e) => setSaid(e.target.value)}
+                      aria-label="Say your answer"
+                    />
+                    <button className="btn btn-sm join-item" type="submit">Say</button>
+                  </form>
+                  <div className="mt-1 grid grid-cols-2 gap-1">
+                    <button type="button" className="btn btn-ghost btn-xs border-dashed border-base-300 focus-ring"
+                      onClick={() => send('উম... আমি ঠিক বুঝতে পারছি না')}
+                      title="Say something the AI cannot understand. Twice sends the call to a supervisor.">
+                      Mumble (unclear)
+                    </button>
+                    <button type="button" className="btn btn-ghost btn-xs border-dashed border-base-300 focus-ring"
+                      onClick={() => send(null, { noInput: true })}
+                      title="Stay silent. Sathi asks again once, then calls back later.">
+                      Stay silent
+                    </button>
+                  </div>
+                </>
+              )}
             </>
           )}
         </>

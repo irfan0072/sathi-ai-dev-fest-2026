@@ -46,6 +46,21 @@ describe('Scoped in-memory API client', () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(response({ status: 'degraded' })));
     expect(await api.checkHealth()).toBe(false);
   });
+  it('accepts the new supervisor and super_admin roles from demo-login', async () => {
+    const fetcher = vi.fn().mockResolvedValue(response({
+      ...loginReply, role: 'supervisor', subject: 'supervisor_777',
+      access_token: 'supervisor-token',
+    }));
+    vi.stubGlobal('fetch', fetcher);
+    await api.login({ principal: 'demo_supervisor', pin: '3456' });
+    expect(api.getSession().role).toBe('supervisor');
+    fetcher.mockResolvedValueOnce(response({
+      ...loginReply, role: 'super_admin', subject: 'admin_777',
+      access_token: 'admin-token',
+    }));
+    await api.login({ principal: 'demo_admin', pin: '7890' });
+    expect(api.getSession().role).toBe('super_admin');
+  });
   it('unavailable artifacts propagate errors with no fallback numbers', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValueOnce(response(loginReply)).mockResolvedValue(response({ detail: 'Artifacts unavailable' }, 503)));
     await api.login({ principal: 'demo_agent', pin: '1234' });

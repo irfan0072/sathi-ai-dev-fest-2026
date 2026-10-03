@@ -110,10 +110,13 @@ def qini_coefficient(curve: list[dict[str, float]]) -> float:
     return float(np.trapezoid(ys - random_line, xs))
 
 
-def train_and_evaluate(data: dict[str, Any], seed: int = 42) -> dict[str, Any]:
+def train_and_evaluate(data: dict[str, Any], seed: int = 42,
+                       features: pd.DataFrame | None = None,
+                       assumptions: list[str] | None = None) -> dict[str, Any]:
     import lightgbm as lgb
 
-    frame = simulate_experiment(user_features(data), seed)
+    frame = simulate_experiment(features if features is not None else user_features(data),
+                                seed)
     rng = np.random.default_rng(seed + 1)
     test_mask = rng.random(len(frame)) < 0.3
     train, test = frame[~test_mask], frame[test_mask]
@@ -180,7 +183,7 @@ def train_and_evaluate(data: dict[str, Any], seed: int = 42) -> dict[str, Any]:
         ],
         "channels": CHANNELS,
         "candidates": candidates,
-        "assumptions": [
+        "assumptions": assumptions or [
             "Synthetic randomized experiment; the true effect formula is injected and "
             "documented so policies can be checked against known truth.",
             "Channel costs and effect multipliers are ASSUMPTIONS, not upay prices.",

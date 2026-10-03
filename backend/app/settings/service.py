@@ -91,6 +91,24 @@ REGISTRY: tuple[Setting, ...] = (
     Setting("ops.sla_normal_minutes", "Other cases", "Time to respond", "int", 480,
             "Wrong amount typed, or too many wrong codes.", minimum=60, maximum=4320,
             unit="min"),
+    Setting("calls.max_auto_attempts", "Automatic call attempts", "Call management", "int", 3,
+            "How many times Sathi calls a customer who does not pick up before the check is "
+            "marked unreachable (ignored).", minimum=1, maximum=10),
+    Setting("calls.retry_delay_seconds", "Wait before calling again", "Call management", "int",
+            120, "Delay before the first retry. Each later retry waits twice as long.",
+            minimum=10, maximum=86400, unit="s"),
+    Setting("calls.ring_timeout_seconds", "Ring time before 'no answer'", "Call management",
+            "int", 45, "How long a demo call rings before it counts as missed. Real providers "
+            "report missed calls themselves.", minimum=15, maximum=600, unit="s"),
+    Setting("calls.unclear_confidence", "Speech confidence needed", "Call management", "float",
+            0.6, "Spoken answers below this recognition confidence are not guessed: they are "
+            "asked again, then sent to a supervisor.", minimum=0.1, maximum=0.99),
+    Setting("sim.enabled", "Live traffic simulator", "Live traffic simulator", "bool", False,
+            "Creates realistic cash-outs from synthetic customers and answers their calls "
+            "(some confirm, some miss the call, some mumble, a few dispute). Everything runs "
+            "through the real pipeline."),
+    Setting("sim.rate_per_minute", "Cash-outs per minute", "Live traffic simulator", "int", 12,
+            "How many simulated cash-outs to create each minute.", minimum=1, maximum=600),
     Setting("cost.usd_to_bdt", "1 US dollar in Taka", "Price estimates", "float", 122.0,
             "Only used to estimate costs.", minimum=50, maximum=300, unit="BDT"),
     Setting("cost.twilio_usd_per_min", "Twilio call price", "Price estimates", "float", 0.06,

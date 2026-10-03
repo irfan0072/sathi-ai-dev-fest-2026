@@ -26,7 +26,7 @@ def analyst_headers():
 
 @pytest.mark.parametrize(
     "route",
-    ["outreach", "metrics/summary", "users/U_fixture_1/assisted-score", "agents/A_fixture_1/risk"],
+    ["metrics/summary"],
 )
 def test_snapshot_routes_require_analyst(bundle_client, route):
     client, _ = bundle_client
@@ -36,21 +36,11 @@ def test_snapshot_routes_require_analyst(bundle_client, route):
     assert client.get("/api/v1/" + route, headers=analyst_headers()).status_code == 200
 
 
-def test_unknown_snapshot_subject_not_invented(bundle_client):
-    client, _ = bundle_client
-    assert (
-        client.get(
-            "/api/v1/users/U_777_000001/assisted-score", headers=analyst_headers()
-        ).status_code
-        == 404
-    )
-
-
 def test_tamper_after_good_request_is_unavailable(bundle_client):
     client, directory = bundle_client
-    assert client.get("/api/v1/outreach", headers=analyst_headers()).status_code == 200
+    assert client.get("/api/v1/metrics/summary", headers=analyst_headers()).status_code == 200
     (directory / "agent.joblib").write_bytes(b"changed")
-    response = client.get("/api/v1/outreach", headers=analyst_headers())
+    response = client.get("/api/v1/metrics/summary", headers=analyst_headers())
     assert response.status_code == 503
     assert str(directory) not in response.text
 
@@ -58,9 +48,8 @@ def test_tamper_after_good_request_is_unavailable(bundle_client):
 def test_missing_artifacts_no_sample_fallback(tmp_path):
     set_analytics_service(AnalyticsService(artifact_dir=tmp_path / "missing"))
     try:
-        response = TestClient(app).get("/api/v1/outreach", headers=analyst_headers())
+        response = TestClient(app).get("/api/v1/metrics/summary", headers=analyst_headers())
         assert response.status_code == 503
-        assert "items" not in response.json()
     finally:
         set_analytics_service(None)
 

@@ -81,12 +81,17 @@ def _voice() -> VoiceService | JSONResponse:
 
 class SimulatedAnswer(BaseModel):
     digits: str = Field(default="", max_length=12, description="Keys pressed before #")
+    speech: str | None = Field(default=None, max_length=200,
+                               description="Spoken answer (speech recognition transcript)")
+    confidence: float | None = Field(default=None, ge=0, le=1)
+    no_input: bool = Field(default=False, description="The customer stayed silent")
 
 
 @router.get("/voice/config")
 def voice_config(
     principal: Annotated[AuthenticatedPrincipal,
-                         Depends(require_roles("agent", "customer_channel", "analyst"))],
+                         Depends(require_roles("agent", "customer_channel", "analyst",
+                                               "super_admin"))],
 ) -> Any:
     """Which channel is live. Never returns credentials or phone numbers."""
     from app.settings.credentials import runtime_env
@@ -124,7 +129,8 @@ def place_call(
 def latest_call(
     mandate_id: str,
     principal: Annotated[AuthenticatedPrincipal,
-                         Depends(require_roles("agent", "customer_channel", "analyst"))],
+                         Depends(require_roles("agent", "customer_channel", "analyst",
+                                               "super_admin"))],
 ) -> Any:
     service = _voice()
     if isinstance(service, JSONResponse):
@@ -139,7 +145,8 @@ def latest_call(
     if call is None:
         return _error(VoiceError("CALL_NOT_FOUND", "No call placed for this mandate.", 404))
     call.pop("user_id", None)
-    if principal.role != "analyst" and call["status"] in ("duress", "rejected", "mismatch"):
+    staff = principal.role in ("analyst", "super_admin")
+    if not staff and call["status"] in ("duress", "rejected", "mismatch"):
         # Agent and customer screens learn only that verification did not complete, so a
         # person watching either screen cannot tell a duress signal from a refusal.
         call["status"] = "not_verified"
@@ -173,9 +180,11 @@ def simulated_answer(
         return _error(err)
     if call["provider"] != "simulated" or call["user_id"] != principal.subject:
         return _error(VoiceError("FORBIDDEN_OWNERSHIP", "Not your simulated call.", 403))
-    result = service.handle_digits(call_id, body.digits, gather_url="")
+    result = service.handle_digits(call_id, body.digits, gather_url="", speech=body.speech,
+                                   confidence=body.confidence, no_input=body.no_input)
     # Like a real call, the handset only hears speech: outcome stays hidden from bystanders.
-    return {"call_ended": result.call_status != "in_progress", "spoken_bn": result.spoken}
+    return {"call_ended": result.call_status != "in_progress", "spoken_bn": result.spoken,
+            "spoken": result.spoken}
 
 
 # ------------------------------------------------------------------- provider webhooks
@@ -223,8 +232,19 @@ async def provider_answer(call_id: str, request: Request) -> Any:
 async def provider_gather(call_id: str, request: Request) -> Any:
     try:
         service, params = await _provider_request(request, call_id)
+        confidence = params.get("Confidence")
+        try:
+            confidence_value = float(confidence) if confidence not in (None, "") else None
+        except ValueError:
+            confidence_value = None
+        # Twilio sends FinishedOnKey="#" when the customer pressed hash, and an empty value
+        # when the gather timed out in silence. Silence must never count as "I did not do it".
+        no_input = ("FinishedOnKey" in params and params.get("FinishedOnKey") != "#"
+                    and not params.get("Digits") and not params.get("SpeechResult"))
         result = service.handle_digits(call_id, params.get("Digits", ""),
-                                       _gather_url(service, call_id, request))
+                                       _gather_url(service, call_id, request),
+                                       speech=params.get("SpeechResult"),
+                                       confidence=confidence_value, no_input=no_input)
         return _xml(result.twiml)
     except (VoiceError, VoiceProviderError):
         return Response(status_code=403)
@@ -268,12 +288,17 @@ async def bd_ivr_event(call_id: str, request: Request) -> Any:
     kind = event.get("event")
     if kind == "answered":
         if service.mark_answered(call_id):
-            prompt = service.prompt_for(service.get_call(call_id))
-            return {"action": "gather", "say": prompt, "language": provider.language,
+            call = service.get_call(call_id)
+            prompt = service.prompt_for(call)
+            return {"action": "gather", "say": prompt,
+                    "language": "en-IN" if call.get("language") == "en" else provider.language,
                     "gather": gather}
         return {"action": "hangup", "say": twiml.NEUTRAL_CLOSE, "language": provider.language}
-    if kind == "digits":
-        result = service.handle_digits(call_id, str(event.get("digits", "")), gather_url="")
+    if kind in ("digits", "timeout"):
+        result = service.handle_digits(call_id, str(event.get("digits", "")), gather_url="",
+                                       speech=event.get("speech"),
+                                       confidence=event.get("confidence"),
+                                       no_input=kind == "timeout")
         if result.call_status == "in_progress":
             return {"action": "gather", "say": result.spoken[0], "language": provider.language,
                     "gather": gather}

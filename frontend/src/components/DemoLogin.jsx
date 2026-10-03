@@ -5,10 +5,18 @@ import Icon from './Icon';
 export const roleMeta = {
   agent: { principal: 'demo_agent', label: 'Agent', hint: 'Gives cash to customers', icon: 'store', tone: 'bg-secondary/15 text-secondary' },
   customer_channel: { principal: 'demo_customer', label: 'Customer', hint: 'Confirms the amount on their phone', icon: 'phone', tone: 'bg-primary/15 text-primary' },
-  analyst: { principal: 'demo_analyst', label: 'Supervisor', hint: 'Checks suspicious cases', icon: 'shield', tone: 'bg-accent/20 text-accent-content' },
+  supervisor: { principal: 'demo_supervisor', label: 'Supervisor', hint: 'Handles calls and cases', icon: 'shield', tone: 'bg-accent/20 text-accent-content' },
+  super_admin: { principal: 'demo_admin', label: 'Super admin', hint: 'Full platform access', icon: 'settings', tone: 'bg-warning/20 text-warning-content' },
+  analyst: { principal: 'demo_analyst', label: 'Fraud analyst', hint: 'AI models and analytics', icon: 'radar', tone: 'bg-info/15 text-info' },
 };
 
-const pins = { demo_agent: '1234', demo_customer: '5678', demo_analyst: '9012' };
+const pins = {
+  demo_agent: '1234',
+  demo_customer: '5678',
+  demo_analyst: '9012',
+  demo_supervisor: '3456',
+  demo_admin: '7890',
+};
 
 export const principalForRole = (role) => roleMeta[role]?.principal || 'demo_agent';
 
@@ -17,10 +25,11 @@ export default function DemoLogin({ session = null, initialRole = 'agent', onDon
   const [pin, setPin] = useState(pins[principalForRole(initialRole)]);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [staffId, setStaffId] = useState('');
 
   const login = async (event) => {
     event.preventDefault(); setBusy(true); setError('');
-    try { await api.login({ principal, pin }); onDone(); }
+    try { await api.login({ principal: staffId || principal, pin }); onDone(); }
     catch (err) { setError(err.message); }
     finally { setBusy(false); }
   };
@@ -50,6 +59,7 @@ export default function DemoLogin({ session = null, initialRole = 'agent', onDon
                 onChange={() => {
                   setPrincipal(meta.principal);
                   setPin(pins[meta.principal]);
+                  setStaffId('');
                 }}
               />
               <span className={`grid size-9 shrink-0 place-items-center rounded-lg ${meta.tone}`}>
@@ -67,6 +77,19 @@ export default function DemoLogin({ session = null, initialRole = 'agent', onDon
         })}
       </fieldset>
 
+      {principal === 'demo_supervisor' || staffId ? (
+        <label className="form-control w-full">
+          <span className="mb-1 block text-sm font-medium">Staff ID (optional)</span>
+          <input
+            className="input input-bordered w-full font-mono focus-ring"
+            value={staffId}
+            placeholder="demo_supervisor, or sup_nadia / sup_karim / sup_farzana"
+            onChange={(e) => setStaffId(e.target.value.trim().toLowerCase())}
+            autoComplete="off"
+          />
+        </label>
+      ) : null}
+
       <label className="form-control w-full">
         <span className="mb-1 block text-sm font-medium">Demo PIN</span>
         <input
@@ -77,7 +100,7 @@ export default function DemoLogin({ session = null, initialRole = 'agent', onDon
           autoComplete="off"
         />
         <span className="muted mt-1 block">
-          Filled in for you. Agent 1234 · Customer 5678 · Supervisor 9012.
+          Filled in for you. Other supervisors: type their staff ID below (PIN 3456).
         </span>
       </label>
 

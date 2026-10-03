@@ -314,21 +314,38 @@ model runs at request time.
 | GET | /voice/incoming | customer_channel | Simulated handset: ringing calls |
 | POST | /voice/calls/{id}/simulated-answer | owning customer_channel | Simulated keypad answer through the real digit logic |
 | POST | /voice/calls/{id}/answer, /gather, /status | Twilio (signed webhook) | TwiML prompt, digits, call status |
-| POST | /cases/{id}/brief | analyst | Grounded AI case brief |
+| POST | /cases/{id}/brief | analyst, super_admin | Grounded AI case brief |
 | POST | /voice/ivr/{id}/events | Bangladesh IVR gateway (HMAC-signed JSON) | answered / digits / status events |
 | GET | /notifications | customer_channel (own), analyst | SMS outbox and delivery status |
-| GET | /ops/overview | analyst | Command Center metrics and live feed |
-| GET | /ops/cases | analyst | Cases with priority and response-target status |
-| GET | /cases/{id}/timeline | analyst | Ordered case events |
-| GET, PUT, DELETE | /watchlist, /watchlist/{agent_id} | analyst | Enhanced-verification watchlist |
-| GET | /liquidity/overview | analyst | Forecast metrics and agents needing extra cash |
-| GET | /liquidity/agents/{id} | that agent, analyst | Agent's own 7-day forecast |
-| GET | /campaigns/uplift | analyst | Experiment, Qini curves, drivers |
-| POST | /campaigns/optimize | analyst | Budget allocation plan |
+| GET | /ops/overview | analyst, super_admin | Command Center metrics and live feed |
+| GET | /ops/cases | analyst, super_admin, supervisor | Cases with priority and response-target status |
+| GET | /cases/{id}/timeline | analyst, super_admin, supervisor | Ordered case events |
+| GET, PUT, DELETE | /watchlist, /watchlist/{agent_id} | analyst, super_admin | Enhanced-verification watchlist |
+| GET | /liquidity/overview | analyst, super_admin | Forecast metrics and agents needing extra cash |
+| GET | /liquidity/agents/{id} | that agent, analyst, super_admin | Agent's own 7-day forecast |
+| GET | /campaigns/uplift | analyst, super_admin | Experiment, Qini curves, drivers |
+| POST | /campaigns/optimize | analyst, super_admin | Budget allocation plan |
 
 `POST /mandates/request` now also returns `risk` (`score`, `band`, `step_up`,
 `engine_version`). With `SATHI_STEP_UP_ENFORCED=true`, `POST /mandates/{id}/verify`
 returns `403 STEP_UP_REQUIRED` unless the mandate's step-up is `keypad_or_call`.
+
+### Roles
+
+Three operator roles share the same UI surface. They are pure-widening splits —
+the legacy `analyst` role still works exactly as before:
+
+- **`analyst`** (default, e.g. `analyst_777 / 9012`) — every page, every decision.
+  Backwards-compatible; all pre-refactor tests still pass.
+- **`super_admin`** (e.g. `admin_777 / 7890`) — same surface as analyst **plus**
+  the Settings page and the AI case brief endpoint. Day-to-day operator.
+- **`supervisor`** (e.g. `supervisor_777 / 3456`) — **cases-only**. Read-only
+  access to the case queue, the prioritized queue, and the per-case timeline.
+  No Decide, no AI brief, no Settings, no watchlist edits, no campaign optimizer.
+
+The Cases tab in the navigation is the only one supervisor can see. Every other
+operator tab hides itself from supervisor. Both new roles are wired in
+`data/config.yaml` under `auth.principals` and exposed on the demo login card.
 
 ## Go-live checklist (run before deploy)
 

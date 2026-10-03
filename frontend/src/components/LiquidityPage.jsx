@@ -163,6 +163,7 @@ export default function LiquidityPage({ session }) {
         <h2 className="page-title">Cash planning</h2>
         <p className="page-lead mt-1">
           How much cash each agent will need in the next 7 days, so no customer is turned away for lack of cash.
+          Re-trained every 15 minutes on the live cash-out ledger{data?.computed_at ? ` · updated ${new Date(data.computed_at).toLocaleTimeString()}` : ''}.
         </p>
       </div>
       {error && (

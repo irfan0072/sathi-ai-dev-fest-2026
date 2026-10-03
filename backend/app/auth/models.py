@@ -24,11 +24,14 @@ class DemoLoginResponse(BaseModel):
     access_token: str = Field(..., description="Signed short-lived JWT token")
     token_type: str = Field(default="bearer", description="Token type")
     expires_in: int = Field(..., description="TTL in seconds")
-    role: str = Field(..., description="Scoped role: agent | customer_channel | analyst")
+    role: str = Field(
+        ..., description="agent | customer_channel | analyst | supervisor | super_admin"
+    )
     subject: str = Field(..., description="Bound subject identifier")
     allowed_users: list[str] = Field(
         default_factory=list, description="Bound customers allowed for this agent"
     )
+    display_name: str = Field(default="", description="Human-readable name for the console")
 
 
 class AuthenticatedPrincipal(BaseModel):

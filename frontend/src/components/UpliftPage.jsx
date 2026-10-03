@@ -84,6 +84,7 @@ export default function UpliftPage() {
         <h2 className="page-title">Who to invite to Sathi</h2>
         <p className="page-lead mt-1">
           Find the customers who will start using Sathi because we invited them, not people who would join anyway.
+          Customer features come from live activity in the last 30 days{data?.computed_at ? ` · updated ${new Date(data.computed_at).toLocaleTimeString()}` : ''}.
         </p>
       </div>
       {error && (

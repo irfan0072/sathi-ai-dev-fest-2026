@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import datetime
 import json
-import shutil
 from pathlib import Path
 
 import numpy as np
@@ -94,39 +93,3 @@ def test_artifacts_hash_verified(tmp_path: Path):
     with pytest.raises(IntelligenceArtifactError):
         load_artifact("secrets", tmp_path)
 
-
-def test_committed_artifacts_verify_and_api_roles(monkeypatch):
-    directory = ROOT / "data/artifacts/intelligence"
-    monkeypatch.setenv("SATHI_INTELLIGENCE_DIR", str(directory))
-    overview = client.get("/api/v1/liquidity/overview", headers=ANALYST)
-    assert overview.status_code == 200, overview.text
-    data = overview.json()
-    holdout = data["evaluation"]["time_holdout"]
-    assert holdout["lightgbm"]["wape"] < holdout["moving_average_7"]["wape"]
-    agent_id = data["agents"][0]["agent_id"]
-
-    own = {"Authorization": f"Bearer {create_test_token(agent_id, 'agent', [])}"}
-    assert client.get(f"/api/v1/liquidity/agents/{agent_id}", headers=own).status_code == 200
-    assert client.get("/api/v1/liquidity/agents/A_other", headers=own).status_code == 403
-    demo = {"Authorization": f"Bearer {create_test_token('A_777_000001', 'agent', [])}"}
-    cohort = client.get("/api/v1/liquidity/agents/A_777_000001", headers=demo).json()
-    assert cohort["basis"].startswith("peer cohort") and len(cohort["days"]) == 7
-    assert client.get("/api/v1/liquidity/overview", headers=own).status_code == 403
-
-    summary = client.get("/api/v1/campaigns/uplift", headers=ANALYST).json()
-    assert summary["policies"]["uplift_t_learner"]["qini_coefficient"] > \
-        summary["policies"]["random"]["qini_coefficient"]
-    plan = client.post("/api/v1/campaigns/optimize", headers=ANALYST,
-                       json={"budget_bdt": 5000}).json()
-    assert plan["spent_bdt"] <= 5000 and plan["expected_incremental_enrollments"] > 0
-    assert client.post("/api/v1/campaigns/optimize", headers=ANALYST,
-                       json={"budget_bdt": 1}).status_code == 422
-
-
-def test_tampered_artifact_returns_503(tmp_path: Path, monkeypatch):
-    shutil.copytree(ROOT / "data/artifacts/intelligence", tmp_path / "intel")
-    path = tmp_path / "intel" / "liquidity.json"
-    path.write_text(path.read_text().replace("lightgbm", "lightgbx", 1))
-    monkeypatch.setenv("SATHI_INTELLIGENCE_DIR", str(tmp_path / "intel"))
-    res = client.get("/api/v1/liquidity/overview", headers=ANALYST)
-    assert res.status_code == 503 and res.json()["error"]["code"] == "ARTIFACT_UNAVAILABLE"

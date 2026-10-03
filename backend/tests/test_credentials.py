@@ -18,7 +18,8 @@ from fastapi.testclient import TestClient
 from tests.conftest import create_test_token
 
 client = TestClient(app)
-ANALYST = {"Authorization": f"Bearer {create_test_token('analyst_1', 'analyst')}"}
+ANALYST = {"Authorization": f"Bearer {create_test_token('admin_1', 'super_admin')}"}
+FRAUD_ANALYST = {"Authorization": f"Bearer {create_test_token('analyst_1', 'analyst')}"}
 AGENT = {"Authorization": f"Bearer {create_test_token('A_001', 'agent', ['U_001'])}"}
 SID = "AC" + "a" * 32
 TOKEN = "b" * 32
@@ -67,7 +68,7 @@ def test_saved_secret_is_encrypted_write_only_and_audited(secured,
     item = next(i for i in status.json()["credentials"]["items"]
                 if i["name"] == "GEMINI_API_KEY")
     assert item["source"] == "settings" and item["hint"] == "••••WXYZ"
-    assert item["updated_by"] == "analyst_1"
+    assert item["updated_by"] == "admin_1"
     with durable_service.get_connection() as conn, conn.cursor() as cur:
         cur.execute("SELECT ciphertext FROM provider_credentials;")
         assert secret not in cur.fetchone()[0]

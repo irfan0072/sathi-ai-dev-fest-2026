@@ -92,7 +92,7 @@ function Detail({ id, onOpenCases, onChanged }) {
             {item.calls.map((c, i) => (
               <li key={i} className="flex items-center justify-between gap-2">
                 <span>{callStatus[c.status] || c.status}</span>
-                <span className="muted">{c.provider === 'simulated' ? 'demo phone' : c.provider} · {new Date(c.at).toLocaleTimeString()}</span>
+                <span className="muted">{c.provider === 'simulated' ? 'phone simulator' : c.provider} · {new Date(c.at).toLocaleTimeString()}</span>
               </li>
             ))}
           </ul>

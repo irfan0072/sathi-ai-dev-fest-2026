@@ -49,7 +49,7 @@ export function BriefView({ result }) {
   );
 }
 
-export default function CaseBrief({ caseId }) {
+export default function CaseBrief({ caseId, canGenerate = true }) {
   const [result, setResult] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -58,6 +58,13 @@ export default function CaseBrief({ caseId }) {
     try { setResult(await api.generateCaseBrief(caseId)); } catch (err) { setError(err.message); }
     finally { setBusy(false); }
   };
+  if (!canGenerate) {
+    return (
+      <p className="muted rounded-box border border-base-300 bg-base-200/40 px-3 py-2 text-xs">
+        AI case summaries are restricted to operators with decision authority.
+      </p>
+    );
+  }
   return (
     <div className="flex flex-col gap-2">
       <button className="btn btn-secondary btn-sm btn-soft self-start" disabled={busy} onClick={generate}>

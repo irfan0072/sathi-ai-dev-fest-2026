@@ -14,6 +14,8 @@ from app.mandates.service import MandateService
 
 TEST_JWT_SECRET = "test_synthetic_signing_secret_for_jwt_2026_0123456789"
 os.environ["JWT_SECRET"] = TEST_JWT_SECRET
+os.environ["SATHI_WORKER_ENABLED"] = "false"
+os.environ["SATHI_PBKDF2_ITERATIONS"] = "1000"
 
 
 def create_test_token(
@@ -151,10 +153,41 @@ def durable_service(
     """Fixture providing a MandateService instance bound to the isolated PostgreSQL test schema."""
     service = MandateService(db_url=test_db_url, schema=test_schema)
     set_mandate_service(service)
+    from app.staff.service import StaffService
+
+    StaffService(service.get_connection).seed({
+        "demo_supervisor": {"role": "supervisor", "subject": "supervisor_777", "pin": "3456"},
+        "demo_admin": {"role": "super_admin", "subject": "admin_777", "pin": "7890"},
+    })
     try:
         yield service
     finally:
         set_mandate_service(None)
+
+
+# ---------------------------------------------------------------------------
+# Role-based auth header fixtures for role-split tests.
+# ---------------------------------------------------------------------------
+
+@pytest.fixture
+def supervisor_headers() -> dict[str, str]:
+    """Bearer headers for the read-only case-handler principal (supervisor)."""
+    token = create_test_token(subject="supervisor_777", role="supervisor")
+    return {"Authorization": f"Bearer {token}"}
+
+
+@pytest.fixture
+def super_admin_headers() -> dict[str, str]:
+    """Bearer headers for the day-to-day operator principal (super_admin)."""
+    token = create_test_token(subject="admin_777", role="super_admin")
+    return {"Authorization": f"Bearer {token}"}
+
+
+@pytest.fixture
+def analyst_headers() -> dict[str, str]:
+    """Bearer headers for the analyst principal (back-compat: still allowed everywhere)."""
+    token = create_test_token(subject="analyst_777", role="analyst")
+    return {"Authorization": f"Bearer {token}"}
 
 
 # ---------------------------------------------------------------------------

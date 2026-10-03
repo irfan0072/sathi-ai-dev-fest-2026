@@ -1,10 +1,10 @@
 {
   "as_of": "2026-12-30T00:00:00+00:00",
-  "config_sha256": "b3f5aec16cfe8c3e9f93e89a20d0648de309fd8e4db03be3bd293ad101a517d6",
+  "config_sha256": "3bb292b9fbb70e677b5fe1b3afae9b75c094378f321bca61c926c4a5d1e108f5",
   "cutoff": "2026-11-30T00:00:00+00:00",
   "description": "Sathi deployment inference bundle. Models trained on synthetic 90-day simulation with 30-day offline behavioral window. Zero demographic or ground-truth features.",
-  "final_run_timestamp": "2026-10-03T02:36:49.864260+00:00",
-  "git_revision": "ac18e14bd8f76e3ac4068e2037bfa7dbe29910a7",
+  "final_run_timestamp": "2026-10-03T18:43:52.065724+00:00",
+  "git_revision": "f07df6382ea084d5359945261317c838f8682b96",
   "key_metrics": {
     "agent_anomaly": {
       "false_flag_rate_honest_high_volume": 0.0,
@@ -1648,7 +1648,7 @@
         "unmet_targets": []
       }
     },
-    "final_run_timestamp": "2026-10-03T02:36:49.864260+00:00",
+    "final_run_timestamp": "2026-10-03T18:43:52.065724+00:00",
     "schema_version": 1,
     "synthetic": true
   },

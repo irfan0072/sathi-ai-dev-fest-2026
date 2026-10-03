@@ -24,7 +24,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
@@ -81,9 +81,13 @@ async def validation_exception_handler(
     )
 
 
+from app.admin.router import router as admin_router  # noqa: E402
 from app.analytics.router import router as analytics_router  # noqa: E402
+from app.assistant.router import router as assistant_router  # noqa: E402
 from app.auth.router import router as auth_router  # noqa: E402
 from app.bootstrap import readiness  # noqa: E402
+from app.callcenter import worker as call_worker  # noqa: E402
+from app.callcenter.router import router as callcenter_router  # noqa: E402
 from app.copilot.router import router as copilot_router  # noqa: E402
 from app.intelligence.router import router as intelligence_router  # noqa: E402
 from app.mandates.router import router as mandates_router  # noqa: E402
@@ -92,6 +96,7 @@ from app.ops.router import router as ops_router  # noqa: E402
 from app.settings.router import router as settings_router  # noqa: E402
 from app.txn.router import router as txn_router  # noqa: E402
 from app.voice.router import router as voice_router  # noqa: E402
+from app.workdesk.router import router as workdesk_router  # noqa: E402
 
 app.include_router(auth_router)
 app.include_router(mandates_router)
@@ -103,6 +108,25 @@ app.include_router(notify_router)
 app.include_router(ops_router)
 app.include_router(settings_router)
 app.include_router(txn_router)
+app.include_router(callcenter_router)
+app.include_router(workdesk_router)
+app.include_router(admin_router)
+app.include_router(assistant_router)
+
+
+@app.on_event("startup")
+async def start_background_worker() -> None:
+    """Call retries, ring timeouts and the optional live traffic simulator."""
+    call_worker.start()
+    if call_worker.worker_enabled():
+        from app.live.intelligence import start_refresh
+
+        start_refresh()
+
+
+@app.on_event("shutdown")
+async def stop_background_worker() -> None:
+    await call_worker.stop()
 
 
 @app.get("/health")

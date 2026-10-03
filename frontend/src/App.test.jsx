@@ -90,17 +90,19 @@ describe('MetricsPage Containment', () => {
 });
 
 describe('Screen Labels & Provenance', () => {
-  it('displays illustrative sample, not a result on OutreachList', () => {
+  it('scores customers live on OutreachList (no frozen snapshot)', () => {
     const html = renderToString(<OutreachList />);
-    expect(html).toContain('frozen synthetic snapshot');
-    expect(html).toContain('Unavailable');
+    expect(html).toContain('Scored live by the trained AI');
+    expect(html).toContain('Scoring active customers');
+    expect(html).not.toContain('frozen');
     expect(html).not.toContain('🔍 SHAP');
   });
 
-  it('displays illustrative sample, not a result on AgentRiskBoard and removes geographic labels', () => {
+  it('scores agents live on AgentRiskBoard without preloaded geography', () => {
     const html = renderToString(<AgentRiskBoard />);
-    expect(html).toContain('frozen synthetic snapshot');
-    expect(html).toContain('Unavailable');
+    expect(html).toContain('scored live by the trained anomaly model');
+    expect(html).toContain('Scoring agents on live data');
+    expect(html).not.toContain('frozen');
     expect(html).not.toContain('Chittagong');
     expect(html).not.toContain('Rajshahi');
     expect(html).not.toContain('Sylhet');
@@ -217,13 +219,13 @@ describe('Role-scoped navigation', () => {
       // SSR cannot run useEffect, so the active tab stays at the default
       // 'simulation'. We assert on the rendered sidebar/header instead,
       // which are purely derived from session + tabs list.
-      expect(html).toContain('Supervisor');
+      expect(html).toContain('Fraud analyst');
       expect(html).toContain('demo_analyst');
-      expect(html).toContain('Dashboard');
+      expect(html).toContain('Fraud dashboard');
       expect(html).toContain('Cases to review');
       expect(html).toContain('Cash planning');
       expect(html).toContain('Invite planner');
-      expect(html).toContain('Agent check');
+      expect(html).toContain('Agent risk (AI)');
       expect(html).toContain('Customers who need help');
       expect(html).toContain('AI test results');
       expect(html).toContain('How it works');
@@ -249,5 +251,50 @@ describe('Role-scoped navigation', () => {
     } finally {
       api.__setSessionForTests(original);
     }
+  });
+});
+
+describe('Super admin and supervisor navigation', () => {
+  it('gives the super admin the control center, directories and call management', async () => {
+    const { default: App } = await import('./App');
+    const { api } = await import('./api');
+    const original = api.getSession();
+    api.__setSessionForTests({ role: 'super_admin', subject: 'admin_777', allowed_users: [] });
+    try {
+      const html = renderToString(<App />);
+      for (const label of ['Control center', 'Call management', 'All transactions', 'Customers',
+        'Agents', 'Supervisors', 'Audit log', 'Settings', 'Fraud dashboard']) {
+        expect(html).toContain(label);
+      }
+    } finally {
+      api.__setSessionForTests(original);
+    }
+  });
+
+  it('keeps the supervisor to their work queues', async () => {
+    const { default: App } = await import('./App');
+    const { api } = await import('./api');
+    const original = api.getSession();
+    api.__setSessionForTests({ role: 'supervisor', subject: 'sup_nadia', allowed_users: [] });
+    try {
+      const html = renderToString(<App />);
+      for (const label of ['My desk', 'Call queue', 'My audit reports']) expect(html).toContain(label);
+      for (const label of ['Control center', 'All transactions', 'Settings', 'Audit log', 'Fraud dashboard']) {
+        expect(html).not.toContain(label);
+      }
+    } finally {
+      api.__setSessionForTests(original);
+    }
+  });
+});
+
+describe('Sathi Sahayak assistant', () => {
+  it('renders a trilingual chat with safe defaults', async () => {
+    const { default: AssistantChat, CallLanguage } = await import('./components/AssistantChat');
+    const html = renderToString(<AssistantChat />);
+    expect(html).toContain('Sathi Sahayak');
+    expect(html).toContain('never asks for your PIN');
+    expect(html).toContain('আমার ব্যালেন্স কত?');
+    expect(renderToString(<CallLanguage />)).toContain('Banglish');
   });
 });

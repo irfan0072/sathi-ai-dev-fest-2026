@@ -48,7 +48,7 @@ const trackMap = [
 ];
 
 const pipeline = [
-  { layer: 'Data', desc: 'Made-up customers and payments, no real people' },
+  { layer: 'Data', desc: 'Live PostgreSQL ledger: 5M synthetic customers, 20k agents, real-time cash-outs' },
   { layer: 'Patterns', desc: 'How people usually pay and cash out' },
   { layer: 'AI', desc: 'Spots unusual activity and predicts needs' },
   { layer: 'Rules', desc: 'Fixed safety rules for every cash-out' },
@@ -174,7 +174,7 @@ export default function ArchitecturePage() {
             ))}
           </ul>
           <p className="muted text-center">
-            AI DEV FEST 2026 — DIU CPC × upay · Demo only, not connected to real upay accounts.
+            AI DEV FEST 2026 — DIU CPC × upay · Runs on a synthetic upay-scale population; every screen reads the live database.
           </p>
         </div>
       </div>

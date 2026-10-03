@@ -307,8 +307,8 @@ export default function CommandCenter({ onOpenCases, onOpenTransactions }) {
                 })}
               </div>
               <p className="muted">
-                Now using: calls <strong>{config?.provider === 'simulated' ? 'demo phone' : config?.provider || '…'}</strong>, SMS{' '}
-                <strong>{config?.sms_provider === 'simulated' ? 'demo inbox' : config?.sms_provider || '…'}</strong>. Prices are estimates. Change them in Settings.
+                Now using: calls <strong>{config?.provider === 'simulated' ? 'built-in phone simulator' : config?.provider || '…'}</strong>, SMS{' '}
+                <strong>{config?.sms_provider === 'simulated' ? 'built-in SMS inbox' : config?.sms_provider || '…'}</strong>. Prices are estimates. Change them in Settings.
               </p>
             </div>
           </div>

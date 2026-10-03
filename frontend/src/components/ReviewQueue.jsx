@@ -47,7 +47,7 @@ function Timeline({ caseId }) {
   );
 }
 
-export default function ReviewQueue({ initialCaseId = null }) {
+export default function ReviewQueue({ initialCaseId = null, session = null }) {
   const [cases, setCases] = useState(null);
   const [watch, setWatch] = useState(new Set());
   const [filter, setFilter] = useState(initialCaseId ? 'all' : 'open');
@@ -57,10 +57,16 @@ export default function ReviewQueue({ initialCaseId = null }) {
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
 
+  const canDecide = session?.role !== 'supervisor';
+  const canWatchlist = session?.role !== 'supervisor';
+
   const refresh = useCallback(async () => {
     setError('');
     try {
-      const [result, list] = await Promise.all([api.getPrioritizedCases(), api.getWatchlist()]);
+      const [result, list] = await Promise.all([
+        api.getPrioritizedCases(),
+        canWatchlist ? api.getWatchlist() : Promise.resolve({ agents: [] }),
+      ]);
       setCases(result.cases);
       setWatch(new Set(list.agents.map((a) => a.agent_id)));
       setSelected((prev) => {
@@ -68,7 +74,7 @@ export default function ReviewQueue({ initialCaseId = null }) {
         return want ? result.cases.find((c) => c.case_id === want) || null : null;
       });
     } catch (err) { setError(err.message); }
-  }, [initialCaseId]);
+  }, [initialCaseId, canWatchlist]);
   useEffect(() => { refresh(); }, [refresh]);
 
   const decide = async (decision) => {
@@ -173,13 +179,15 @@ export default function ReviewQueue({ initialCaseId = null }) {
                   <span className="muted">Reference {selected.mandate_id ? selected.mandate_id.slice(0, 8) : '—'}</span>
                   {selected.agent_id && <>
                     <span className="muted">· agent {selected.agent_id}</span>
-                    <WatchButton agentId={selected.agent_id} watchlisted={watch.has(selected.agent_id)} caseId={selected.case_id} onChange={refresh} />
+                    {canWatchlist && (
+                      <WatchButton agentId={selected.agent_id} watchlisted={watch.has(selected.agent_id)} caseId={selected.case_id} onChange={refresh} />
+                    )}
                   </>}
                 </div>
                 {selected.reason === 'duress_signal' && (
                   <div className="alert alert-error alert-soft text-sm"><Icon name="warning" /><span>The customer asked for help secretly. Call them on their registered number, away from the agent, before anything else.</span></div>
                 )}
-                <CaseBrief key={selected.case_id} caseId={selected.case_id} />
+                <CaseBrief key={selected.case_id} caseId={selected.case_id} canGenerate={canDecide} />
                 <details className="collapse collapse-arrow bg-base-200" open>
                   <summary className="collapse-title min-h-0 py-2 text-sm">What happened, step by step</summary>
                   <div className="collapse-content"><Timeline key={selected.case_id} caseId={selected.case_id} /></div>
@@ -188,28 +196,36 @@ export default function ReviewQueue({ initialCaseId = null }) {
                   <summary className="collapse-title min-h-0 py-2 text-sm">Technical details</summary>
                   <div className="collapse-content"><pre className="json-block">{JSON.stringify(selected.evidence, null, 2)}</pre></div>
                 </details>
-                <label className="w-full">
-                  <span className="mb-1 block text-sm">Your note (optional)</span>
-                  <textarea
-                    className="textarea textarea-bordered w-full focus-ring"
-                    rows={3}
-                    value={note}
-                    onChange={(e) => setNote(e.target.value)}
-                  />
-                </label>
-                <div className="grid grid-cols-3 gap-2">
-                  {decisions.map((d) => (
-                    <button
-                      key={d.id}
-                      className={`btn btn-sm btn-soft focus-ring ${d.tone}`}
-                      disabled={busy}
-                      onClick={() => decide(d.id)}
-                    >
-                      {d.label}
-                    </button>
-                  ))}
-                </div>
-                <p className="muted">Your decision is saved with your name. It never pays out cash.</p>
+                {canDecide ? (
+                  <>
+                    <label className="w-full">
+                      <span className="mb-1 block text-sm">Your note (optional)</span>
+                      <textarea
+                        className="textarea textarea-bordered w-full focus-ring"
+                        rows={3}
+                        value={note}
+                        onChange={(e) => setNote(e.target.value)}
+                      />
+                    </label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {decisions.map((d) => (
+                        <button
+                          key={d.id}
+                          className={`btn btn-sm btn-soft focus-ring ${d.tone}`}
+                          disabled={busy}
+                          onClick={() => decide(d.id)}
+                        >
+                          {d.label}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="muted">Your decision is saved with your name. It never pays out cash.</p>
+                  </>
+                ) : (
+                  <p className="muted rounded-box border border-base-300 bg-base-200/40 px-3 py-2 text-xs">
+                    Read-only view. Case decisions are made by an operator.
+                  </p>
+                )}
               </>
             )}
           </div>

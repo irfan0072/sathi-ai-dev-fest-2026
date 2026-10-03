@@ -41,7 +41,7 @@ describe('Fraud operations UI', () => {
     const original = api.getSession();
     api.__setSessionForTests({ role: 'analyst', subject: 'demo_analyst', allowed_users: [] });
     try {
-      expect(renderToString(<App />)).toContain('Dashboard');
+      expect(renderToString(<App />)).toContain('Fraud dashboard');
     } finally {
       api.__setSessionForTests(original);
     }

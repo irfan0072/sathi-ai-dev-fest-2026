@@ -84,7 +84,7 @@ export default function LoginScreen({ onSuccess }) {
             <span>
               Track 07 · AI DEV FEST 2026 · DIU CPC × upay
             </span>
-            <span className="badge badge-ghost border-base-300">Demo with made-up data</span>
+            <span className="badge badge-ghost border-base-300">Live system · synthetic customers</span>
           </footer>
         </aside>
 
@@ -117,34 +117,26 @@ export default function LoginScreen({ onSuccess }) {
                 <div className="flex flex-col gap-2 text-xs text-base-content/60">
                   <div className="flex items-center gap-2 font-medium">
                     <Icon name="info" className="size-4" />
-                    Demo PINs (for trying it out)
+                    Sign-in PINs for judges
                   </div>
                   <ul className="ml-6 flex flex-col gap-1 font-mono">
-                    <li>
-                      <span className="inline-block w-32 font-sans font-medium text-base-content/70">
-                        Agent
-                      </span>
-                      <span>1234</span>
-                    </li>
-                    <li>
-                      <span className="inline-block w-32 font-sans font-medium text-base-content/70">
-                        Customer
-                      </span>
-                      <span>5678</span>
-                    </li>
-                    <li>
-                      <span className="inline-block w-32 font-sans font-medium text-base-content/70">
-                        Supervisor
-                      </span>
-                      <span>9012</span>
-                    </li>
+                    {[
+                      ['Agent', '1234'], ['Customer', '5678'], ['Supervisor', '3456'],
+                      ['Super admin', '7890'], ['Fraud analyst', '9012'],
+                      ['Other supervisors', 'sup_nadia · sup_karim · sup_farzana / 3456'],
+                    ].map(([who, pin]) => (
+                      <li key={who}>
+                        <span className="inline-block w-32 font-sans font-medium text-base-content/70">{who}</span>
+                        <span>{pin}</span>
+                      </li>
+                    ))}
                   </ul>
                 </div>
               </div>
             </div>
 
             <p className="muted mt-6 text-center">
-              This is a demo. All people and money here are made up.
+              Synthetic customers only; no real upay accounts are connected.
             </p>
           </div>
         </main>
@@ -158,6 +150,8 @@ export const ROLE_LANDING = {
   agent: 'cashout',
   customer_channel: 'account',
   analyst: 'command',
+  super_admin: 'admin',
+  supervisor: 'desk',
 };
 
 export const landingTabForRole = (role) => ROLE_LANDING[role] || 'architecture';

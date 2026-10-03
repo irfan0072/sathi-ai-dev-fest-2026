@@ -11,7 +11,8 @@ from fastapi.testclient import TestClient
 from tests.conftest import create_test_token
 
 client = TestClient(app)
-ANALYST = {"Authorization": f"Bearer {create_test_token('analyst_1', 'analyst')}"}
+ANALYST = {"Authorization": f"Bearer {create_test_token('admin_1', 'super_admin')}"}
+FRAUD_ANALYST = {"Authorization": f"Bearer {create_test_token('analyst_1', 'analyst')}"}
 AGENT = {"Authorization": f"Bearer {create_test_token('A_001', 'agent', ['U_001'])}"}
 CUSTOMER = {"Authorization": f"Bearer {create_test_token('U_001', 'customer_channel')}"}
 
@@ -55,7 +56,7 @@ def test_override_precedence_reset_and_audit(durable_service: MandateService, mo
     body = _put({"risk.step_up_enforced": False, "ops.sla_urgent_minutes": 10}).json()
     item = next(i for i in body["items"] if i["key"] == "risk.step_up_enforced")
     assert item["value"] is False and item["source"] == "override"
-    assert item["updated_by"] == "analyst_1"
+    assert item["updated_by"] == "admin_1"
     reset = client.delete("/api/v1/settings/risk.step_up_enforced", headers=ANALYST).json()
     assert next(i for i in reset["items"] if i["key"] == "risk.step_up_enforced")["source"] == "env"
     actions = [a["action"] for a in durable_service.audit_log]
@@ -226,3 +227,11 @@ def test_probe_endpoint_returns_one_or_all_results(durable_service):
 def test_probe_endpoint_is_analyst_only(durable_service):
     assert client.get("/api/v1/settings/probe", headers=AGENT).status_code == 403
     assert client.get("/api/v1/settings/probe", headers=CUSTOMER).status_code == 403
+
+
+def test_settings_are_super_admin_only():
+    for role, sub in (("analyst", "analyst_1"), ("supervisor", "sup_1"), ("agent", "A_001")):
+        h = {"Authorization": f"Bearer {create_test_token(sub, role)}"}
+        assert client.get("/api/v1/settings", headers=h).status_code == 403
+        assert client.put("/api/v1/settings", headers=h,
+                          json={"changes": {"sim.enabled": True}}).status_code == 403

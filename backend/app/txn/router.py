@@ -40,12 +40,12 @@ def _public(item: dict[str, Any], role: str) -> dict[str, Any]:
     return out
 
 
-def _call_customer(check_id: int, actor: str) -> str | None:
+def _call_customer(check_id: int, actor: str, automatic: bool = True) -> str | None:
     """Start the confirmation call. Returns an error message instead of raising."""
     from app.voice.router import get_voice_service
 
     try:
-        get_voice_service().start_check_call(check_id, actor)
+        get_voice_service().start_check_call(check_id, actor, automatic=automatic)
         return None
     except (VoiceError, VoiceProviderError) as exc:
         message = getattr(exc, "message", str(exc))
@@ -100,10 +100,11 @@ def my_transactions(
 
 @router.get("/transaction-checks")
 def list_checks(
-    principal: Annotated[AuthenticatedPrincipal, Depends(require_roles("analyst"))],
+    principal: Annotated[AuthenticatedPrincipal, Depends(require_roles("analyst", "super_admin"))],
     status: str | None = None,
 ) -> Any:
-    if status and status not in ("pending", "calling", "verified", "suspicious", "no_answer"):
+    if status and status not in ("pending", "calling", "verified", "suspicious", "no_answer",
+                                 "manual_review", "unreachable"):
         return _err(422, "INVALID_STATUS", "Unknown status filter.")
     checks = get_checks()
     return {"items": checks.list(status=status, limit=200), "summary": checks.summary()}
@@ -112,7 +113,8 @@ def list_checks(
 @router.get("/transaction-checks/{check_id}")
 def check_detail(
     check_id: int,
-    principal: Annotated[AuthenticatedPrincipal, Depends(require_roles("analyst"))],
+    principal: Annotated[AuthenticatedPrincipal,
+                         Depends(require_roles("analyst", "super_admin", "supervisor"))],
 ) -> Any:
     item = get_checks().get(check_id)
     if item is None:
@@ -131,7 +133,7 @@ def check_detail(
 @router.post("/transaction-checks/{check_id}/call")
 def call_again(
     check_id: int,
-    principal: Annotated[AuthenticatedPrincipal, Depends(require_roles("analyst"))],
+    principal: Annotated[AuthenticatedPrincipal, Depends(require_roles("analyst", "super_admin"))],
 ) -> Any:
     checks = get_checks()
     item = checks.get(check_id)
@@ -139,7 +141,7 @@ def call_again(
         return _err(404, "CHECK_NOT_FOUND", "Transaction check not found.")
     if item["status"] not in ("pending", "no_answer", "calling"):
         return _err(409, "CHECK_CLOSED", "This transaction is already confirmed.")
-    error = _call_customer(check_id, principal.subject)
+    error = _call_customer(check_id, principal.subject, automatic=False)
     if error:
         return _err(502, "CALL_FAILED", error)
     return checks.get(check_id)

@@ -1,9 +1,9 @@
 """FastAPI router for Sathi Intelligence, Cases, Receipts, and Metrics endpoints.
 
 Conforms strictly to docs/api-contracts.md and authenticated role policies:
-- GET  /api/v1/users/{id}/assisted-score (Role: analyst)
-- GET  /api/v1/agents/{id}/risk (Role: analyst)
-- GET  /api/v1/outreach (Role: analyst)
+- GET  /api/v1/users/{id}/assisted-score (live, analyst / super_admin)
+- GET  /api/v1/agents/risk-board, /agents/{id}/risk (live, analyst / super_admin)
+- GET  /api/v1/outreach (live, analyst / super_admin)
 - GET  /api/v1/cases (Role: analyst)
 - POST /api/v1/cases/{id}/decision (Role: analyst)
 - GET  /api/v1/receipts/{txn_id} (Role: customer_channel, agent, analyst)
@@ -55,41 +55,71 @@ def _artifact_query(operation, *args) -> dict[str, Any]:
         raise HTTPException(status_code=503, detail="Verified synthetic artifacts unavailable")
 
 
+def _live_query(operation, *args) -> dict[str, Any]:
+    """Live AI over the current database; 404 when the subject has no recent activity."""
+    try:
+        return operation(*args)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc).strip("'"))
+    except (ArtifactError, OSError) as exc:
+        raise HTTPException(status_code=503, detail=f"Trained model unavailable: {exc}")
+
+
+def _live():
+    from app.live.intelligence import get_live
+
+    return get_live()
+
+
 @router.get("/users/{user_id}/assisted-score")
 def get_user_assisted_score(
     user_id: str,
-    principal: Annotated[AuthenticatedPrincipal, Depends(require_roles("analyst"))],
-    service: Annotated[AnalyticsService, Depends(get_analytics_service)],
+    principal: Annotated[AuthenticatedPrincipal, Depends(require_roles("analyst", "super_admin"))],
 ) -> dict[str, Any]:
-    """Retrieve calibrated assisted score and local SHAP explanations for customer."""
-    return _artifact_query(service.get_user_assisted_score, user_id)
+    """Assisted-customer score from the customer's live last-30-day activity, with SHAP."""
+    return _live_query(_live().user_score, user_id)
+
+
+@router.get("/agents/risk-board")
+def get_agent_risk_board(
+    principal: Annotated[AuthenticatedPrincipal, Depends(require_roles("analyst", "super_admin"))],
+    level: str | None = None,
+    limit: int = 200,
+) -> dict[str, Any]:
+    """Every agent with activity in the last 30 days, ranked by live anomaly risk."""
+    board = _live_query(_live().agent_board)
+    agents = board["agents"]
+    if level:
+        agents = [a for a in agents if a["level"] == level.lower()]
+    slim = [{k: v for k, v in a.items() if k != "features"} for a in agents[:max(1, min(limit,
+                                                                                       1000))]]
+    return {**board, "agents": slim, "total": len(board["agents"])}
 
 
 @router.get("/agents/{agent_id}/risk")
 def get_agent_risk(
     agent_id: str,
-    principal: Annotated[AuthenticatedPrincipal, Depends(require_roles("analyst"))],
-    service: Annotated[AnalyticsService, Depends(get_analytics_service)],
+    principal: Annotated[AuthenticatedPrincipal, Depends(require_roles("analyst", "super_admin"))],
 ) -> dict[str, Any]:
-    """Retrieve agent anomaly risk, risk level, and peer cohort comparison."""
-    return _artifact_query(service.get_agent_risk, agent_id)
+    """Live agent anomaly risk, risk level and peer comparison (last 30 days)."""
+    return _live_query(_live().agent_risk, agent_id)
 
 
 @router.get("/outreach")
 def get_outreach_list(
-    principal: Annotated[AuthenticatedPrincipal, Depends(require_roles("analyst"))],
-    service: Annotated[AnalyticsService, Depends(get_analytics_service)],
+    principal: Annotated[AuthenticatedPrincipal, Depends(require_roles("analyst", "super_admin"))],
 ) -> dict[str, Any]:
-    """Retrieve ranked list of likely assisted beneficiaries for proactive onboarding."""
-    return _artifact_query(service.get_outreach_list)
+    """Customers active in the last 30 days, ranked by the live assisted-customer score."""
+    return _live_query(_live().outreach)
 
 
 @router.get("/cases")
 def list_cases(
-    principal: Annotated[AuthenticatedPrincipal, Depends(require_roles("analyst"))],
+    principal: Annotated[AuthenticatedPrincipal,
+                         Depends(require_roles("analyst", "super_admin", "supervisor"))],
     service: Annotated[AnalyticsService, Depends(get_analytics_service)],
 ) -> dict[str, Any]:
-    """Retrieve analyst review queue cases."""
+    """Retrieve analyst review queue cases (also readable by supervisor and super_admin)."""
     try:
         return service.list_cases()
     except Exception:
@@ -103,10 +133,21 @@ def list_cases(
 def decide_case(
     case_id: int,
     body: CaseDecisionRequest,
-    principal: Annotated[AuthenticatedPrincipal, Depends(require_roles("analyst"))],
+    principal: Annotated[AuthenticatedPrincipal,
+                         Depends(require_roles("analyst", "super_admin", "supervisor"))],
     service: Annotated[AnalyticsService, Depends(get_analytics_service)],
 ) -> dict[str, Any]:
-    """Submit human analyst decision for review queue case."""
+    """Human decision on a case. Supervisors may decide only cases assigned to them."""
+    if principal.role == "supervisor":
+        with service.mandate_service.get_connection() as conn, conn.cursor() as cur:
+            cur.execute("SELECT assigned_to FROM cases WHERE case_id = %s;", (case_id,))
+            row = cur.fetchone()
+        if row is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Case not found")
+        if row[0] != principal.subject:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail={"error": {
+                "code": "NOT_YOURS",
+                "message": "Take this case from the pending list before deciding it."}})
     reviewer = principal.subject or body.reviewer or "analyst"
     try:
         return service.decide_case(
@@ -126,7 +167,8 @@ def get_receipt(
     txn_id: int,
     principal: Annotated[
         AuthenticatedPrincipal,
-        Depends(require_roles("customer_channel", "agent", "analyst")),
+        Depends(require_roles("customer_channel", "agent", "analyst", "super_admin",
+                              "supervisor")),
     ],
     service: Annotated[AnalyticsService, Depends(get_analytics_service)],
 ) -> dict[str, Any]:
@@ -167,7 +209,7 @@ def get_receipt(
 
 @router.get("/metrics/summary")
 def get_metrics_summary(
-    principal: Annotated[AuthenticatedPrincipal, Depends(require_roles("analyst"))],
+    principal: Annotated[AuthenticatedPrincipal, Depends(require_roles("analyst", "super_admin"))],
     service: Annotated[AnalyticsService, Depends(get_analytics_service)],
 ) -> dict[str, Any]:
     """Retrieve comprehensive evaluation metrics and fairness audit summary."""

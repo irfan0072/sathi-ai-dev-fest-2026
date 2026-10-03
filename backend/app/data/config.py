@@ -732,10 +732,10 @@ def validate_config(config: dict[str, Any]) -> dict[str, Any]:
             if not isinstance(p_info, dict):
                 raise ConfigError(f"auth.principals['{p_name}'] must be a mapping.")
             role = p_info.get("role")
-            if role not in ("agent", "customer_channel", "analyst"):
+            if role not in ("agent", "customer_channel", "analyst", "supervisor", "super_admin"):
                 raise ConfigError(
                     f"auth.principals['{p_name}'].role must be one of "
-                    "['agent', 'customer_channel', 'analyst']"
+                    "['agent', 'customer_channel', 'analyst', 'supervisor', 'super_admin']"
                 )
             sub = p_info.get("subject")
             if not isinstance(sub, str) or not sub.strip():

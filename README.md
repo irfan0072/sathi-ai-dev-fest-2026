@@ -88,7 +88,12 @@ Open [local console](http://127.0.0.1:13000) and [API health](http://127.0.0.1:1
 |---|---|---|
 | `demo_agent` | `1234` | `A_777_000001`, permitted customer `U_777_000001` only |
 | `demo_customer` | `5678` | Own amount verification/cash report/receipt; no terminal code |
-| `demo_analyst` | `9012` | Human-review cases and saved synthetic evidence; no redemption |
+| `demo_analyst` | `9012` | Fraud analyst: AI models, analytics and saved synthetic evidence; no redemption |
+| `demo_supervisor` | `3456` | Supervisor: shared call and case queues, claims work, notes, audit reports, decides own cases |
+| `sup_nadia`, `sup_karim`, `sup_farzana` | `3456` | More supervisors (database staff accounts) for the multi-supervisor queue |
+| `demo_admin` | `7890` | Super admin: control center, customers/agents/staff directories, all transactions, call management, assignment, settings |
+
+See [Operations center](docs/operations-center.md) for the role matrix, call-management lifecycle and the 5-million-customer scale test.
 
 Use the console’s role selector or `POST /api/v1/auth/demo-login` using the API contract. JWTs remain in browser memory; switching roles/signing out clears them. These public fixture PINs are synthetic demo data, separate from the private signing secret. The initial assumed50,000BDT credit is never replenished by repeated seeding. A3,000BDT mandate has assumed45BDT fee and3,045BDT debit. See [API contracts](docs/api-contracts.md) and [demo script](docs/demo-script.md).
 
