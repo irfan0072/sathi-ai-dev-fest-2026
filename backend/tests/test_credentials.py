@@ -243,6 +243,21 @@ def test_test_endpoints_audit_and_rate_limit(secured, durable_service, monkeypat
     assert actions and actions[0]["detail"]["to"] == "…678"
 
 
+def test_failed_paid_tests_do_not_use_up_the_limit(secured, durable_service, monkeypatch):
+    """Twilio refusing a number spends no credit, so a tester can keep fixing settings."""
+    monkeypatch.setattr(probes, "twilio_test_call", lambda env, to: {
+        "provider": "twilio", "ok": False, "detail": "Twilio error 21219", "http_status": 400,
+        "latency_ms": 1})
+    url = "/api/v1/settings/providers/twilio/test-call"
+    for _ in range(settings_router.PAID_TESTS_PER_HOUR + 2):
+        res = client.post(url, headers=secured, json={"to": "+8801712345678"})
+        assert res.status_code == 200 and not res.json()["ok"]
+    monkeypatch.setattr(settings_router, "TEST_ATTEMPTS_PER_HOUR",
+                        settings_router.PAID_TESTS_PER_HOUR + 2)
+    blocked = client.post(url, headers=secured, json={"to": "+8801712345678"})
+    assert blocked.status_code == 429 and "minute" in blocked.json()["error"]["message"]
+
+
 def test_init_env_generates_runtime_secrets_once(tmp_path):
     import importlib.util
     from pathlib import Path

@@ -24,6 +24,7 @@ from app.settings.service import SettingsError, SettingsService
 router = APIRouter(prefix="/api/v1/settings", tags=["settings"])
 
 PAID_TESTS_PER_HOUR = 5
+TEST_ATTEMPTS_PER_HOUR = 20
 # Settings change providers, credentials and policy for the whole platform: super admin only.
 Analyst = Annotated[AuthenticatedPrincipal, Depends(require_roles("super_admin"))]
 
@@ -158,14 +159,28 @@ def _paid_test(kind: str, to: str, principal: AuthenticatedPrincipal) -> Any:
     if not re.fullmatch(E164, to.strip()):
         return _err(422, "INVALID_PHONE", "Use E.164 format, e.g. +8801XXXXXXXXX.", "to")
     service = get_mandate_service()
+    # Only tests the provider accepted spend credit, so only those count toward the paid
+    # limit. Refused attempts (unverified number, wrong settings) cost nothing; a looser cap
+    # still stops the button being hammered.
     with service.get_connection() as conn, conn.cursor() as cur:
         cur.execute(
-            "SELECT count(*) FROM audit_log WHERE action IN "
-            "('provider_test_call', 'provider_test_sms') AND ts > now() - interval '1 hour';"
+            "SELECT count(*) FILTER (WHERE (detail->>'ok')::boolean), count(*), "
+            "min(ts) FILTER (WHERE (detail->>'ok')::boolean), min(ts) "
+            "FROM audit_log WHERE action IN ('provider_test_call', 'provider_test_sms') "
+            "AND ts > now() - interval '1 hour';"
         )
-        if cur.fetchone()[0] >= PAID_TESTS_PER_HOUR:
+        paid, attempts, first_paid, first_any = cur.fetchone()
+        limited = None
+        if paid >= PAID_TESTS_PER_HOUR:
+            limited = (first_paid, f"At most {PAID_TESTS_PER_HOUR} paid tests per hour.")
+        elif attempts >= TEST_ATTEMPTS_PER_HOUR:
+            limited = (first_any, f"At most {TEST_ATTEMPTS_PER_HOUR} test attempts per hour.")
+        if limited:
+            cur.execute("SELECT ceil(extract(epoch FROM (%s + interval '1 hour' - now())) / 60);",
+                        (limited[0],))
+            minutes = max(1, int(cur.fetchone()[0] or 1))
             return _err(429, "TEST_RATE_LIMITED",
-                        f"At most {PAID_TESTS_PER_HOUR} paid tests per hour.")
+                        f"{limited[1]} Try again in {minutes} minute(s).")
     env = get_credentials().effective_env()
     result = (probes.twilio_test_call(env, to.strip()) if kind == "call"
               else probes.alpha_test_sms(env, to.strip()))

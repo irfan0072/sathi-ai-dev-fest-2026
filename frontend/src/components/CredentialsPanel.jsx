@@ -122,7 +122,7 @@ function ProviderCard({ provider, items, unlocked, onSaved }) {
             onClick={() => paid(provider.id === 'twilio' ? api.testCall : api.testSms)}>
             {provider.id === 'twilio' ? 'Place test call' : 'Send test SMS'}
           </button>
-          <span className="muted">Uses real credit · up to 5 per hour</span>
+          <span className="muted">Uses real credit · up to 5 successful tests per hour (failed attempts do not count)</span>
         </div>
       )}
       {result && (
