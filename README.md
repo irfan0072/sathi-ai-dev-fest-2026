@@ -353,6 +353,8 @@ Full tables, denominators, ablations and noise tests: [`docs/evaluation-results.
 
 ## 11. Architecture
 
+![Sathi architecture](docs/screenshots/architecture.jpg)
+
 ```
             ┌────────────────────────── Browser console (React + Vite) ───────────────────────────┐
             │ Agent · Customer (simulated handset, Send money) · Supervisor · Super admin · Analyst │
