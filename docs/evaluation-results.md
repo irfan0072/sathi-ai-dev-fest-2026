@@ -2,7 +2,8 @@
 
 > [!NOTE]
 > All evaluations use synthetic MFS simulation data generated with disjoint cohorts
-> per `docs/evaluation-plan.md` (Train Seed 42, Val Seed 4242, Test Seed 2026).
+> per the frozen configuration in `data/config.yaml`
+> (Train Seed 42, Val Seed 4242, Test Seed 2026).
 > Zero protected demographic features or ground truth labels were included in models.
 
 ## 1. Assisted-User Classifier vs Rule Baseline

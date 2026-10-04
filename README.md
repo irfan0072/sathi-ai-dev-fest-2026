@@ -7,6 +7,10 @@ Team: **Runtime Terrors**
 > Sathi is a working prototype on **synthetic data**. It is not connected to real upay accounts.
 > The AI only recommends; a person makes every decision.
 
+**Live demo: <https://sathi-console.onrender.com/>** · pick a role on the sign-in screen (the synthetic demo PIN is filled in). The free hosting sleeps when idle, so the first load can take up to a minute.
+
+![Sathi control center](docs/screenshots/control-center.jpg)
+
 ---
 
 ## Table of contents
@@ -27,7 +31,7 @@ Team: **Runtime Terrors**
 14. [Repository Structure](#14-repository-structure)
 15. [Other Configuration](#15-other-configuration)
 16. [Disclosures](#16-disclosures)
-17. [Team](#17-team)
+17. [Live Project](#17-live-project)
 18. [Acknowledgments](#18-acknowledgments)
 
 ---
@@ -109,6 +113,20 @@ Sathi adds a safety layer around every assisted cash-out:
 | Fraud dashboard / Confirmations | Live counts, hourly patterns and every confirmation result. |
 
 Every AI page has a **"How this page works"** box that explains what it is for, how the AI decides, what to do with the result, and what each term means.
+
+### Screenshots
+
+| Agent records a cash-out | Customer answers Sathi's call |
+|---|---|
+| ![Agent cash-out](docs/screenshots/agent-cashout.jpg) | ![Customer confirmation call](docs/screenshots/customer-call.jpg) |
+| **Supervisor case queue** | **Call management** |
+| ![Cases](docs/screenshots/cases.jpg) | ![Call management](docs/screenshots/call-management.jpg) |
+| **Send-money warning from community alerts** | **Agent risk (AI)** |
+| ![Send money warning](docs/screenshots/send-money-warning.jpg) | ![Agent risk](docs/screenshots/agent-risk.jpg) |
+| **Cash planning (Track 05)** | **Invite planner (Track 04)** |
+| ![Cash planning](docs/screenshots/cash-planning.jpg) | ![Invite planner](docs/screenshots/invite-planner.jpg) |
+| **AI test results** | **Test accounts with real phone numbers** |
+| ![AI test results](docs/screenshots/ai-test-results.jpg) | ![Test accounts](docs/screenshots/test-accounts.jpg) |
 
 ---
 
@@ -258,15 +276,16 @@ Note: `make` does not read `.env`; export the variables you need for host runs.
 
 ## 8. Live Deployment
 
-- **Local (verified):** console <http://127.0.0.1:13000>, API <http://127.0.0.1:18000>.
-- **Public hosting:** a Render blueprint is included (`render.yaml`: managed PostgreSQL 16, FastAPI service, static console). Step-by-step guide: [`docs/deploy-guide.md`](docs/deploy-guide.md).
-- **Public URL:** _to be added after deployment_.
+- **Live console:** <https://sathi-console.onrender.com/>
+- **Live API health:** <https://sathi-api-mqk2.onrender.com/health>
+- **Local:** console <http://127.0.0.1:13000>, API <http://127.0.0.1:18000>.
+- **Hosting:** Render blueprint (`render.yaml`: managed PostgreSQL 16, FastAPI service, static console). Step-by-step guide, including loading the synthetic population: [`docs/deploy-guide.md`](docs/deploy-guide.md).
 
 For real phone calls on a hosted API:
 
 1. Deploy the API on a public HTTPS URL and set `SATHI_PUBLIC_API_URL`.
 2. Add Twilio (or BD IVR) credentials in Settings or the environment, and choose the provider.
-3. In Twilio, enable Bangladesh under Voice Geographic Permissions. Trial accounts can only call verified numbers and play a short trial message first.
+3. Use an upgraded Twilio account and enable Bangladesh under Voice Geographic Permissions. Twilio trial accounts only allow Twilio's own sample call scripts, so Sathi's Bangla prompt and keypad answer cannot run on a trial. The simulated handset runs the same call logic with no provider.
 4. Use a plan that does not sleep, or keep the service awake. A sleeping free instance takes about 50 seconds to wake, which is longer than Twilio waits for a webhook.
 
 Full live-channel guide: [`docs/live-mode.md`](docs/live-mode.md).
@@ -454,6 +473,8 @@ Full policy: [`docs/responsible-ai.md`](docs/responsible-ai.md).
 │   ├── assumptions.md      Documented assumptions
 │   └── artifacts/          Verified model bundles and evaluation manifest
 ├── docs/                   Architecture, API, evaluation, live mode, deploy guide
+│   ├── report/             Final submission report (PDF and Word)
+│   └── screenshots/        README screenshots
 ├── scripts/                Evaluation, scale seed, smoke tests, env setup, IVR stand-in
 ├── compose.yaml            Local Docker stack
 ├── render.yaml             Render deployment blueprint
@@ -485,15 +506,16 @@ Full policy: [`docs/responsible-ai.md`](docs/responsible-ai.md).
 
 ---
 
-## 17. Team
+## 17. Live Project
 
-**Runtime Terrors**: Daffodil International University
-
-| Name | Role |
+| | Link |
 |---|---|
-| MD Irfanur Islam Rahat | _Role to be added_ |
-| _Member name_ | _Role_ |
-| _Member name_ | _Role_ |
+| Live demo (console) | <https://sathi-console.onrender.com/> |
+| Live API health | <https://sathi-api-mqk2.onrender.com/health> |
+| Repository | <https://github.com/irfan0072/sathi-ai-dev-fest-2026> |
+| Final report | [PDF](docs/report/Sathi_Final_Report.pdf) · [Word](docs/report/Sathi_Final_Report.docx) |
+
+Demo sign-in PINs (public synthetic fixtures): agent `1234`, customer `5678`, supervisor `3456`, super admin `7890`, fraud analyst `9012`.
 
 ---
 

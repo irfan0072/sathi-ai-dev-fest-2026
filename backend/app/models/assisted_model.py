@@ -1,6 +1,6 @@
 """Assisted-user classifier for Sathi using LightGBM, calibration, and SHAP.
 
-Conforms strictly to docs/design-repair-proposal.md and tasks/T023:
+Design notes (model contract):
 - LightGBM gradient boosted trees on approved numeric behavioral features.
 - Fits one base estimator on X_train/y_train; wraps fitted model with sklearn FrozenEstimator
   and sigmoid calibration on separate disjoint X_val/y_val.

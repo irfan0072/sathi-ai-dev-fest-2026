@@ -1,30 +1,41 @@
 # Responsible AI and security
 
-All data and transaction demonstrations are synthetic. Current completion evidence is in handoff.md; planned controls below are not a claim of production readiness.
+All data and transactions are synthetic. Financial figures are assumptions, not upay
+figures. The AI only recommends; a person makes every decision.
 
-| Principle | Required behavior | Evidence/gate |
-|---|---|---|
-| Privacy | No real PII/PIN; parsed amount only, no stored audio | Config/schema; durable API verifiedT024 |
-| Explanation | SHAP explains same base model in raw log odds; train-derived peer reasons | T023 tests; console artifact wiring pendingT025 |
-| Fairness | Demographics evaluation-only; include slice denominators and misses | Corrected final report pendingT023b |
-| Security | Durable hashed codes, expiry, replay/attempt locks, scoped tokens, ownership, ledger rules | T024 DB/security/concurrency tests and actual HTTP flow pass |
-| Human oversight | Models prioritize review/outreach; review never redeems | API verifiedT024; console pendingT025 |
-| Transparency | Illustrative samples labelled; missing metrics unavailable; fees/impact ASSUMPTIONS | T022 verified; final evidence pending |
-| No harmful automation | No score-based authorization, denial or automatic agent penalties | Approved design and focused tests |
-
-Threats to test include guessing/replay, concurrent spending, ownership spoofing, expired tokens, client attempt-counter manipulation, malformed/ambiguous amounts, prompt-like free text and receipt number injection. Public demo principals are explicitly synthetic and low privilege; no admin/policy writes. Hashing alone is insufficient without attempt limits and scope. Signed tokens require a nondefault server secret; credentials remain out of Git.
-
-Customer confirmation checks the stated amount only. It cannot detect coercion, verify comprehension beyond that response, identify speakers or guarantee physical cash delivery. Caps and cash reports can support review but cannot eliminate collusion. Analyst decisions update durable case/audit state without granting mandate authority.
-
-Synthetic distributions cannot establish real-world accuracy or prevented loss. Sparse skimmers and small fairness slices limit estimates; undefined rates must remain unavailable. Adoption30/50/70 estimates are idealized counterfactuals with eligible-loss denominators and explicit assumptions. Validation used for calibration is a diagnostic cohort; final test estimates must use frozen models. A governed pilot is required before any real deployment.
-
-Receipts use validated templates. Live-mode extensions ([live-mode.md](live-mode.md)) keep the same boundaries:
-
-| Extension | Control |
+| Principle | How Sathi meets it |
 |---|---|
-| Verification call | Number from server phone book only; amount never spoken; signed webhooks plus per-call token; masked numbers only stored |
-| Silent duress | Leading-zero amount holds the mandate and opens an urgent case; identical closing speech and "not verified" screens hide it from bystanders. It depends on the customer remembering the rule |
-| Real-time risk | Raises verification strength only; fails toward stronger verification; signal trace hidden from agents to resist gaming |
-| AI case brief | Facts-only prompt, data-not-instructions rule, schema and citation validation, fixed next-step list, provider recorded, escaped rendering; never a decision |
-| Liquidity forecast | Planning aid for agents; never limits a customer's cash-out |
-| Uplift targeting | Invitation only, no offers or pressure; non-positive uplift never contacted; demographics not features; injected truth documented |
+| Privacy | Synthetic data only; demographics are never model inputs; other people's numbers are masked in send money and the assistant; community reporters are stored as keyed hashes; report text is cleaned of phone numbers; provider credentials are encrypted at rest |
+| Explainability | SHAP reasons for customer scores, signal-level reasons for agent risk, plain-language advice and a "How this page works" guide on every AI page; LLM briefs must cite evidence facts |
+| Fairness | Age, gender, region and urban/rural are used only to audit; maximum TPR gap 5.6% on the held-out test (target ≤ 10%); honest high-volume agents are measured explicitly |
+| Security | Short-lived signed JWT with role and scope checks; PBKDF2-SHA256 PIN hashes; signed provider webhooks plus per-call tokens; one live call per check; row locks against double spending |
+| Human oversight | Every suspicious result goes to a supervisor; assignment, notes, audit reports and a full audit log |
+| Transparency | Synthetic-data banner on every page; assumptions labelled; the frozen, reproducible evaluation is published in the console |
+| No harmful automation | No automatic blocking or penalties; silence is never a denial; warnings say "appears in community alerts", never "scam"; the customer always decides |
+
+## Boundaries
+
+- No model approves, denies, blocks or delays a transaction. Verified or suspicious comes
+  from the customer's answer compared with the ledger.
+- The watchlist forces confirmation calls for an agent; it never blocks.
+- Forecasts never limit a customer's cash-out. Outreach scores are used only to offer help.
+- LLM output is discarded if it is ungrounded, accusatory or contains phone numbers; a
+  deterministic template is used instead.
+- A confirmation cannot prove physical cash delivery or who answered the phone.
+
+## Threats and mitigations
+
+| Threat | Mitigation |
+|---|---|
+| Agent watches the customer answer | Prompt never states the amount; silent `0` code; agent sees only "Confirmation done" |
+| Agent answers on the customer's phone | Calls go to the registered number; cash gaps raise agent risk; random human callbacks planned for a pilot |
+| Forged webhooks or replayed codes | Signature checks, per-call tokens, hashed one-time codes, replay rejection, attempt limits |
+| False or malicious community reports | Moderation, rate limits, one "me too" per customer, non-accusatory wording |
+| Prompt injection into the LLM | Only structured facts are sent; schema, citation, accusation and number checks; template fallback |
+| Model drift | Shifted-data tests, 15-minute live re-scoring, human review of every flag |
+
+## Limits
+
+Synthetic distributions cannot establish real-world accuracy or prevented loss. Agent
+results rest on small samples, and subtle skimming is not detected. Adoption scenarios
+assume perfect compliance. A governed pilot is required before any real deployment.

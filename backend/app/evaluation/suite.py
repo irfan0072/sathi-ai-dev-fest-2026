@@ -1,6 +1,6 @@
 """Comprehensive reproducible evaluation suite and experiment runner for Sathi.
 
-Conforms strictly to docs/evaluation-plan.md, docs/design-repair-proposal.md, and tasks/T023b:
+Produces the frozen evaluation reported in docs/evaluation-results.md:
 - Fail-closed manifest and shifted metadata validation BEFORE fitting.
 - Models fitted on train only; calibrated on disjoint validation.
 - Validation metrics explicitly disclosed as calibration-cohort diagnostics.
@@ -1406,7 +1406,8 @@ class EvaluationRunner:
             "",
             "> [!NOTE]",
             "> All evaluations use synthetic MFS simulation data generated with disjoint cohorts",
-            "> per `docs/evaluation-plan.md` (Train Seed 42, Val Seed 4242, Test Seed 2026).",
+            "> per the frozen configuration in `data/config.yaml`",
+            "> (Train Seed 42, Val Seed 4242, Test Seed 2026).",
             "> Zero protected demographic features or ground truth labels were included in models.",
             "",
             "## 1. Assisted-User Classifier vs Rule Baseline",

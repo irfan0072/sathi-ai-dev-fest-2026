@@ -1,25 +1,24 @@
-# Idea Development Framework (9-step logic chain)
+# Idea development framework (9-step logic chain)
 
 ## Problem statement (guideline template)
-For **older adults and first-time rural users who cannot operate their wallets alone**, **sharing their PIN with agents or relatives** can expose **reusable account authority beyond a single cash-out**. We will build **Sathi, an AI-assisted delegation layer** that uses **synthetic transaction, session and agent data** to **issue scoped one-time mandates, verify intent in Bangla, and flag at-risk users and abnormal agents**, with success measured by **share of assisted cash-outs completed without PIN disclosure and simulated loss prevented**.
 
-| # | Step | Our answer | Evidence / source |
+For **older adults, allowance recipients and first-time rural users who need an agent to
+cash out**, **handing over their phone and PIN** causes **hidden skimming, fee overcharging
+and later misuse that they rarely notice or report**. We will build **Sathi, a confirmation
+and risk layer** that uses **cash-out ledger, app-session and agent activity data (synthetic
+in this prototype)** to **call the customer after every assisted cash-out, route mismatches
+and risky agents to human review, and warn before risky payments**, with success measured by
+**the share of assisted cash-outs confirmed by the customer, the confirmed skimming events
+caught, and the false-flag rate on honest agents**.
+
+| # | Step | Our answer | Evidence |
 |---|---|---|---|
-| 1 | User | Primary: wallet owners needing assistance, including allowance recipients. Secondary: agent and analyst. | [Shitol et al.(2025)](https://onlinelibrary.wiley.com/doi/10.1111/ijsw.70033):68 qualitative interviews in Kurigram describe reliance on help and PIN sharing; not a national prevalence estimate |
-| 2 | Problem | Reusable PIN sharing can expose broader authority than a single withdrawal needs; this is our design inference. | Same study motivates assistance needs; no unsupported national fraud percentage claimed |
-| 3 | Why now | Test a bounded delegation prototype with reproducible synthetic evidence and keypad confirmation. | Project rationale; no claim about unverified 2026 regulations or required speech/LLM capability |
-| 4 | Solution | Mandate engine + voice/keypad verification + assisted-user outreach + agent risk console | See architecture.md |
-| 5 | AI role | Prediction (assisted-user classifier), detection (agent anomaly), generation (plain-language explanation) | evaluation-plan.md |
-| 6 | Impact | % assisted cash-outs without PIN disclosure; simulated loss prevented; detection precision/recall | [Fill targets after baseline] |
-| 7 | Data | 100% synthetic generator with injected patterns; documented assumptions; held-out agents | data/assumptions.md |
-| 8 | Validation | Offline metrics vs rule baseline + adoption-sensitivity simulation; plan for a controlled pilot | evaluation-plan.md |
-| 9 | Scale | Channel-agnostic API (app, USSD, SMS, IVR); governed anonymised data pilot with a few agents | architecture.md section 6 |
-
-## Product readiness checklist (from guideline)
-- [ ] Problem is frequent or economically meaningful
-- [ ] AI adds value beyond a simple rule (show baseline comparison)
-- [ ] Clear action after predictions (outreach, human review); mandate authorization remains deterministic policy
-- [ ] Business benefit measurable
-- [ ] Validatable with future real data
-- [ ] Privacy, fairness, explainability, security addressed
-- [ ] Fits a real digital-service workflow
+| 1 | User | Assisted customers (older adults, allowance recipients, first-time rural users); also agents, supervisors and analysts | [TIB, 27 May 2025](https://www.ti-bangladesh.org/images/2025/report/mfs/Executive-Summary-Mobile-Financial-Services-Sector-En.pdf); [Shitol et al., 21 Aug 2025](https://onlinelibrary.wiley.com/doi/10.1111/ijsw.70033) |
+| 2 | Problem | PIN sharing gives agents reusable control; skimming and overcharging go unnoticed and unreported | TIB 2025: 6.3% of account holders were fraud victims; only 7.6% filed a case |
+| 3 | Why now | Allowances are paid through MFS; 239 million accounts; cheap voice and AI make per-transaction confirmation affordable | Bangladesh Bank data, January 2025 |
+| 4 | Solution | Confirmation call, silent duress code, voice mandate, operations center, send-money warnings | [architecture.md](architecture.md) |
+| 5 | AI role | Prediction (assisted customers, liquidity), detection (agent anomaly, receiver risk), causal targeting (uplift), guarded generation (briefs, warnings) | [evaluation-results.md](evaluation-results.md) |
+| 6 | Impact | Confirmed cash-outs, skimming caught, honest-agent false flags, cost per confirmation; break-even about ৳97 average loss per incident | Final report, section 8 |
+| 7 | Data | Synthetic generator with documented assumptions, overlap and label noise; disjoint and shifted splits | [data/assumptions.md](../data/assumptions.md) |
+| 8 | Validation | Baselines, ablations, distribution-shift test, fairness audit, adoption scenarios; pilot with stop-or-go gates | Final report, sections 7–8 |
+| 9 | Scale | Channel-agnostic API; 5-million-customer test; governed-data pilot | [operations-center.md](operations-center.md) |

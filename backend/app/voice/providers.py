@@ -93,6 +93,13 @@ def twilio_error(exc: urllib.error.HTTPError) -> str:
     if isinstance(code, str) and code.isdigit():
         code = int(code)
     log.warning("twilio HTTP %s: %s", exc.code, raw[:500])
+    if "trial accounts have limited parameter access" in message.lower():
+        # Newer Twilio trials accept only "to" plus Twilio's sample call scripts, so no
+        # app can play its own voice prompt or read the keypad answer.
+        return ("Twilio trial accounts only allow Twilio's sample call scripts, so Sathi's "
+                "own Bangla prompt and keypad answer cannot run. Upgrade the Twilio account "
+                "(Console > Billing > Upgrade, add credit) and test again, or use the "
+                "simulated handset or the Bangladesh IVR provider for the demo.")
     fix = TWILIO_FIXES.get(code) if isinstance(code, int) else None
     if code:
         head = f"Twilio error {code}: {message}".strip()

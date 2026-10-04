@@ -221,6 +221,10 @@ def test_twilio_test_call_explains_the_real_twilio_error():
     sender = probes.twilio_test_call(TW, "+8801712345678",
                                      _twilio_error(21210, "From is not a valid number."))
     assert "TWILIO_FROM_NUMBER" in sender["detail"]
+    trial = probes.twilio_test_call(TW, "+8801712345678", _twilio_error(
+        0, "Invalid or disallowed parameters provided - trial accounts have limited "
+           "parameter access, upgrade your account to unlock full functionality"))
+    assert "Upgrade the Twilio account" in trial["detail"]
 
 
 def test_test_endpoints_audit_and_rate_limit(secured, durable_service, monkeypatch):

@@ -1,6 +1,6 @@
 """Agent anomaly detector for Sathi using Peer Robust Z-Score and Isolation Forest.
 
-Conforms strictly to docs/design-repair-proposal.md, docs/api-contracts.md, and tasks/T023:
+Conforms to docs/api-contracts.md:
 - Fit uses X numeric behavior only; never uses peer_metadata region,
   agent_type, or generated volume_band.
 - Learns volume-band boundaries from train agent_volume_daily_mean only

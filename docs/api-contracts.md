@@ -1,6 +1,6 @@
 # Synthetic demo API contract
 
-Base `/api/v1`. Human-approved repair contract; T024 implements durable authentication/ledger behavior and T025 wires the console. Check docs/handoff.md for verified status. All financial values are simulation ASSUMPTIONS, never actual upay figures. Health is public diagnostic information; business routes require scoped bearer authentication. X-Actor is not authentication. No admin or policy-write role.
+Base `/api/v1`. All financial values are simulation ASSUMPTIONS, never actual upay figures. Health is public diagnostic information; business routes require scoped bearer authentication. X-Actor is not authentication. No admin or policy-write role.
 
 | Method | Path | Role | Purpose |
 |---|---|---|---|
@@ -39,7 +39,7 @@ Model signals support outreach/human review only. Gender, age band, region, grou
 
 Attempts, verification events, cases, ledger records and audit logs are PostgreSQL-backed. Signing secrets belong only in ignored environment configuration. Public synthetic demo PINs are fixtures, not real customer credentials.
 
-## Runtime readiness (T026)
+## Runtime readiness
 
 `GET /health` returns200 only when signing is configured, the curated bundle passes hashes/current-config validation, and the database probe finds migrations, configured demo principals and their ledger. Payload keys: `status`, `database` (`ready`/`unavailable`), `auth_signing`, `artifacts` (`verified`/`unavailable`). Unready state returns503/degraded without underlying exceptions or credentials. Existing business routes and schema are unchanged. Startup validates before database writes, applies001/002 idempotently and seeds only namespace777 without replenishing spent balances.
 
