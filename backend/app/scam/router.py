@@ -41,9 +41,26 @@ class RecipientCheck(BaseModel):
 @router.post("/payments/check-recipient")
 def check_recipient(body: RecipientCheck, principal: Customer) -> Any:
     try:
-        return _scam().check_recipient(principal.subject, body.number)
+        check = _scam().check_recipient(principal.subject, body.number)
     except TransferError as err:
         return _err(err.code, err.message, err.status_code)
+    check["advisory"] = _advisory(check)
+    return check
+
+
+def _advisory(check: dict) -> dict | None:
+    """Calm warning worded by the LLM (or a template) when the number is in community alerts."""
+    from app.scam.advisor import advise
+
+    if not check.get("community_reports"):
+        return None
+    try:
+        from app.assistant.router import get_assistant
+
+        clients = getattr(get_assistant(), "llm", [])
+    except Exception:
+        clients = []
+    return advise(check, clients)
 
 
 class SendMoney(BaseModel):

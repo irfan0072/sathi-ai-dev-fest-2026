@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+
 import pytest
 from app.main import app
 from app.mandates.service import MandateService
@@ -153,6 +155,53 @@ def test_moderation_and_verified_reports_raise_warning(wallets):
     check = client.post("/api/v1/payments/check-recipient", headers=cust(21),
                         json={"number": num(903)}).json()
     assert check["verified_reports"] == 1 and check["warning_level"] == "high"
+    advisory = check["advisory"]
+    assert advisory["source"] == "template"  # no LLM key in tests
+    assert "scam" not in json.dumps(advisory).lower() and "প্রতারক" not in json.dumps(advisory)
+    assert num(903) not in json.dumps(advisory)
+    plain = client.post("/api/v1/payments/check-recipient", headers=cust(21),
+                        json={"number": num(904)}).json()
+    assert plain["advisory"] is None
+
+
+class _FakeLLM:
+    name = "gemini"
+
+    def __init__(self, reply: dict):
+        self.reply, self.timeout, self.prompts = reply, 20.0, []
+
+    def complete(self, system: str, user: str) -> str:
+        self.prompts.append(user)
+        return json.dumps(self.reply)
+
+
+GOOD = {"title": "Please check first", "message": "Some customers reported problems after paying.",
+        "message_bn": "কিছু গ্রাহক টাকা দেওয়ার পর সমস্যার কথা বলেছেন।",
+        "tips": ["Pay only people you know."], "tips_bn": ["চেনা মানুষকেই টাকা দিন।"]}
+CHECK = {"number": "01700000001", "community_reports": 2, "verified_reports": 0,
+         "report_categories": ["not_delivered"], "warning_level": "high"}
+
+
+def test_llm_advisory_is_used_only_when_it_does_not_accuse():
+    from app.scam import advisor
+
+    advisor._cache.clear()
+    llm = _FakeLLM(GOOD)
+    out = advisor.advise(CHECK, [llm])
+    assert out["source"] == "gemini" and out["message"] == GOOD["message"]
+    assert llm.timeout <= advisor.LLM_TIMEOUT_SECONDS
+    # Only structured facts reach the model: no report text, no phone number.
+    assert "01700000001" not in llm.prompts[0] and "not arrive" in llm.prompts[0]
+
+    advisor._cache.clear()
+    for bad in ({**GOOD, "message": "This seller is a scammer."},
+                {**GOOD, "message_bn": "এই লোকটি প্রতারক।"},
+                {**GOOD, "message": "Do not pay 01700000001."},
+                {"title": "x"}):
+        advisor._cache.clear()
+        out = advisor.advise(CHECK, [_FakeLLM(bad)])
+        assert out["source"] == "template", bad
+    assert advisor.advise({**CHECK, "community_reports": 0}, [llm]) is None
 
 
 def test_social_page_reports_and_rate_limit(wallets):

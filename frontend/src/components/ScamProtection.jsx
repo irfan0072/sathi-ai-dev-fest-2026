@@ -5,7 +5,7 @@ import { Alert, Badge, Empty, Kpi, LiveDot, PageHead, Panel, Tabs, bdt, timeAgo,
 import { phone } from '../ids';
 
 const levelStyle = {
-  high: { box: 'border-error/50 bg-error/10', badge: 'badge-error', title: 'Do not send money to this number' },
+  high: { box: 'border-error/50 bg-error/10', badge: 'badge-error', title: 'Please check carefully before you send' },
   caution: { box: 'border-warning/60 bg-warning/10', badge: 'badge-warning', title: 'Be careful with this number' },
   none: { box: 'border-success/40 bg-success/10', badge: 'badge-success', title: 'No reports found' },
 };
@@ -26,17 +26,27 @@ function RiskBox({ check }) {
     <div className={`flex flex-col gap-2 rounded-box border p-4 ${style.box}`} role="status">
       <div className="flex flex-wrap items-center gap-2">
         <Icon name={check.warning_level === 'none' ? 'check' : 'warning'} className="size-5" />
-        <strong>{style.title}</strong>
+        <strong>{check.advisory?.title || style.title}</strong>
         <span className="font-mono text-sm">{check.masked}</span>
         {check.paid_before && <Badge tone="badge-ghost">you paid before</Badge>}
       </div>
-      {check.warnings?.length > 0 && (
-        <ul className="ml-7 list-disc text-sm">{check.warnings.map((w) => <li key={w}>{w}</li>)}</ul>
+      {check.advisory && (
+        <div className="ml-7 flex flex-col gap-1 text-sm">
+          <p>{check.advisory.message}</p>
+          <p lang="bn" className="font-bangla">{check.advisory.message_bn}</p>
+          <ul className="list-disc pl-5">
+            {check.advisory.tips.map((t, i) => <li key={t}>{t} <span lang="bn" className="muted font-bangla">· {check.advisory.tips_bn?.[i]}</span></li>)}
+          </ul>
+          <span className="muted text-xs">Written by {check.advisory.source === 'template' ? 'Sathi' : 'Sathi AI'} from community alerts. These are reports by other customers, not a final decision.</span>
+        </div>
       )}
-      {check.community_reports > 0 && (
+      {check.warnings?.length > 0 && (
+        <ul className="ml-7 list-disc text-sm">{check.warnings.filter((w) => !check.advisory || !w.includes('community alerts')).map((w) => <li key={w}>{w}</li>)}</ul>
+      )}
+      {check.community_reports > 0 && !check.advisory && (
         <p className="ml-7 text-sm">{check.community_reports} community report(s){check.verified_reports ? `, ${check.verified_reports} verified by upay` : ''}.</p>
       )}
-      {check.advice && <p className="ml-7 text-sm font-medium">{check.advice}</p>}
+      {check.advice && !check.advisory && <p className="ml-7 text-sm font-medium">{check.advice}</p>}
       {!check.exists && <p className="ml-7 text-sm">No upay account uses this number.</p>}
     </div>
   );
@@ -84,7 +94,7 @@ export function SendMoney() {
                 <button type="button" className="btn join-item" onClick={verify} disabled={busy || !number.trim()}>Check</button>
               </div>
             </label>
-            {!check && <p className="muted -mt-2 text-xs">Demo numbers: 01900000500 (reported scam seller) · 01900000600 (home bakery on a personal account) · 01901000002 (ordinary customer).</p>}
+            {!check && <p className="muted -mt-2 text-xs">Demo numbers: 01900000500 (in community alerts) · 01900000600 (home bakery on a personal account) · 01901000002 (ordinary customer).</p>}
             <RiskBox check={check} />
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="form-control">
@@ -108,7 +118,7 @@ export function SendMoney() {
             <button className="btn btn-primary focus-ring" disabled={busy || !check || !check.exists || check.is_self || (needsAck && !ack)}>
               {busy ? <span className="loading loading-spinner loading-sm" /> : 'Send money'}
             </button>
-            <p className="muted text-xs">Sathi never blocks your money. Warnings help you avoid scams; you decide.</p>
+            <p className="muted text-xs">Sathi never blocks your money. Warnings are advice from community alerts and payment patterns; you decide.</p>
           </form>
         </Panel>
         <Panel className="lg:col-span-2" title="Recent transfers" action={wallet?.upay_number && <span className="muted font-mono text-xs">your number {wallet.upay_number}</span>}>

@@ -47,7 +47,7 @@ REASON_TEXT = {
 CUSTOMER_WARNING = {
     "same_amount": "Many people paid this personal number the same amount today. Personal "
                    "accounts are not allowed to sell products.",
-    "community": "Other customers reported this number for a scam.",
+    "community": "This number appears in community alerts from other customers.",
     "pass_through": "Money sent to this number is moved out very quickly.",
     "fan_in": "This personal number is receiving payments from many strangers.",
 }
