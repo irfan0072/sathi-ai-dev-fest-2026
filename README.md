@@ -284,7 +284,7 @@ make test lint build-console
 make smoke-skeleton
 ```
 
-- **Backend:** 560 pytest tests (8 skipped by design) covering data determinism and leakage, models, authentication and roles, mandates and concurrency, replay and lockout, confirmation calls and retries, Twilio and BD IVR webhooks, call center, scam protection and the LLM warning guard, test accounts, migrations and bootstrap.
+- **Backend:** 563 pytest tests (8 skipped by design) covering data determinism and leakage, models, authentication and roles, mandates and concurrency, replay and lockout, confirmation calls and retries, Twilio and BD IVR webhooks, call center, scam protection and the LLM warning guard, test accounts, migrations and bootstrap.
 - **Frontend:** 60 Vitest tests covering role navigation, pages, escaping of untrusted text and ID-to-phone display.
 - **Isolation:** tests use disposable schemas inside `sathi_phase1_test` and never touch the demo database.
 - **CI:** GitHub Actions (`.github/workflows/ci.yml`) runs lint, tests and the console build on every push and pull request against PostgreSQL 16.

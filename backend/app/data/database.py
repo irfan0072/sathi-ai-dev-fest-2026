@@ -171,12 +171,112 @@ def get_migrations_dir() -> Path:
     raise FileNotFoundError(f"Migrations directory not found. Searched locations: {searched}")
 
 
+class _PooledConnection:
+    """A pooled psycopg connection. Leaving `with` or calling close() hands it back.
+
+    Opening a connection costs a TLS handshake and SCRAM password hashing, which takes
+    hundreds of milliseconds on a small hosted CPU. Almost every request opened several,
+    so idle connections are now reused.
+    """
+
+    def __init__(self, conn: Any, key: tuple) -> None:
+        self._conn, self._key, self._released = conn, key, False
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._conn, name)
+
+    def __enter__(self) -> "_PooledConnection":
+        return self
+
+    def __exit__(self, *exc: Any) -> None:
+        self.close()
+
+    def close(self) -> None:
+        if not self._released:
+            self._released = True
+            _POOL.release(self._key, self._conn)
+
+
+class _ConnectionPool:
+    MAX_IDLE = int(os.environ.get("SATHI_DB_POOL_SIZE", "6"))
+    CHECK_AFTER_SECONDS = 30.0  # test an idle connection before reuse after this long
+
+    def __init__(self) -> None:
+        import threading
+
+        self._idle: list[tuple[tuple, Any, float]] = []
+        self._lock = threading.Lock()
+        self._pid = os.getpid()
+
+    def acquire(self, key: tuple) -> Any | None:
+        import time
+
+        with self._lock:
+            if self._pid != os.getpid():  # forked child: never share parent sockets
+                self._idle, self._pid = [], os.getpid()
+            for i in range(len(self._idle) - 1, -1, -1):
+                if self._idle[i][0] == key:
+                    _, conn, since = self._idle.pop(i)
+                    break
+            else:
+                return None
+        if conn.closed or conn.broken:
+            return None
+        if time.monotonic() - since > self.CHECK_AFTER_SECONDS:
+            try:
+                conn.execute("SELECT 1;")
+            except Exception:
+                _quiet_close(conn)
+                return None
+        return conn
+
+    def release(self, key: tuple, conn: Any) -> None:
+        import time
+
+        try:
+            if conn.closed or conn.broken:
+                return
+            if conn.info.transaction_status != psycopg.pq.TransactionStatus.IDLE:
+                conn.rollback()
+            if not conn.autocommit:
+                conn.autocommit = True
+        except Exception:
+            _quiet_close(conn)
+            return
+        evicted = []
+        with self._lock:
+            self._idle.append((key, conn, time.monotonic()))
+            while len(self._idle) > self.MAX_IDLE:
+                evicted.append(self._idle.pop(0)[1])
+        for old in evicted:
+            _quiet_close(old)
+
+
+def _quiet_close(conn: Any) -> None:
+    try:
+        conn.close()
+    except Exception:
+        pass
+
+
+_POOL = _ConnectionPool()
+
+
 def get_connection(db_url: str, schema: str | None = None):
     """Establish database connection with optional schema/search_path."""
     if not db_url:
         raise ValueError("Database URL must be provided.")
     if psycopg is None:
         raise ImportError("psycopg is not installed. Please install psycopg[binary]>=3.2,<4.")
+    pooled = os.environ.get("SATHI_DB_POOL", "true").strip().lower() != "false"
+    key = (db_url, schema)
+    if pooled and (reused := _POOL.acquire(key)) is not None:
+        return _PooledConnection(reused, key)
+    conn = _open_connection(db_url, schema)
+    return _PooledConnection(conn, key) if pooled else conn
+
+
+def _open_connection(db_url: str, schema: str | None):
     conn = psycopg.connect(db_url, autocommit=True)
     if schema:
         if not re.match(r"^[a-zA-Z_][a-zA-Z0-9_]*$", schema):

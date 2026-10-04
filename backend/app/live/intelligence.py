@@ -68,6 +68,12 @@ class _Cache:
         if hit and not force and (stale_ok or time.monotonic() - hit[0] < ttl):
             return hit[1]
         if stale_ok and _thread is not None and _thread.is_alive():
+            # The last background run failed (for example too little live data): say so
+            # at once instead of making the page wait.
+            failed = FAILURES.get(key)
+            if failed and not hit:
+                raise WarmingUp(f"The live {key.replace('_', ' ')} model is not available yet: "
+                                f"{failed[1]}")
             # The background process owns training; wait for it instead of training twice.
             deadline = time.monotonic() + 20
             while time.monotonic() < deadline:
@@ -96,6 +102,9 @@ class _Cache:
 
 
 CACHE = _Cache()
+# name -> (monotonic time, short reason) of the last failed background run.
+FAILURES: dict[str, tuple[float, str]] = {}
+FAILURE_RETRY_SECONDS = 300
 
 
 class LiveIntelligence:
@@ -532,12 +541,18 @@ def _refresh_loop() -> None:
             hit = CACHE._values.get(name)
             if hit and time.monotonic() - hit[0] < TTL[name]:
                 continue
+            failed = FAILURES.get(name)
+            if failed and time.monotonic() - failed[0] < FAILURE_RETRY_SECONDS:
+                continue  # back off: retrying every 20 s only burns CPU
             try:
                 value = pool.submit(_child_compute, name, service.db_url,
                                     service.schema).result(timeout=600)
                 CACHE._values[name] = (time.monotonic(), value)
+                FAILURES.pop(name, None)
                 _save_snapshot(service, name, value)
             except Exception as exc:
+                reason = str(exc).strip("'\" ") or type(exc).__name__
+                FAILURES[name] = (time.monotonic(), reason[:160])
                 log.warning("live %s refresh failed: %s", name, exc)
         time.sleep(20)
 

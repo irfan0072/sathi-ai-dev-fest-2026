@@ -11,6 +11,7 @@ import base64
 import hashlib
 import hmac
 import json
+import logging
 import os
 import secrets
 import urllib.error
@@ -18,6 +19,8 @@ import urllib.parse
 import urllib.request
 from dataclasses import dataclass
 from typing import Protocol
+
+log = logging.getLogger("sathi.voice")
 
 
 class VoiceProviderError(RuntimeError):
@@ -77,15 +80,26 @@ TWILIO_FIXES = {
 
 def twilio_error(exc: urllib.error.HTTPError) -> str:
     """Twilio's own error code and message, plus the fix when we know it."""
-    code, message = None, ""
+    code, message, raw = None, "", ""
     try:
-        data = json.loads(exc.read().decode() or "{}")
+        raw = (exc.read() or b"").decode("utf-8", "replace")
+    except Exception as read_error:  # body already consumed or connection dropped
+        raw = f"<unreadable: {type(read_error).__name__}>"
+    try:
+        data = json.loads(raw or "{}")
         code, message = data.get("code"), str(data.get("message") or "")
-    except Exception:
+    except ValueError:
         pass
+    if isinstance(code, str) and code.isdigit():
+        code = int(code)
+    log.warning("twilio HTTP %s: %s", exc.code, raw[:500])
     fix = TWILIO_FIXES.get(code) if isinstance(code, int) else None
-    head = f"Twilio error {code}: {message}".strip() if code else \
-        f"Twilio rejected the call (HTTP {exc.code})."
+    if code:
+        head = f"Twilio error {code}: {message}".strip()
+    else:
+        snippet = " ".join(raw.split())[:200]
+        head = f"Twilio rejected the call (HTTP {exc.code})." + (
+            f" Twilio said: {snippet}" if snippet else " Twilio sent no details.")
     return f"{head} {fix}" if fix else head
 
 

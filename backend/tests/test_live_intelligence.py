@@ -153,3 +153,21 @@ def test_snapshot_survives_restart(durable_service: MandateService):
     stamp = intelligence.CACHE._values["agent_risk"][0]
     assert intelligence.time.monotonic() - stamp > intelligence.TTL["agent_risk"]
     intelligence.CACHE.clear()
+
+
+def test_failed_model_answers_at_once_instead_of_waiting(monkeypatch):
+    """Too little live data must not make the page wait 20 seconds."""
+    import time
+
+    class _Alive:
+        def is_alive(self):
+            return True
+
+    intelligence.CACHE.clear()
+    monkeypatch.setattr(intelligence, "_thread", _Alive())
+    monkeypatch.setitem(intelligence.FAILURES, "uplift",
+                        (time.monotonic(), "Not enough active customers"))
+    started = time.monotonic()
+    with pytest.raises(intelligence.WarmingUp, match="Not enough active customers"):
+        intelligence.CACHE.get("uplift", 60, lambda: {}, stale_ok=True)
+    assert time.monotonic() - started < 1

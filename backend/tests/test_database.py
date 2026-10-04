@@ -605,3 +605,21 @@ def test_integration_insert_failure_rolls_back_all_rows(test_db_schema):
     with get_connection(url, schema=schema) as conn:
         for table in ["users", "agents", "transactions", "sessions", "dataset_metadata"]:
             assert conn.execute(f"SELECT count(*) FROM {table}").fetchone()[0] == 0
+
+
+def test_connection_pool_reuses_and_cleans_connections(test_db_schema):
+    """Connections go back to the pool; an open transaction is rolled back first."""
+    from app.data import database
+
+    url, schema = test_db_schema
+    with database.get_connection(url, schema=schema) as first:
+        raw = first._conn
+        first.execute("BEGIN;")
+        first.execute("SELECT 1;")
+    with database.get_connection(url, schema=schema) as second:
+        assert second._conn is raw  # reused, no new handshake
+        assert second.info.transaction_status == database.psycopg.pq.TransactionStatus.IDLE
+        assert second.execute("SHOW search_path;").fetchone()[0].startswith(schema)
+        raw.close()  # a dead connection must never be handed out again
+    with database.get_connection(url, schema=schema) as third:
+        assert third._conn is not raw and third.execute("SELECT 1;").fetchone()[0] == 1
