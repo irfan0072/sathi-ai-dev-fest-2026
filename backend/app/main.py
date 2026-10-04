@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+import logging
 import os
+import threading
 from typing import Any
 
 from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
@@ -20,6 +23,8 @@ app = FastAPI(
 raw_origins = os.getenv("CORS_ORIGINS", "http://localhost:13000,http://127.0.0.1:13000")
 allowed_origins = [orig.strip() for orig in raw_origins.split(",") if orig.strip()]
 
+# JSON lists (agent risk board, outreach) are 50-90 KB; compress them on the wire.
+app.add_middleware(GZipMiddleware, minimum_size=1024)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
@@ -120,10 +125,31 @@ app.include_router(scam_router)
 async def start_background_worker() -> None:
     """Call retries, ring timeouts and the optional live traffic simulator."""
     call_worker.start()
+    threading.Thread(target=_warm_up, name="warm-up", daemon=True).start()
     if call_worker.worker_enabled():
         from app.live.intelligence import start_refresh
 
         start_refresh()
+
+
+def _warm_up() -> None:
+    """Load model artifacts and touch hot tables so the first page view is not slow."""
+    try:
+        from app.analytics.router import get_analytics_service
+
+        get_analytics_service().get_metrics_summary()
+    except Exception as exc:  # best effort: a cold page is slow, not broken
+        logging.getLogger(__name__).info("warm-up skipped analytics: %s", exc)
+    try:
+        from app.mandates.router import get_mandate_service
+
+        with get_mandate_service().get_connection() as conn, conn.cursor() as cur:
+            cur.execute("SELECT count(*) FROM agents;")
+            cur.execute("SELECT count(*) FROM txn_checks WHERE created_at > now() - "
+                        "interval '30 days';")
+            cur.execute("SELECT count(*) FROM call_tasks;")
+    except Exception as exc:
+        logging.getLogger(__name__).info("warm-up skipped database: %s", exc)
 
 
 @app.on_event("shutdown")

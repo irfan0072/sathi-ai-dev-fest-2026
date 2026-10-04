@@ -1,5 +1,91 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
+import PageGuide from './PageGuide';
+
+const of10 = (v) => (v == null ? '?' : Math.round(v * 10));
+const whole = (v) => (v == null ? '—' : `${Math.round(v * 100)}%`);
+
+const tabHelp = {
+  detection: 'Can the AI tell which customers need help to pay? Each row is one test group. Compare “assisted classifier” (the AI) with “rule baseline” (simple rules). Higher precision, recall and PR-AUC are better; lower Brier is better.',
+  agents: 'Can the AI find agents who cheat (skimmers) without blaming honest busy agents? Skimmer recall: share of cheating agents found. Honest HV false flags: honest high-volume agents wrongly flagged (lower is better).',
+  adoption: 'A simulation: if a share of eligible customers used Sathi, how much skimming loss would be stopped? It assumes everyone follows the process, so it is an upper limit, not a measured result.',
+  robustness: 'Does the AI still work when cheating is lighter or heavier, when some signals are removed, or when training labels are noisy?',
+  fairness: 'Does the AI find people who need help equally well across age, gender, region and urban/rural? TPR gap: the biggest difference between groups. Target: no more than 10 points.',
+};
+
+export function MetricsGuide() {
+  return (
+    <PageGuide
+      what="Proof that the AI works, for judges and reviewers. The models were tested on customers and agents they never saw during training. These numbers are frozen on purpose so anyone can re-run the test and get the same result."
+      steps={[
+        'We generated a realistic synthetic population of customers and agents, with known cheating agents inside it.',
+        'The models were trained on one part (training set) and tuned on another (validation set).',
+        'They were then scored once on a held-out test set, plus a “shifted” set where behaviour changes, to check they still work.',
+        'Every result is compared with a simple rule, so you can see what the AI adds.',
+      ]}
+      actions={[
+        'Read “In plain words” first. It gives each result in one sentence.',
+        'Use the tabs for the full tables: detection, agent review, impact, robustness and fairness.',
+        'The same trained models score live data on Agent risk, Customers who need help and Cash planning.',
+      ]}
+      terms={[
+        { term: 'Precision', meaning: 'Of the people the AI flags, the share that is right.' },
+        { term: 'Recall', meaning: 'Of the people who really need help (or really cheat), the share the AI finds.' },
+        { term: 'PR-AUC', meaning: 'One number for precision and recall together, over all thresholds. 1.0 is perfect.' },
+        { term: 'Brier score', meaning: 'How close the predicted chances are to what happened. Lower is better.' },
+        { term: 'Precision@K', meaning: 'Share of real cheaters in the top K agents a supervisor would review.' },
+        { term: 'TPR / FPR', meaning: 'True positive rate (found correctly) and false positive rate (flagged wrongly), per group.' },
+        { term: 'Held-out test', meaning: 'Data kept aside and never used for training or tuning.' },
+        { term: 'Shifted test', meaning: 'Test data where behaviour drifts, as it would in real life over time.' },
+      ]}
+    />
+  );
+}
+
+function PlainSummary({ data }) {
+  const r = data.results || {};
+  const ai = r.experiment_1_assisted_detection?.held_out_test?.assisted_classifier;
+  const rule = r.experiment_1_assisted_detection?.held_out_test?.rule_baseline;
+  const agents = r.experiment_2_agent_anomaly?.held_out_test;
+  const ens = agents?.combined_ensemble;
+  const fair = r.fairness_evaluation?.held_out_canonical;
+  const adopt = r.experiment_5_adoption_sensitivity;
+  const half = adopt?.scenarios?.adoption_50pct;
+  const items = [
+    ai && {
+      title: 'Finding customers who need help',
+      text: `Of every 10 customers the AI flags, about ${of10(ai.precision)} really need help, and it finds about ${of10(ai.recall)} of every 10 who do.${rule ? ` Simple rules: ${of10(rule.precision)} and ${of10(rule.recall)}.` : ''}`,
+    },
+    ens && agents?.denominators && {
+      title: 'Catching cheating agents',
+      text: `In the test, the AI found ${whole(ens.recall_on_skimmers)} of the ${agents.denominators.total_skimmers} cheating agents and wrongly flagged ${whole(ens.false_flag_rate_honest_high_volume)} of the ${agents.denominators.total_honest_high_volume} honest busy agents.`,
+    },
+    fair?.global_max_tpr_gap != null && {
+      title: 'Fair to every group',
+      text: `The biggest difference in how well it finds people across age, gender, region and area is ${whole(fair.global_max_tpr_gap)} (target: at most ${whole(fair.target_max_tpr_gap)}). ${fair.satisfies_fairness_target ? 'Target met.' : 'Target not met yet.'}`,
+    },
+    half && {
+      title: 'Money it could save',
+      text: `In the simulation, if half of eligible customers use Sathi, about ৳${Math.round(half.loss_prevented_bdt).toLocaleString('en-US')} of ৳${Math.round(adopt.eligible_assisted_skimming_loss_bdt).toLocaleString('en-US')} skimming loss is stopped. This assumes everyone follows the process.`,
+    },
+  ].filter(Boolean);
+  if (!items.length) return null;
+  return (
+    <div className="panel shadow-sm">
+      <div className="panel-body gap-3">
+        <h3 className="font-semibold">In plain words</h3>
+        <div className="grid gap-3 md:grid-cols-2">
+          {items.map((i) => (
+            <div key={i.title} className="rounded-box bg-base-200 p-3 text-sm">
+              <div className="font-semibold">{i.title}</div>
+              <p className="text-base-content/80">{i.text}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 const fmt = (value, digits = 4) =>
   value == null ? 'Undefined' : Number(value).toFixed(digits);
@@ -58,7 +144,7 @@ function Pill({ children, tone = 'neutral' }) {
     bad: 'badge-error',
     info: 'badge-info',
   };
-  return <span className={`badge badge-sm ${tones[tone] || 'badge-ghost'}`}>{children}</span>;
+  return <span className={`badge badge-sm whitespace-nowrap ${tones[tone] || 'badge-ghost'}`}>{children}</span>;
 }
 
 function Section({ title, subtitle, children, action }) {
@@ -521,7 +607,10 @@ export function EvidenceTables({ data }) {
         </span>
       </div>
 
+      <PlainSummary data={data} />
+
       <TabNav active={tab} onChange={setTab} />
+      <p className="muted -mt-2 text-sm">{tabHelp[tab]}</p>
 
       <div
         role="tabpanel"
@@ -572,6 +661,7 @@ export default function MetricsPage({ initialData = null }) {
           </p>
         </div>
       </div>
+      <MetricsGuide />
       {error && (
         <div className="alert alert-error alert-soft text-sm" role="alert">
           Unavailable: {error}

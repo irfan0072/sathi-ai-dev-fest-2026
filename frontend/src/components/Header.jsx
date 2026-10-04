@@ -3,6 +3,7 @@ import { API_BASE_URL, setApiBaseUrl, api } from '../api';
 import Icon from './Icon';
 import ThemeToggle from './ThemeToggle';
 import { roleMeta } from './DemoLogin';
+import { phone } from '../ids';
 
 const health = {
   unknown: { color: '#94a3b8', label: 'Connecting…' }, // never green until verified
@@ -96,14 +97,14 @@ export default function Header({ title = '', session = null, onLogin = () => {},
               </span>
               <span className="hidden text-left leading-tight sm:block">
                 <span className="block text-xs font-semibold">{role.label}</span>
-                <span className="block text-[11px] font-normal opacity-60">{session.subject}</span>
+                <span className="block text-[11px] font-normal opacity-60">{phone(session.subject)}</span>
               </span>
             </div>
             <ul
               tabIndex={0}
               className="menu dropdown-content z-40 mt-2 w-56 rounded-box border border-base-300 bg-base-100 p-2 shadow-lg"
             >
-              <li className="menu-title">{role.label} · {session.subject}</li>
+              <li className="menu-title">{role.label} · {phone(session.subject)}</li>
               <li>
                 <button onClick={() => onLogin()} className="focus-ring">
                   <Icon name="switch" className="size-4" />Switch user

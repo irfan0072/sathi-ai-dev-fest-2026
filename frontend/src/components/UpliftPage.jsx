@@ -1,6 +1,36 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api';
 import { ErrorBars, QiniChart } from './Charts';
+import PageGuide from './PageGuide';
+import { phone } from '../ids';
+
+const pctText = (v) => `${Math.round(v * 100)}%`;
+
+export function UpliftGuide() {
+  return (
+    <PageGuide
+      what="Inviting customers to Sathi costs money (SMS ৳0.5, call ৳3, agent visit ৳40). Some people would join without an invite, and some will never join. This page finds the people an invite actually changes, so the budget is not wasted."
+      steps={[
+        'In a past test, half of the customers got an invite at random and half did not.',
+        'Two LightGBM models learn the chance of joining with an invite and without one (a “T-learner”).',
+        'The difference is the uplift: how much the invite itself raises that person’s chance.',
+        'Each customer is scored from their live activity in the last 30 days, and ranked by uplift.',
+      ]}
+      actions={[
+        'Use “Plan a campaign”: type a budget and get who to contact and by which channel.',
+        'Check “Best people to invite”: high chance if invited, low chance if not.',
+        'People with no uplift are never contacted, which saves money and avoids spam.',
+      ]}
+      terms={[
+        { term: 'Uplift', meaning: 'Chance of joining if invited, minus chance if not invited. Only this part is caused by the invite.' },
+        { term: 'New users (top 20%)', meaning: 'Extra people who joined because of the invite, when the top 20% of the ranking is invited.' },
+        { term: 'Qini score', meaning: 'Area under the chart below. It measures how well a method ranks over the whole list. Higher is better.' },
+        { term: 'Usual method', meaning: 'Picks people most likely to join, including those who would have joined anyway.' },
+        { term: 'Match with known result', meaning: 'This test data was generated with a known true effect, so we can check how close the AI is.' },
+      ]}
+    />
+  );
+}
 
 const channelName = { sms: 'SMS', ivr_call: 'Phone call', agent_visit: 'Agent visit' };
 const featureName = {
@@ -91,6 +121,7 @@ export default function UpliftPage() {
           Customer features come from live activity in the last 30 days{data?.computed_at ? ` · updated ${new Date(data.computed_at).toLocaleTimeString()}` : ''}.
         </p>
       </div>
+      <UpliftGuide />
       {error && (
         <div role="alert" className="alert alert-error alert-soft text-sm">
           Unavailable: {error}
@@ -138,6 +169,7 @@ export default function UpliftPage() {
               <div className="panel-body">
                 <h3 className="font-semibold">New users as more people are invited</h3>
                 <QiniChart policies={p} />
+                <p className="muted">A line above “Random pick” means the method finds the right people first.</p>
               </div>
             </div>
             <div className="panel shadow-sm lg:col-span-2">
@@ -148,7 +180,7 @@ export default function UpliftPage() {
                     <thead>
                       <tr>
                         <th>Method</th>
-                        <th className="text-right">Score</th>
+                        <th className="text-right">Qini score</th>
                         <th className="text-right">New users (top 20%)</th>
                       </tr>
                     </thead>
@@ -165,6 +197,12 @@ export default function UpliftPage() {
                     </tbody>
                   </table>
                 </div>
+                <p className="muted">
+                  Both AI methods beat the simple rule and random pick by far.
+                  {p.uplift_t_learner.true_incremental_top20 >= p.response_model.true_incremental_top20
+                    ? ' Sathi AI finds the most extra users in the top 20%, where a real budget is spent.'
+                    : ' In this run the usual method finds slightly more in the top 20%; the planner still skips people the invite would not change.'}
+                </p>
                 <h4 className="mt-2 text-sm font-semibold">What the AI looks at most</h4>
                 <ErrorBars
                   rows={data.feature_importance
@@ -175,6 +213,50 @@ export default function UpliftPage() {
                 />
               </div>
             </div>
+          </div>
+
+          <div className="grid gap-5 lg:grid-cols-5">
+            {data.top_candidates?.length > 0 && (
+              <div className="panel shadow-sm lg:col-span-3">
+                <div className="panel-body">
+                  <h3 className="font-semibold">Best people to invite right now</h3>
+                  <p className="muted">The invite makes the biggest difference for these customers.</p>
+                  <div className="overflow-x-auto">
+                    <table className="table table-sm">
+                      <thead><tr><th>Customer</th><th className="text-right">If invited</th><th className="text-right">If not</th><th className="text-right">Invite adds</th><th className="hidden text-right sm:table-cell">Relies on one agent</th></tr></thead>
+                      <tbody>
+                        {data.top_candidates.slice(0, 10).map((c) => (
+                          <tr key={c.user_id}>
+                            <td className="font-mono text-xs">{phone(c.user_id)}</td>
+                            <td className="text-right font-mono">{pctText(c.p_if_contacted)}</td>
+                            <td className="text-right font-mono">{pctText(c.p_if_not)}</td>
+                            <td className="text-right"><span className="badge badge-sm badge-success">+{pctText(c.predicted_uplift)}</span></td>
+                            <td className="hidden text-right font-mono sm:table-cell">{c.agent_dependence == null ? '—' : pctText(c.agent_dependence)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <p className="muted">Out of {data.total_candidates?.toLocaleString()} customers scored.</p>
+                </div>
+              </div>
+            )}
+            {data.channels && (
+              <div className="panel shadow-sm lg:col-span-2">
+                <div className="panel-body">
+                  <h3 className="font-semibold">Ways to invite</h3>
+                  <table className="table table-sm">
+                    <thead><tr><th>Channel</th><th className="text-right">Cost each</th><th className="text-right">Strength</th></tr></thead>
+                    <tbody>
+                      {Object.entries(data.channels).map(([k, c]) => (
+                        <tr key={k}><td>{channelName[k] || k}</td><td className="text-right font-mono">৳{c.cost_bdt}</td><td className="text-right font-mono">{c.effect}×</td></tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <p className="muted">Strength is compared with a phone call (1×). The planner uses an agent visit only where it pays off, for example for people who rely on one agent and rarely use the app.</p>
+                </div>
+              </div>
+            )}
           </div>
 
           <Optimizer />

@@ -210,7 +210,8 @@ def users(principal: Admin, q: str | None = Query(default=None, max_length=40),
     where, params = [], []
     if q:
         prefix = q.strip().upper()
-        where.append("u.user_id >= %s AND u.user_id < %s")
+        col = "u.msisdn" if prefix.isdigit() else "u.user_id"
+        where.append(f"{col} >= %s AND {col} < %s")
         params += [prefix, prefix + "￿"]
     if after:
         where.append("u.user_id > %s")
@@ -277,7 +278,8 @@ def agents(principal: Admin, q: str | None = Query(default=None, max_length=40),
     where, params = [], []
     if q:
         prefix = q.strip().upper()
-        where.append("a.agent_id >= %s AND a.agent_id < %s")
+        col = "a.msisdn" if prefix.isdigit() else "a.agent_id"
+        where.append(f"{col} >= %s AND {col} < %s")
         params += [prefix, prefix + "￿"]
     if region:
         where.append("a.region = %s")
@@ -366,12 +368,17 @@ def transactions(principal: Admin,
     if txn_type:
         where.append("t.txn_type = %s")
         params.append(txn_type)
+    # Each filter takes the internal ID or the phone number.
     if user_id:
-        where.append("t.user_id = %s")
-        params.append(user_id.strip().upper())
+        value = user_id.strip().upper()
+        where.append("t.user_id = (SELECT user_id FROM users WHERE msisdn = %s)"
+                     if value.isdigit() else "t.user_id = %s")
+        params.append(value)
     if agent_id:
-        where.append("t.agent_id = %s")
-        params.append(agent_id.strip().upper())
+        value = agent_id.strip().upper()
+        where.append("t.agent_id = (SELECT agent_id FROM agents WHERE msisdn = %s)"
+                     if value.isdigit() else "t.agent_id = %s")
+        params.append(value)
     if check_status:
         where.append("k.status = %s")
         params.append(check_status)
@@ -470,6 +477,77 @@ def staff_update(staff_id: str, body: StaffUpdate, principal: Admin) -> Any:
         principal.subject, "staff_updated", "staff", staff_id,
         {"active": body.active, "renamed": body.display_name is not None,
          "pin_reset": body.pin is not None})
+    return item
+
+
+# ---------------------------------------------------------------------------- test accounts
+class AccountCreate(BaseModel):
+    kind: Literal["customer", "agent"]
+    phone: str = Field(..., min_length=11, max_length=20)
+    display_name: str = Field(..., min_length=2, max_length=80)
+    pin: str = Field(..., min_length=4, max_length=8)
+    region: str = Field(default="dhaka", max_length=20)
+    opening_balance: float = Field(default=0, ge=0, le=500000)
+
+
+class AccountUpdate(BaseModel):
+    active: bool | None = None
+    display_name: str | None = Field(default=None, min_length=2, max_length=80)
+    pin: str | None = Field(default=None, min_length=4, max_length=8)
+
+
+class AddMoney(BaseModel):
+    amount: float = Field(..., gt=0, le=500000)
+
+
+@router.get("/accounts")
+def accounts_list(principal: Admin) -> Any:
+    from app.accounts.service import get_account_service
+
+    return {"items": get_account_service().list()}
+
+
+@router.post("/accounts", status_code=201)
+def accounts_create(body: AccountCreate, principal: Admin) -> Any:
+    from app.accounts.service import AccountError, get_account_service
+
+    try:
+        item = get_account_service().create(body.kind, body.phone, body.display_name, body.pin,
+                                            body.region, body.opening_balance,
+                                            principal.subject)
+    except AccountError as err:
+        return _err(err.status_code, err.code, err.message)
+    get_mandate_service().log_audit(principal.subject, "account_created", body.kind,
+                                    item["subject"], {"opening_balance": body.opening_balance})
+    return item
+
+
+@router.patch("/accounts/{account_id}")
+def accounts_update(account_id: int, body: AccountUpdate, principal: Admin) -> Any:
+    from app.accounts.service import AccountError, get_account_service
+
+    try:
+        item = get_account_service().update(account_id, active=body.active,
+                                            display_name=body.display_name, pin=body.pin)
+    except AccountError as err:
+        return _err(err.status_code, err.code, err.message)
+    get_mandate_service().log_audit(
+        principal.subject, "account_updated", item["kind"], item["subject"],
+        {"active": body.active, "renamed": body.display_name is not None,
+         "pin_reset": body.pin is not None})
+    return item
+
+
+@router.post("/accounts/{account_id}/add-money")
+def accounts_add_money(account_id: int, body: AddMoney, principal: Admin) -> Any:
+    from app.accounts.service import AccountError, get_account_service
+
+    try:
+        item = get_account_service().add_money(account_id, body.amount)
+    except AccountError as err:
+        return _err(err.status_code, err.code, err.message)
+    get_mandate_service().log_audit(principal.subject, "account_money_added", item["kind"],
+                                    item["subject"], {"amount": body.amount})
     return item
 
 

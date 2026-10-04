@@ -3,6 +3,7 @@ import { api } from '../api';
 import Icon from './Icon';
 import { HourlyBars, StateBar } from './Charts';
 import { eventLabel } from '../copy';
+import { phone } from '../ids';
 
 const bdt = (v) => `৳${Math.round(v || 0).toLocaleString('en-US')}`;
 const pct = (v) => (v == null ? '—' : `${(v * 100).toFixed(0)}%`);
@@ -224,7 +225,7 @@ export default function CommandCenter({ onOpenCases, onOpenTransactions }) {
                       <tbody>
                         {data.agents.map((a) => (
                           <tr key={a.agent_id}>
-                            <td className="font-mono text-xs">{a.agent_id}</td>
+                            <td className="font-mono text-xs">{phone(a.agent_id)}</td>
                             <td className="text-right">{a.cases_7d}</td>
                             <td className="text-right">
                               {a.duress_7d ? (

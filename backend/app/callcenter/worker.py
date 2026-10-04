@@ -166,6 +166,7 @@ class Worker:
         with mandates.get_connection() as conn, conn.cursor() as cur:
             if not self._agents:
                 cur.execute("SELECT agent_id FROM agents WHERE agent_id NOT LIKE 'A_777%%' "
+                            "AND agent_id NOT LIKE 'A\\_P\\_%%' "
                             "ORDER BY agent_id;")
                 self._agents = [r[0] for r in cur.fetchall()]
             if self._sim_users is None:

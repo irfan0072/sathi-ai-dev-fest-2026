@@ -121,6 +121,23 @@ def test_ring_timeout_sweeper_marks_no_answer(durable_service, services, monkeyp
     assert _task(durable_service, out["txn_id"])["status"] == "retry_scheduled"
 
 
+def test_abandoned_answered_call_times_out(durable_service, services, monkeypatch):
+    """Customer answered, typed a wrong amount once, then left: the call must not stay live."""
+    _patch_policy(monkeypatch)
+    out = _cashout(3000)
+    call = _live_call(durable_service, out["txn_id"])
+    _answer(call, digits="2000")  # first mismatch: asked again, call stays in progress
+    monkeypatch.setattr(call_worker.Worker, "_services", lambda self: (
+        durable_service, CallCenterService(durable_service, policy=lambda: POLICY), services))
+    assert call_worker.Worker().tick()["timeouts"] == 0  # still within the answer window
+    with durable_service.get_connection() as conn, conn.cursor() as cur:
+        cur.execute("UPDATE voice_calls SET updated_at = now() - interval '4 minutes';")
+        conn.commit()
+    assert call_worker.Worker().tick()["timeouts"] == 1
+    assert _live_call(durable_service, out["txn_id"]) == ""
+    assert _task(durable_service, out["txn_id"])["status"] == "retry_scheduled"
+
+
 def test_unclear_answer_goes_to_manual_queue_and_supervisor_resolves(
         durable_service, monkeypatch):
     _patch_policy(monkeypatch)

@@ -62,6 +62,19 @@ def demo_login(body: DemoLoginRequest) -> Any:
     token_ttl_minutes = int(auth_cfg.get("token_ttl_minutes", 30))
     ttl_seconds = token_ttl_minutes * 60
 
+    if body.account_type:
+        account = _account_login(body.account_type, body.principal or body.username or "",
+                                 body.pin)
+        if account is None:
+            return JSONResponse(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                content={"error": {"code": "INVALID_CREDENTIALS",
+                                   "message": "Wrong phone number or PIN."}},
+            )
+        role = "customer_channel" if body.account_type == "customer" else "agent"
+        return _issue(account["subject"], role, account["subject"], account["allowed_users"],
+                      ttl_seconds, display_name=account["display_name"])
+
     # 3. Resolve requested principal
     req_key = body.principal or body.username
     req_sub = body.subject
@@ -136,6 +149,16 @@ def _staff_login(staff_id: str | None, pin: str) -> dict[str, Any] | None:
         from app.staff.service import get_staff_service
 
         return get_staff_service().authenticate(staff_id.strip().lower(), str(pin).strip())
+    except Exception:
+        return None
+
+
+def _account_login(kind: str, phone: str, pin: str) -> dict[str, Any] | None:
+    """Registered customers and agents sign in with their own phone number."""
+    try:
+        from app.accounts.service import get_account_service
+
+        return get_account_service().authenticate(kind, phone, str(pin).strip())
     except Exception:
         return None
 

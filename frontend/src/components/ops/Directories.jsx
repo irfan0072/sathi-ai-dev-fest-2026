@@ -1,3 +1,4 @@
+import { normalizePhone, phone } from '../../ids';
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '../../api';
 import Icon from '../Icon';
@@ -31,7 +32,7 @@ function useKeyset(fetchPage, deps) {
 function SearchBox({ value, onChange, placeholder }) {
   const [text, setText] = useState(value);
   return (
-    <form onSubmit={(e) => { e.preventDefault(); onChange(text.trim()); }} className="join">
+    <form onSubmit={(e) => { e.preventDefault(); onChange(/^[\d\s+-]+$/.test(text) ? normalizePhone(text) : text.trim()); }} className="join">
       <input className="input input-bordered input-sm join-item w-56 font-mono focus-ring" value={text} placeholder={placeholder} onChange={(e) => setText(e.target.value)} />
       <button className="btn btn-sm join-item">Search</button>
     </form>
@@ -51,7 +52,7 @@ export function UsersPage() {
   return (
     <div className="flex flex-col gap-5">
       <PageHead title="Customers" lead={`Every upay customer account in the system. ${totalText(list.total)}. Search by ID prefix (for example U_9_00001).`}>
-        <SearchBox value={q} onChange={setQ} placeholder="U_9_0000123" />
+        <SearchBox value={q} onChange={setQ} placeholder="01900000123" />
       </PageHead>
       <Alert>{list.error}</Alert>
       <div className={`grid gap-4 ${open ? 'xl:grid-cols-[1fr_1fr]' : ''}`}>
@@ -62,7 +63,7 @@ export function UsersPage() {
               <tbody>
                 {list.items.map((u) => (
                   <tr key={u.user_id} className={`cursor-pointer hover:bg-base-200/60 ${open === u.user_id ? 'bg-primary/5' : ''}`} onClick={() => setOpen(u.user_id)}>
-                    <td className="font-mono text-xs">{u.user_id}</td>
+                    <td className="font-mono text-xs">{phone(u.user_id)}</td>
                     <td className="capitalize">{u.region}</td>
                     <td className="capitalize">{u.area}</td>
                     <td>{u.age_band}</td>
@@ -104,7 +105,7 @@ function UserDetail({ userId, onClose }) {
               <ul className="flex flex-col gap-1 text-xs">
                 {d.checks.map((c) => (
                   <li key={c.check_id} className="flex items-center gap-2">
-                    <Badge tone={checkTone[c.status]}>{checkText[c.status]}</Badge> {bdt(c.amount)} via {c.agent_id}
+                    <Badge tone={checkTone[c.status]}>{checkText[c.status]}</Badge> {bdt(c.amount)} via {phone(c.agent_id)}
                     {c.case_id && <span>· case #{c.case_id}</span>}<span className="muted ml-auto">{timeAgo(c.at)}</span>
                   </li>
                 ))}
@@ -117,7 +118,7 @@ function UserDetail({ userId, onClose }) {
               <thead><tr><th>#</th><th>Type</th><th>Amount</th><th>Agent</th><th>Balance</th><th>When</th></tr></thead>
               <tbody>
                 {d.transactions.map((t) => (
-                  <tr key={t.txn_id}><td className="font-mono">{t.txn_id}</td><td>{t.txn_type.replace('_', '-')}</td><td>{bdt(t.amount)}</td><td className="font-mono">{t.agent_id || '—'}</td><td>{bdt(t.balance_after)}</td><td className="muted">{when(t.ts)}</td></tr>
+                  <tr key={t.txn_id}><td className="font-mono">{t.txn_id}</td><td>{t.txn_type.replace('_', '-')}</td><td>{bdt(t.amount)}</td><td className="font-mono">{phone(t.agent_id) || '—'}</td><td>{bdt(t.balance_after)}</td><td className="muted">{when(t.ts)}</td></tr>
                 ))}
               </tbody>
             </table>
@@ -144,7 +145,7 @@ export function AgentsDirectory() {
           <option value="">All divisions</option>
           {['dhaka', 'chittagong', 'rajshahi', 'khulna', 'barishal', 'sylhet', 'rangpur', 'mymensingh'].map((r) => <option key={r} value={r}>{r}</option>)}
         </select>
-        <SearchBox value={q} onChange={setQ} placeholder="A_000042" />
+        <SearchBox value={q} onChange={setQ} placeholder="01390000042" />
       </PageHead>
       <Alert>{list.error}</Alert>
       <div className={`grid gap-4 ${open ? 'xl:grid-cols-[1fr_1fr]' : ''}`}>
@@ -155,7 +156,7 @@ export function AgentsDirectory() {
               <tbody>
                 {list.items.map((a) => (
                   <tr key={a.agent_id} className={`cursor-pointer hover:bg-base-200/60 ${open === a.agent_id ? 'bg-primary/5' : ''}`} onClick={() => setOpen(a.agent_id)}>
-                    <td className="font-mono text-xs">{a.agent_id}</td>
+                    <td className="font-mono text-xs">{phone(a.agent_id)}</td>
                     <td className="capitalize">{a.region}</td>
                     <td>{a.volume_band}</td>
                     <td className="tabular-nums">{num(a.txns_30d)}</td>
@@ -201,7 +202,7 @@ function AgentDetail({ agentId, onClose }) {
           <div className="text-sm font-semibold">Recent confirmation checks</div>
           <ul className="flex flex-col gap-1 text-xs">
             {d.checks.map((c) => (
-              <li key={c.check_id} className="flex items-center gap-2"><Badge tone={checkTone[c.status]}>{checkText[c.status]}</Badge>{bdt(c.amount)} · {c.user_id}<span className="muted ml-auto">{timeAgo(c.at)}</span></li>
+              <li key={c.check_id} className="flex items-center gap-2"><Badge tone={checkTone[c.status]}>{checkText[c.status]}</Badge>{bdt(c.amount)} · {phone(c.user_id)}<span className="muted ml-auto">{timeAgo(c.at)}</span></li>
             ))}
           </ul>
         </>
@@ -306,7 +307,7 @@ export function LedgerPage() {
         <label className="flex items-center gap-2 text-sm"><input type="checkbox" className="toggle toggle-sm toggle-success" checked={live} onChange={(e) => setLive(e.target.checked)} /> Live</label>
         {live && <LiveDot />}
       </PageHead>
-      <form className="flex flex-wrap gap-2" onSubmit={(e) => { e.preventDefault(); setApplied(filters); }}>
+      <form className="flex flex-wrap gap-2" onSubmit={(e) => { e.preventDefault(); setApplied({ ...filters, user_id: normalizePhone(filters.user_id), agent_id: normalizePhone(filters.agent_id) }); }}>
         <select className="select select-bordered select-sm focus-ring" value={filters.txn_type} onChange={set('txn_type')} aria-label="Type">
           <option value="">All types</option><option value="cash_out">Cash-out</option><option value="credit">Credit</option><option value="send">Send</option><option value="bill_pay">Bill pay</option>
         </select>
@@ -314,8 +315,8 @@ export function LedgerPage() {
           <option value="">Any check result</option>
           {Object.entries(checkText).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
         </select>
-        <input className="input input-bordered input-sm w-40 font-mono focus-ring" placeholder="Customer ID" value={filters.user_id} onChange={set('user_id')} />
-        <input className="input input-bordered input-sm w-36 font-mono focus-ring" placeholder="Agent ID" value={filters.agent_id} onChange={set('agent_id')} />
+        <input className="input input-bordered input-sm w-40 font-mono focus-ring" placeholder="Customer phone" value={filters.user_id} onChange={set('user_id')} />
+        <input className="input input-bordered input-sm w-36 font-mono focus-ring" placeholder="Agent phone" value={filters.agent_id} onChange={set('agent_id')} />
         <button className="btn btn-sm btn-primary">Apply</button>
       </form>
       <Alert>{list.error}</Alert>
@@ -329,8 +330,8 @@ export function LedgerPage() {
                   <td className="font-mono text-xs">{t.txn_id}</td>
                   <td className="muted whitespace-nowrap text-xs">{timeAgo(t.ts)}</td>
                   <td>{t.txn_type.replace('_', '-')}</td>
-                  <td className="font-mono text-xs">{t.user_id}</td>
-                  <td className="font-mono text-xs">{t.agent_id || '—'}</td>
+                  <td className="font-mono text-xs">{phone(t.user_id)}</td>
+                  <td className="font-mono text-xs">{phone(t.agent_id) || '—'}</td>
                   <td className="tabular-nums">{bdt(t.amount)}</td>
                   <td className="tabular-nums text-xs">{t.fee ? bdt(t.fee) : ''}</td>
                   <td>{t.check_status && <Badge tone={checkTone[t.check_status]}>{checkText[t.check_status]}</Badge>}{t.case_id && <span className="ml-1 text-xs">#{t.case_id}</span>}</td>
@@ -372,7 +373,7 @@ export function AuditLogPage() {
                   <td className="muted whitespace-nowrap text-xs">{when(e.at)}</td>
                   <td className="font-mono text-xs">{e.actor}</td>
                   <td>{eventLabel(e.action)}</td>
-                  <td className="text-xs">{e.entity} {e.entity_id}</td>
+                  <td className="text-xs">{e.entity} {phone(e.entity_id)}</td>
                   <td className="max-w-xs truncate font-mono text-[11px]" title={JSON.stringify(e.detail)}>{e.detail ? JSON.stringify(e.detail) : ''}</td>
                 </tr>
               ))}
@@ -405,7 +406,7 @@ export function SupervisorDesk({ session, onOpen }) {
       <div className="grid gap-4 lg:grid-cols-3">
         <Panel title="My calls" action={<button className="link text-xs" onClick={() => onOpen('callcenter')}>Open call queue</button>}>
           {(calls?.items || []).length === 0 ? <p className="muted">No calls assigned to you. Take one from the pending list.</p> : (
-            <ul className="flex flex-col gap-1.5 text-sm">{calls.items.map((t) => <li key={t.task_id} className="flex justify-between"><span>#{t.task_id} · {t.user_id}</span><span className="muted">{bdt(t.amount)}</span></li>)}</ul>
+            <ul className="flex flex-col gap-1.5 text-sm">{calls.items.map((t) => <li key={t.task_id} className="flex justify-between"><span>#{t.task_id} · {phone(t.user_id)}</span><span className="muted">{bdt(t.amount)}</span></li>)}</ul>
           )}
         </Panel>
         <Panel title="My cases" action={<button className="link text-xs" onClick={() => onOpen('casework')}>Open cases</button>}>

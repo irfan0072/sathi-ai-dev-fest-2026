@@ -21,6 +21,11 @@ RUN printf '%s\n' \
     '' \
     '    root /usr/share/nginx/html;' \
     '' \
+    '    gzip on;' \
+    '    gzip_comp_level 6;' \
+    '    gzip_min_length 1024;' \
+    '    gzip_types text/css application/javascript application/json image/svg+xml;' \
+    '' \
     '    # Hashed build assets never change: cache them for a year.' \
     '    location /assets/ {' \
     '        add_header Cache-Control "public, max-age=31536000, immutable";' \

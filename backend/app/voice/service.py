@@ -24,6 +24,7 @@ import uuid
 from dataclasses import dataclass
 from typing import Any
 
+from app.accounts.service import registered_number
 from app.mandates.service import MandateError, MandateService
 from app.verification.keypad import KeypadParseError
 from app.voice import scripts, twiml
@@ -139,7 +140,8 @@ class VoiceService:
     def _place_call(self, user_id: str, actor: str, target_col: str, target_id: Any,
                     entity: str) -> dict[str, Any]:
         if self.provider.name != "simulated":
-            number = self.phone_book.get(user_id)
+            number = self.phone_book.get(user_id) or registered_number(
+                self.mandates.get_connection, user_id)
             if not number:
                 raise VoiceError(
                     "NO_REGISTERED_PHONE",

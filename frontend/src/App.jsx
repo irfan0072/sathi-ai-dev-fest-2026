@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { Suspense, lazy, useState, useEffect } from 'react';
 import './style.css';
 import { api } from './api';
 import Header from './components/Header';
@@ -7,25 +7,41 @@ import LoginScreen, { landingTabForRole } from './components/LoginScreen';
 import NavTabs, { canOpen, findTab } from './components/NavTabs';
 import Icon from './components/Icon';
 import ErrorBoundary from './components/ErrorBoundary';
-import AgentCashout from './components/AgentCashout';
-import CustomerAccount from './components/CustomerAccount';
-import TransactionsPage from './components/TransactionsPage';
-import ReviewQueue from './components/ReviewQueue';
-import OutreachList from './components/OutreachList';
-import AgentRiskBoard from './components/AgentRiskBoard';
-import MetricsPage from './components/MetricsPage';
-import ArchitecturePage from './components/ArchitecturePage';
-import LiquidityPage from './components/LiquidityPage';
-import UpliftPage from './components/UpliftPage';
-import CommandCenter from './components/CommandCenter';
-import SettingsPage from './components/SettingsPage';
-import AdminDashboard from './components/ops/AdminDashboard';
-import CallCenter from './components/ops/CallCenter';
-import CaseWorkbench from './components/ops/CaseWorkbench';
-import { CommunityPage, ScamWatch, SendMoney } from './components/ScamProtection';
-import {
-  AgentsDirectory, AuditLogPage, LedgerPage, StaffPage, SupervisorDesk, UsersPage,
-} from './components/ops/Directories';
+// Pages load on first visit, so the sign-in screen only downloads what it needs.
+const page = (loader, name = 'default') => lazy(() => loader().then((m) => ({ default: m[name] })));
+const AgentCashout = page(() => import('./components/AgentCashout'));
+const CustomerAccount = page(() => import('./components/CustomerAccount'));
+const TransactionsPage = page(() => import('./components/TransactionsPage'));
+const ReviewQueue = page(() => import('./components/ReviewQueue'));
+const OutreachList = page(() => import('./components/OutreachList'));
+const AgentRiskBoard = page(() => import('./components/AgentRiskBoard'));
+const MetricsPage = page(() => import('./components/MetricsPage'));
+const ArchitecturePage = page(() => import('./components/ArchitecturePage'));
+const LiquidityPage = page(() => import('./components/LiquidityPage'));
+const UpliftPage = page(() => import('./components/UpliftPage'));
+const CommandCenter = page(() => import('./components/CommandCenter'));
+const SettingsPage = page(() => import('./components/SettingsPage'));
+const AdminDashboard = page(() => import('./components/ops/AdminDashboard'));
+const CallCenter = page(() => import('./components/ops/CallCenter'));
+const CaseWorkbench = page(() => import('./components/ops/CaseWorkbench'));
+const scam = () => import('./components/ScamProtection');
+const CommunityPage = page(scam, 'CommunityPage');
+const ScamWatch = page(scam, 'ScamWatch');
+const SendMoney = page(scam, 'SendMoney');
+const dirs = () => import('./components/ops/Directories');
+const AgentsDirectory = page(dirs, 'AgentsDirectory');
+const AuditLogPage = page(dirs, 'AuditLogPage');
+const LedgerPage = page(dirs, 'LedgerPage');
+const StaffPage = page(dirs, 'StaffPage');
+const SupervisorDesk = page(dirs, 'SupervisorDesk');
+const UsersPage = page(dirs, 'UsersPage');
+const TestAccounts = page(() => import('./components/ops/TestAccounts'));
+
+const PageLoading = () => (
+  <div className="flex justify-center py-16" aria-busy="true">
+    <span className="loading loading-spinner loading-md text-primary" />
+  </div>
+);
 
 const TAB_KEY = 'sathi_tab';
 const savedTab = (session) => {
@@ -139,6 +155,7 @@ export default function App() {
     if (id === 'users') return <UsersPage />;
     if (id === 'agents-dir') return <AgentsDirectory />;
     if (id === 'staff') return <StaffPage />;
+    if (id === 'accounts') return <TestAccounts />;
     if (id === 'auditlog') return <AuditLogPage />;
     // Fallback: render a small empty state if nothing matches.
     return (
@@ -175,7 +192,7 @@ export default function App() {
             key={`${session?.role}:${session?.subject}:${showTab?.id}`}
             className="animate-fadeIn"
           >
-            <ErrorBoundary key={showTab?.id}>{content()}</ErrorBoundary>
+            <ErrorBoundary key={showTab?.id}><Suspense fallback={<PageLoading />}>{content()}</Suspense></ErrorBoundary>
           </div>
         </main>
         <footer className="border-t border-base-300 bg-base-100 px-4 py-3 text-center text-xs text-base-content/60 sm:px-6">

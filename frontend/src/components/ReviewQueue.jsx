@@ -4,6 +4,7 @@ import Icon from './Icon';
 import CaseBrief from './CaseBrief';
 import { WatchButton } from './CommandCenter';
 import { caseStatus, eventLabel, priorityName, reasonLabel } from '../copy';
+import { phone } from '../ids';
 
 const decisions = [
   { id: 'approved', label: 'Approve', tone: 'btn-success' },
@@ -148,7 +149,7 @@ export default function ReviewQueue({ initialCaseId = null, session = null }) {
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-sm font-medium">{reasonLabel(item.reason)}</span>
                         <span className="block truncate text-[11px] text-base-content/60">
-                          Agent {item.agent_id || '—'} · {slaText(item)}
+                          Agent {phone(item.agent_id) || '—'} · {slaText(item)}
                         </span>
                       </span>
                       <span className="flex flex-col items-end gap-1">
@@ -178,7 +179,7 @@ export default function ReviewQueue({ initialCaseId = null, session = null }) {
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="muted">Reference {selected.mandate_id ? selected.mandate_id.slice(0, 8) : '—'}</span>
                   {selected.agent_id && <>
-                    <span className="muted">· agent {selected.agent_id}</span>
+                    <span className="muted">· agent {phone(selected.agent_id)}</span>
                     {canWatchlist && (
                       <WatchButton agentId={selected.agent_id} watchlisted={watch.has(selected.agent_id)} caseId={selected.case_id} onChange={refresh} />
                     )}

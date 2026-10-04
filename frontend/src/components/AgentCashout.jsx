@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { api } from '../api';
 import Icon from './Icon';
 import { publicCheck, takaFmt } from '../copy';
+import { phone } from '../ids';
 
 const quick = [500, 1000, 2000, 3000, 5000];
 
@@ -70,7 +71,7 @@ export default function AgentCashout({ session }) {
             <label className="flex flex-col gap-1">
               <span className="text-sm">Customer</span>
               <select className="select select-bordered w-full" value={userId} onChange={(e) => setUserId(e.target.value)}>
-                {customers.map((c) => <option key={c} value={c}>{c}</option>)}
+                {customers.map((c) => <option key={c} value={c}>{phone(c)}</option>)}
               </select>
             </label>
             <label className="flex flex-col gap-1">
@@ -101,7 +102,7 @@ export default function AgentCashout({ session }) {
               <>
                 <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
                   <span className="text-3xl font-bold">{takaFmt(last.amount)}</span>
-                  <span className="muted">fee {takaFmt(last.fee)} · customer {last.user_id} · receipt #{last.txn_id}</span>
+                  <span className="muted">fee {takaFmt(last.fee)} · customer {phone(last.user_id)} · receipt #{last.txn_id}</span>
                 </div>
                 <FlowSteps last={last} />
                 <div className={`alert alert-soft text-sm ${last.check === 'missed' ? 'alert-warning' : last.check === 'done' ? 'alert-success' : 'alert-info'}`}>
@@ -129,7 +130,7 @@ export default function AgentCashout({ session }) {
                 <tbody>{items.map((t) => (
                   <tr key={t.txn_id}>
                     <td className="whitespace-nowrap">{new Date(t.ts).toLocaleString()}</td>
-                    <td className="font-mono text-xs">{t.user_id}</td>
+                    <td className="font-mono text-xs">{phone(t.user_id)}</td>
                     <td className="text-right font-semibold">{takaFmt(t.amount)}</td>
                     <td className="text-right">{takaFmt(t.fee)}</td>
                     <td><span className={`badge badge-sm ${publicCheck[t.check]?.tone}`}>{publicCheck[t.check]?.label || t.check}</span></td>

@@ -4,6 +4,7 @@ import Icon from './Icon';
 import { IncomingCall, SmsInbox } from './LiveCall';
 import AssistantChat, { CallLanguage } from './AssistantChat';
 import { takaFmt } from '../copy';
+import { phone } from '../ids';
 
 const customerCheck = {
   waiting: { label: 'Please answer our call', tone: 'badge-info' },
@@ -61,7 +62,7 @@ export default function CustomerAccount() {
                     <li key={t.txn_id} className="flex flex-wrap items-center gap-3 py-3">
                       <div className="min-w-0 flex-1">
                         <div className="font-semibold">{takaFmt(t.amount)} <span className="muted font-normal">+ fee {takaFmt(t.fee)}</span></div>
-                        <div className="muted">{new Date(t.ts).toLocaleString()} · agent {t.agent_id} · receipt #{t.txn_id}</div>
+                        <div className="muted">{new Date(t.ts).toLocaleString()} · agent {phone(t.agent_id)} · receipt #{t.txn_id}</div>
                       </div>
                       <span className={`badge badge-sm ${customerCheck[t.check]?.tone}`}>{customerCheck[t.check]?.label || t.check}</span>
                     </li>

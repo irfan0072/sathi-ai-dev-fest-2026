@@ -147,10 +147,11 @@ export const api = {
     session = value;
     notifySession();
   },
-  async login({ principal, pin }) {
+  async login({ principal, pin, accountType }) {
     api.logout();
+    const body = accountType ? { principal, pin, account_type: accountType } : { principal, pin };
     const data = await request('/api/v1/auth/demo-login', {
-      method: 'POST', body: { principal, pin }, authenticated: false,
+      method: 'POST', body, authenticated: false,
     });
     if (!data.access_token || !['agent', 'customer_channel', 'analyst', 'supervisor', 'super_admin'].includes(data.role)) {
       throw new Error('Invalid demo login response.');
@@ -253,6 +254,10 @@ export const api = {
   getStaff: (role) => request(`/api/v1/admin/staff${qs({ role })}`),
   createStaff: (body) => request('/api/v1/admin/staff', { method: 'POST', body }),
   updateStaff: (id, body) => request(`/api/v1/admin/staff/${encodeURIComponent(id)}`, { method: 'PATCH', body }),
+  getAccounts: () => request('/api/v1/admin/accounts'),
+  createAccount: (body) => request('/api/v1/admin/accounts', { method: 'POST', body }),
+  updateAccount: (id, body) => request(`/api/v1/admin/accounts/${encodeURIComponent(id)}`, { method: 'PATCH', body }),
+  addAccountMoney: (id, amount) => request(`/api/v1/admin/accounts/${encodeURIComponent(id)}/add-money`, { method: 'POST', body: { amount } }),
   setSimulator: (body) => request('/api/v1/admin/simulator', { method: 'PUT', body }),
   // ── Call management ──
   getCallQueue: (params = {}) => request(`/api/v1/callcenter/queue${qs(params)}`),

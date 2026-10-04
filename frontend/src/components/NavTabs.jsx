@@ -10,6 +10,7 @@ export const tabs = [
   { id: 'scamwatch', label: 'Scam watch', icon: 'warning', group: 'Operations', title: 'Scam watch', roles: ['super_admin'] },
   { id: 'users', label: 'Customers', icon: 'users', group: 'Directory', title: 'Customers', roles: ['super_admin'] },
   { id: 'agents-dir', label: 'Agents', icon: 'store', group: 'Directory', title: 'Agents', roles: ['super_admin'] },
+  { id: 'accounts', label: 'Test accounts', icon: 'phone', group: 'Directory', title: 'Test accounts', roles: ['super_admin'] },
   { id: 'staff', label: 'Supervisors', icon: 'shield', group: 'Directory', title: 'Supervisors and admins', roles: ['super_admin'] },
   // Supervisor
   { id: 'desk', label: 'My desk', icon: 'chart', group: 'My work', title: 'My desk', roles: ['supervisor'] },

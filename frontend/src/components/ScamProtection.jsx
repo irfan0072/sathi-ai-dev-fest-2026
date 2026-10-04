@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { api } from '../api';
 import Icon from './Icon';
 import { Alert, Badge, Empty, Kpi, LiveDot, PageHead, Panel, Tabs, bdt, timeAgo, usePoll } from './ops/kit';
+import { phone } from '../ids';
 
 const levelStyle = {
   high: { box: 'border-error/50 bg-error/10', badge: 'badge-error', title: 'Do not send money to this number' },
@@ -360,7 +361,7 @@ export function ScamWatch({ session }) {
               <div className="muted grid grid-cols-3 gap-2 text-xs">
                 <span>{r.features.inbound_24h} payments</span><span>{r.features.senders} payers</span><span>{bdt(r.features.total_bdt)} in 24h</span>
               </div>
-              <div className="muted text-xs">Wallet {r.user_id} · flagged {timeAgo(r.first_flagged_at)} · updated {timeAgo(r.updated_at)}</div>
+              <div className="muted text-xs">Wallet {phone(r.user_id)} · flagged {timeAgo(r.first_flagged_at)} · updated {timeAgo(r.updated_at)}</div>
             </Panel>
           ))}
         </div>

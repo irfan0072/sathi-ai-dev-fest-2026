@@ -210,6 +210,12 @@ def test_admin_directories_paginate(durable_service, super_admin_headers):
     assert detail["balance"] == 50000.0
     agents = client.get("/api/v1/admin/agents?q=A_00", headers=super_admin_headers).json()
     assert {a["agent_id"] for a in agents["items"]} >= {"A_001", "A_002"}
+    # Staff search customers and agents by phone number as well as by ID
+    by_phone = client.get("/api/v1/admin/users?q=01742000008", headers=super_admin_headers).json()
+    assert [u["user_id"] for u in by_phone["items"]] == ["U_42_000008"]
+    agent_phone = client.get("/api/v1/admin/agents?q=0131000004",
+                             headers=super_admin_headers).json()
+    assert [a["agent_id"] for a in agent_phone["items"]] == ["A_000042"]
     txns = client.get("/api/v1/admin/transactions?include_future=true&limit=3",
                       headers=super_admin_headers).json()
     assert len(txns["items"]) == 3 and txns["next_before"]

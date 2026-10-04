@@ -1,3 +1,4 @@
+import { phone } from '../../ids';
 import { useState } from 'react';
 import { api } from '../../api';
 import { StateBar } from '../Charts';
@@ -168,7 +169,7 @@ export default function AdminDashboard({ onOpen }) {
             <ul className="flex flex-col divide-y divide-base-300">
               {d.risky_agents.map((a) => (
                 <li key={a.agent_id} className="flex items-center justify-between gap-2 py-2 text-sm">
-                  <span className="font-mono">{a.agent_id}<span className="muted ml-2 font-sans capitalize">{a.region}</span></span>
+                  <span className="font-mono">{phone(a.agent_id)}<span className="muted ml-2 font-sans capitalize">{a.region}</span></span>
                   <span className="flex items-center gap-2">
                     {a.watchlisted && <span className="badge badge-warning badge-xs">watchlist</span>}
                     <strong className="text-error">{a.suspicious_7d}</strong>

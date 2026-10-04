@@ -4,6 +4,14 @@ import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  build: {
+    rollupOptions: {
+      output: {
+        // React rarely changes: keep it in its own long-cached file.
+        manualChunks: (id) => (id.includes('node_modules/react') ? 'react' : undefined),
+      },
+    },
+  },
   server: {
     host: 'localhost',
     port: 5173,

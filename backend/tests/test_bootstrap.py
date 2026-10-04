@@ -82,5 +82,10 @@ def test_bootstrap_twice_after_spend_preserves_ledger(valid_bundle, test_db_url,
             "SELECT balance_after FROM transactions WHERE txn_id=%s", (redemption["txn_id"],)
         ).fetchone()[0]
         assert balance == Decimal("46955.00")
-        assert conn.execute("SELECT count(*) FROM schema_migrations").fetchone()[0] == 11
+        assert conn.execute("SELECT count(*) FROM schema_migrations").fetchone()[0] == 14
+        # Seeded customers and agents get their phone identity from the insert triggers
+        assert conn.execute("SELECT msisdn FROM users WHERE user_id = 'U_777_000001'"
+                            ).fetchone()[0] == "01577000001"
+        assert conn.execute("SELECT msisdn FROM agents WHERE agent_id = 'A_777_000001'"
+                            ).fetchone()[0] == "01377000001"
     assert bootstrap.database_ready(load_config(), test_db_url, test_schema)

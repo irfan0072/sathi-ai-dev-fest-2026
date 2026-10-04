@@ -138,3 +138,18 @@ def test_rebase_moves_future_cohort_rows_to_the_past(live_db):
         cur.execute("SELECT ts < now() - interval '1 day' FROM transactions "
                     "WHERE user_id = 'U_LV_1' AND txn_type = 'credit';")
         assert cur.fetchone()[0] is True  # live rows untouched
+
+
+def test_snapshot_survives_restart(durable_service: MandateService):
+    """A restart serves the last saved result at once, marked stale so it is retrained."""
+    import numpy as np
+
+    intelligence.CACHE.clear()
+    value = {"agents": [{"agent_id": "A_001", "score": np.float64(0.42)}], "computed_at": "t"}
+    intelligence._save_snapshot(durable_service, "agent_risk", value)
+    intelligence._load_snapshots(durable_service)
+    loaded = intelligence.CACHE.peek("agent_risk")
+    assert loaded["agents"][0]["score"] == 0.42
+    stamp = intelligence.CACHE._values["agent_risk"][0]
+    assert intelligence.time.monotonic() - stamp > intelligence.TTL["agent_risk"]
+    intelligence.CACHE.clear()

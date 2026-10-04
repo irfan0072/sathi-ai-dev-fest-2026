@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api';
 import { ErrorBars, ForecastChart } from './Charts';
+import { phone } from '../ids';
+import PageGuide from './PageGuide';
 
 const featureName = {
   target_dom: 'Day of the month (allowance days)', lag_same_dow: 'Same day last week',
@@ -8,6 +10,81 @@ const featureName = {
   std_28: 'How much it changes', mean_7: 'Average of last week', h: 'Days ahead',
   zero_share_28: 'Days with no cash-outs', trend_7_28: 'Recent trend', volume_band_code: 'Agent size',
 };
+
+const dayName = (iso) => new Date(`${iso}T00:00:00`).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+const sizeName = { low: 'Small agents', medium: 'Medium agents', high: 'Large agents' };
+
+const terms = [
+  { term: 'Likely amount', meaning: 'The cash-out total the AI expects on a normal day.' },
+  { term: 'Busy-day amount (P90)', meaning: 'On 9 of 10 days, cash-outs stay below this. Keeping this much covers almost every day.' },
+  { term: 'Keep ready', meaning: 'Busy-day amount for the peak day, rounded up to the next ৳1,000.' },
+  { term: 'Extra cash needed', meaning: 'How much more than their busiest day last month the agent may need.' },
+  { term: 'Error (WAPE)', meaning: 'Average miss as a share of real cash-outs. 0.79 means the forecast is off by 79% of the day’s total on average. Lower is better.' },
+  { term: 'Coverage', meaning: 'How often the busy-day amount was enough in the test. The goal is 90%.' },
+];
+
+export function LiquidityGuide({ agent = false }) {
+  return agent ? (
+    <PageGuide
+      what="Shows how much cash you should keep in your shop each day for the next week, so you never have to turn a customer away."
+      steps={[
+        'Sathi reads your own cash-outs from the last 90 days.',
+        'It learns your weekly pattern and the allowance and salary days when more people come.',
+        'It predicts a normal day and a busy day for each of the next 7 days.',
+      ]}
+      actions={[
+        'Keep at least the “Keep this much cash ready” amount at the start of the busiest day.',
+        'If it says more customers than usual are coming, arrange extra cash early.',
+        'This is only advice. It never limits what a customer can withdraw.',
+      ]}
+      terms={terms.slice(0, 3)}
+    />
+  ) : (
+    <PageGuide
+      what="Agents run out of cash on busy days (allowance and salary days), and customers are turned away. This page predicts each agent’s cash need for the next 7 days, so the area team can send cash before it runs out."
+      steps={[
+        'Every 15 minutes Sathi reads the live cash-out ledger (last 90 days per agent).',
+        'A LightGBM model learns weekly patterns, month-day peaks and each agent’s recent trend.',
+        'For each of the next 7 days it predicts a likely amount and a busy-day amount (P90).',
+        'Agents whose busy day is higher than any day last month are flagged as needing extra cash.',
+      ]}
+      actions={[
+        'Start with the top of the “Agents needing extra cash” list.',
+        'Click an agent to see their 7-day chart and the plain-English advice.',
+        'Send cash (or tell the agent) before the peak day. Agents see their own forecast in their app.',
+      ]}
+      terms={terms}
+    />
+  );
+}
+
+function AgentAdvice({ agent }) {
+  if (!agent) return null;
+  const ratio = agent.typical_daily_bdt ? agent.peak_p90_bdt / agent.typical_daily_bdt : null;
+  return (
+    <div className="rounded-box bg-base-200 p-3 text-sm">
+      On <strong>{dayName(agent.peak_date)}</strong> this agent may need up to <strong>{bdt(agent.peak_p90_bdt)}</strong>
+      {ratio ? <> — about <strong>{ratio.toFixed(1)}×</strong> a usual day ({bdt(agent.typical_daily_bdt)})</> : null}.
+      {' '}Their busiest day last month was {bdt(agent.max_daily_35d_bdt)}.
+      {' '}Advice: keep <strong>{bdt(agent.recommended_opening_float_bdt)}</strong> ready that morning.
+    </div>
+  );
+}
+
+function DayTable({ days }) {
+  return (
+    <div className="overflow-x-auto">
+      <table className="table table-xs">
+        <thead><tr><th>Day</th><th className="text-right">Likely</th><th className="text-right">Busy day (P90)</th></tr></thead>
+        <tbody>
+          {days.map((d) => (
+            <tr key={d.date}><td>{dayName(d.date)}</td><td className="text-right font-mono">{bdt(d.forecast_bdt)}</td><td className="text-right font-mono">{bdt(d.p90_bdt)}</td></tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
 
 const bdt = (v) => (v == null ? '—' : `৳${Math.round(v).toLocaleString('en-US')}`);
 
@@ -33,8 +110,10 @@ export function AgentForecast({ data }) {
       </div>
       <div className="panel shadow-sm">
         <div className="panel-body">
-          <h3 className="font-semibold">Cash needed in the next 7 days · {data.agent_id}</h3>
+          <h3 className="font-semibold">Cash needed in the next 7 days · {phone(data.agent_id)}</h3>
           <ForecastChart days={data.days} />
+          <AgentAdvice agent={data} />
+          <DayTable days={data.days} />
           <p className="muted">
             {data.basis?.startsWith('own') ? 'Based on your past cash-outs.' : 'Based on agents like you, because you have no history yet.'}{' '}
             This only helps you plan; it never limits a customer&apos;s cash-out.
@@ -81,7 +160,7 @@ function AnalystOverview({ data }) {
                       }`}
                       onClick={() => setSelected(a)}
                     >
-                      <td className="font-mono text-xs">{a.agent_id}</td>
+                      <td className="font-mono text-xs">{phone(a.agent_id)}</td>
                       <td className="text-right font-mono text-xs">{bdt(a.max_daily_35d_bdt)}</td>
                       <td className="text-right font-mono text-xs">{bdt(a.peak_p90_bdt)}</td>
                       <td className="text-right">
@@ -103,11 +182,48 @@ function AnalystOverview({ data }) {
         </div>
         <div className="panel shadow-sm lg:col-span-2">
           <div className="panel-body">
-            <h3 className="font-semibold">{selected?.agent_id}</h3>
+            <h3 className="font-semibold">{phone(selected?.agent_id)}</h3>
             {selected && <ForecastChart days={selected.days} />}
+            <AgentAdvice agent={selected} />
+            {selected && <DayTable days={selected.days} />}
           </div>
         </div>
       </div>
+
+      {data.cohorts && (
+        <div className="panel shadow-sm">
+          <div className="panel-body">
+            <h3 className="font-semibold">Average cash need per agent, by agent size</h3>
+            <p className="muted">What a typical agent of each size should plan for next week.</p>
+            <div className="overflow-x-auto">
+              <table className="table table-sm">
+                <thead><tr><th>Group</th><th className="text-right">Agents</th><th className="text-right">Likely, 7 days total</th><th className="text-right">Busiest day</th><th className="text-right">Busy-day amount</th></tr></thead>
+                <tbody>
+                  {['low', 'medium', 'high'].filter((k) => data.cohorts[k]).map((size) => {
+                    const c = data.cohorts[size];
+                    const peak = c.days.reduce((a, d) => (d.p90_bdt > a.p90_bdt ? d : a), c.days[0]);
+                    return (
+                      <tr key={size}>
+                        <td>{sizeName[size] || size}</td>
+                        <td className="text-right font-mono">{c.agents.toLocaleString()}</td>
+                        <td className="text-right font-mono">{bdt(c.days.reduce((a, d) => a + d.forecast_bdt, 0))}</td>
+                        <td className="text-right">{dayName(peak.date)}</td>
+                        <td className="text-right font-mono">{bdt(peak.p90_bdt)}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            {data.provenance && (
+              <p className="muted">
+                Source: {data.provenance.source}, last {data.provenance.history_days} days · {data.provenance.agents_with_cashouts?.toLocaleString()} agents with cash-outs ·
+                {' '}{data.provenance.agents_forecast?.toLocaleString()} forecast · model trained on {data.provenance.agents_trained?.toLocaleString()} agents.
+              </p>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="grid gap-5 lg:grid-cols-2">
         <div className="panel shadow-sm">
@@ -182,6 +298,7 @@ export default function LiquidityPage({ session }) {
           Loading…
         </p>
       )}
+      <LiquidityGuide agent={isAgent} />
       {data && (isAgent ? <AgentForecast data={data} /> : <AnalystOverview data={data} />)}
     </div>
   );

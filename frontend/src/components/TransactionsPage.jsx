@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { api } from '../api';
 import Icon from './Icon';
 import { callStatus, checkStatus, takaFmt } from '../copy';
+import { phone } from '../ids';
 
 const filters = [
   { id: '', label: 'All' },
@@ -60,7 +61,7 @@ function Detail({ id, onOpenCases, onChanged }) {
         <div>
           <div className="muted">Receipt #{item.txn_id} · {new Date(item.ts).toLocaleString()}</div>
           <div className="text-2xl font-bold">{takaFmt(item.amount)}</div>
-          <div className="muted">Customer {item.user_id} · Agent {item.agent_id}</div>
+          <div className="muted">Customer {phone(item.user_id)} · Agent {phone(item.agent_id)}</div>
         </div>
         <span className={`badge ${checkStatus[item.status]?.tone}`}>{checkStatus[item.status]?.label}</span>
       </div>
@@ -163,7 +164,7 @@ export default function TransactionsPage({ onOpenCases }) {
                     <tr key={t.check_id} onClick={() => setSelected(t.check_id)}
                       className={`cursor-pointer hover:bg-base-200 ${selected === t.check_id ? 'bg-primary/10' : ''}`}>
                       <td className="whitespace-nowrap text-xs" title={new Date(t.ts).toLocaleString()}>{new Date(t.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
-                      <td className="font-mono text-xs">{t.user_id}</td>
+                      <td className="font-mono text-xs">{phone(t.user_id)}</td>
                       <td className="text-right">{takaFmt(t.amount)}</td>
                       <td className={`text-right ${t.status === 'suspicious' ? 'font-semibold text-error' : ''}`}>{t.outcome === 'denied' ? '—' : takaFmt(t.stated_amount)}</td>
                       <td><span className={`badge badge-sm ${checkStatus[t.status]?.tone}`}>{checkStatus[t.status]?.label}</span></td>

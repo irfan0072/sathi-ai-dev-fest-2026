@@ -19,6 +19,7 @@ import urllib.request
 from dataclasses import dataclass
 from typing import Any, Callable
 
+from app.accounts.service import registered_number
 from app.voice.service import load_phone_book, mask_number
 
 TEMPLATES = {
@@ -102,7 +103,7 @@ class NotificationService:
                **params: float) -> dict[str, Any]:
         body = TEMPLATES[template].format(
             **{k: _bn_number(v) if isinstance(v, (int, float)) else v for k, v in params.items()})
-        number = self.phone_book.get(user_id)
+        number = self.phone_book.get(user_id) or registered_number(self._conn, user_id)
         if self.provider.name == "simulated":
             result, to_masked = self.provider.send("", body), "simulated outbox"
         elif not number:

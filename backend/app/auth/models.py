@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic import BaseModel, Field
 
 
@@ -16,6 +18,9 @@ class DemoLoginRequest(BaseModel):
         default=None, description="Explicit subject identifier (e.g. A_777_000001)"
     )
     pin: str = Field(..., description="Synthetic public demo PIN")
+    account_type: Literal["customer", "agent"] | None = Field(
+        default=None, description="Sign in to a registered account with its phone number"
+    )
 
 
 class DemoLoginResponse(BaseModel):

@@ -26,10 +26,17 @@ export default function DemoLogin({ session = null, initialRole = 'agent', onDon
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [staffId, setStaffId] = useState('');
+  const [phoneNo, setPhoneNo] = useState('');
+  const accountType = { demo_agent: 'agent', demo_customer: 'customer' }[principal];
+  const usePhone = Boolean(accountType && phoneNo.trim());
 
   const login = async (event) => {
     event.preventDefault(); setBusy(true); setError('');
-    try { await api.login({ principal: staffId || principal, pin }); onDone(); }
+    try {
+      if (usePhone) await api.login({ principal: phoneNo.trim(), pin, accountType });
+      else await api.login({ principal: staffId || principal, pin });
+      onDone();
+    }
     catch (err) { setError(err.message); }
     finally { setBusy(false); }
   };
@@ -60,6 +67,7 @@ export default function DemoLogin({ session = null, initialRole = 'agent', onDon
                   setPrincipal(meta.principal);
                   setPin(pins[meta.principal]);
                   setStaffId('');
+                  setPhoneNo('');
                 }}
               />
               <span className={`grid size-9 shrink-0 place-items-center rounded-lg ${meta.tone}`}>
@@ -90,8 +98,25 @@ export default function DemoLogin({ session = null, initialRole = 'agent', onDon
         </label>
       ) : null}
 
+      {accountType && (
+        <label className="form-control w-full">
+          <span className="mb-1 block text-sm font-medium">Phone number (test account, optional)</span>
+          <input
+            className="input input-bordered w-full font-mono focus-ring"
+            value={phoneNo}
+            inputMode="tel"
+            placeholder="01XXXXXXXXX — leave empty for the demo account"
+            onChange={(e) => {
+              setPhoneNo(e.target.value);
+              setPin(e.target.value.trim() ? '' : pins[principal]);
+            }}
+            autoComplete="off"
+          />
+        </label>
+      )}
+
       <label className="form-control w-full">
-        <span className="mb-1 block text-sm font-medium">Demo PIN</span>
+        <span className="mb-1 block text-sm font-medium">{usePhone ? 'PIN' : 'Demo PIN'}</span>
         <input
           className="input input-bordered w-full font-mono tracking-widest focus-ring"
           value={pin}
@@ -100,7 +125,7 @@ export default function DemoLogin({ session = null, initialRole = 'agent', onDon
           autoComplete="off"
         />
         <span className="muted mt-1 block">
-          Filled in for you. Other supervisors: type their staff ID below (PIN 3456).
+          {usePhone ? 'The PIN the super admin set for this test account.' : 'Filled in for you. Other supervisors: type their staff ID below (PIN 3456).'}
         </span>
       </label>
 

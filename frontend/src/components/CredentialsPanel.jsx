@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { api } from '../api';
 import Icon from './Icon';
+import { idFromPhone, phone } from '../ids';
 
 const sourceBadge = {
   settings: <span className="badge badge-primary badge-xs">saved</span>,
@@ -20,21 +21,21 @@ const randomSecret = () => {
 
 function PhoneBookEditor({ item, disabled, onSave }) {
   const [rows, setRows] = useState([{ user_id: '', phone: '' }]);
-  const valid = rows.every((r) => /^[A-Za-z0-9_]{3,64}$/.test(r.user_id) && /^\+[1-9]\d{7,14}$/.test(r.phone));
+  const valid = rows.every((r) => /^[A-Za-z0-9_]{3,64}$/.test(idFromPhone(r.user_id)) && /^\+[1-9]\d{7,14}$/.test(r.phone));
   const update = (i, field, value) => setRows((rs) => rs.map((r, j) => (j === i ? { ...r, [field]: value.trim() } : r)));
   return (
     <div className="flex flex-col gap-2">
       {item.entries?.length > 0 && (
         <table className="table table-xs">
-          <thead><tr><th>Customer</th><th>Phone number</th></tr></thead>
-          <tbody>{item.entries.map((e) => <tr key={e.user_id}><td className="font-mono">{e.user_id}</td><td className="font-mono">{e.phone}</td></tr>)}</tbody>
+          <thead><tr><th>Customer upay number</th><th>Number to call</th></tr></thead>
+          <tbody>{item.entries.map((e) => <tr key={e.user_id}><td className="font-mono">{phone(e.user_id)}</td><td className="font-mono">{e.phone}</td></tr>)}</tbody>
         </table>
       )}
       <p className="muted">Confirmation calls go only to these numbers. Saving replaces the whole list, so enter every customer.</p>
       {rows.map((r, i) => (
         <div key={i} className="flex flex-wrap gap-2">
-          <input className="input input-bordered input-xs w-40 font-mono" placeholder="U_777_000001" value={r.user_id} disabled={disabled}
-            onChange={(e) => update(i, 'user_id', e.target.value)} aria-label="Customer id" />
+          <input className="input input-bordered input-xs w-40 font-mono" placeholder="01577000001" value={r.user_id} disabled={disabled}
+            onChange={(e) => update(i, 'user_id', e.target.value)} aria-label="Customer upay number" />
           <input className="input input-bordered input-xs w-40 font-mono" placeholder="+8801XXXXXXXXX" value={r.phone} disabled={disabled}
             onChange={(e) => update(i, 'phone', e.target.value)} aria-label="Phone" />
           {rows.length > 1 && <button className="btn btn-ghost btn-xs" disabled={disabled} onClick={() => setRows((rs) => rs.filter((_, j) => j !== i))}>Remove</button>}
@@ -43,7 +44,7 @@ function PhoneBookEditor({ item, disabled, onSave }) {
       <div className="flex gap-2">
         <button className="btn btn-ghost btn-xs" disabled={disabled} onClick={() => setRows((rs) => [...rs, { user_id: '', phone: '' }])}>Add row</button>
         <button className="btn btn-primary btn-xs" disabled={disabled || !valid}
-          onClick={() => onSave({ [item.name]: Object.fromEntries(rows.map((r) => [r.user_id, r.phone])) })}>Save phone book</button>
+          onClick={() => onSave({ [item.name]: Object.fromEntries(rows.map((r) => [idFromPhone(r.user_id), r.phone])) })}>Save phone book</button>
       </div>
     </div>
   );

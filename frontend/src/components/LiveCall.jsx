@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { api } from '../api';
 import Icon from './Icon';
 import { callStatus, checkNeeded, riskLevel } from '../copy';
+import { phone } from '../ids';
 
 const LIVE = ['queued', 'ringing', 'in_progress'];
 
@@ -161,7 +162,7 @@ export function IncomingCall({ onFinished }) {
           {ended ? 'Call ended' : answered ? 'On call' : 'Incoming call…'}
         </div>
         <div lang="bn" className="text-lg font-semibold">সাথী নিরাপত্তা কল</div>
-        {!answered && <div className="muted">Agent {incoming.agent_id}</div>}
+        {!answered && <div className="muted">Agent {phone(incoming.agent_id)}</div>}
       </div>
       {!answered ? (
         <div className="mt-4 flex justify-center gap-6">

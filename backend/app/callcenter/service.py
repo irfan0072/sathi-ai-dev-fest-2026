@@ -215,15 +215,18 @@ class CallCenterService:
                 return [r[0] for r in cur.fetchall()]
 
     def stale_ringing_calls(self, ring_timeout_seconds: int, limit: int = 50) -> list[str]:
-        """Simulated calls nobody picked up, and real calls stuck without a provider update."""
+        """Simulated calls nobody picked up, real calls stuck without a provider update, and
+        answered calls the customer abandoned mid-way (no answer for 3 minutes)."""
         with self._conn() as conn, conn.cursor() as cur:
             cur.execute(
                 """
                 SELECT call_id FROM voice_calls
-                WHERE status IN ('queued','ringing')
-                  AND ((provider = 'simulated'
-                        AND created_at < now() - make_interval(secs => %s))
-                       OR created_at < now() - interval '10 minutes')
+                WHERE (status IN ('queued','ringing')
+                       AND ((provider = 'simulated'
+                             AND created_at < now() - make_interval(secs => %s))
+                            OR created_at < now() - interval '10 minutes'))
+                   OR (status = 'in_progress'
+                       AND updated_at < now() - interval '3 minutes')
                 ORDER BY created_at LIMIT %s;
                 """,
                 (ring_timeout_seconds, limit),

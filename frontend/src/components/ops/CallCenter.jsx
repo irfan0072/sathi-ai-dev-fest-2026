@@ -1,3 +1,4 @@
+import { phone } from '../../ids';
 import { useEffect, useState } from 'react';
 import { api } from '../../api';
 import Icon from '../Icon';
@@ -110,12 +111,12 @@ function TaskDetail({ taskId, session, supervisors, onChanged, onClose }) {
       <div className="grid gap-3 text-sm sm:grid-cols-2">
         <div>
           <div className="muted">Customer</div>
-          <div className="font-mono">{task.user_id}</div>
+          <div className="font-mono">{phone(task.user_id)}</div>
           <div className="muted capitalize">{task.customer?.region} · {task.customer?.area} · {task.customer?.age_band}</div>
         </div>
         <div>
           <div className="muted">Cash-out</div>
-          <div><strong>{bdt(task.amount)}</strong> via agent <span className="font-mono">{task.agent_id}</span></div>
+          <div><strong>{bdt(task.amount)}</strong> via agent <span className="font-mono">{phone(task.agent_id)}</span></div>
           <div className="muted">{when(task.transaction?.ts)} · txn #{task.txn_id}</div>
         </div>
         <div>
@@ -204,7 +205,7 @@ function TaskRow({ t, selected, onSelect, session, onClaim }) {
     <tr className={`cursor-pointer hover:bg-base-200/60 ${selected ? 'bg-primary/5' : ''}`} onClick={() => onSelect(t.task_id)}>
       <td className="font-mono text-xs">#{t.task_id}</td>
       <td><Badge tone={priorityTone[t.priority]}>{t.priority}</Badge></td>
-      <td className="font-mono text-xs">{t.user_id}</td>
+      <td className="font-mono text-xs">{phone(t.user_id)}</td>
       <td className="tabular-nums">{bdt(t.amount)}</td>
       <td className="text-xs">{manualReason[t.manual_reason] || t.last_outcome || '—'}</td>
       <td><Badge tone={taskTone[t.status]}>{taskLabel[t.status]}</Badge></td>

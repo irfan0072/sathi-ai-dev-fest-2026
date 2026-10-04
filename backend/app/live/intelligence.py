@@ -19,6 +19,7 @@ the numbers follow the live ledger. Every response carries `computed_at` and the
 from __future__ import annotations
 
 import datetime
+import json
 import logging
 import math
 import os
@@ -484,12 +485,45 @@ def _child_compute(name: str, db_url: str, schema: str | None) -> Any:
     return getattr(live, COMPUTE[name])()
 
 
+def _plain(value: Any) -> Any:
+    """numpy scalars and dates to plain JSON values."""
+    return value.item() if hasattr(value, "item") else str(value)
+
+
+def _save_snapshot(service: Any, name: str, value: Any) -> None:
+    try:
+        with service.get_connection() as conn, conn.cursor() as cur:
+            cur.execute(
+                "INSERT INTO live_snapshots (name, payload) VALUES (%s, %s::jsonb) "
+                "ON CONFLICT (name) DO UPDATE SET payload = EXCLUDED.payload, saved_at = now();",
+                (name, json.dumps(value, default=_plain)))
+            conn.commit()
+    except Exception as exc:  # a missing snapshot only means a slower first view
+        log.warning("live %s snapshot not saved: %s", name, exc)
+
+
+def _load_snapshots(service: Any) -> None:
+    """Serve the last saved results at once; mark them stale so they are retrained."""
+    try:
+        with service.get_connection() as conn, conn.cursor() as cur:
+            cur.execute("SELECT name, payload FROM live_snapshots;")
+            rows = cur.fetchall()
+    except Exception as exc:
+        log.warning("live snapshots not loaded: %s", exc)
+        return
+    for name, payload in rows:
+        if name in COMPUTE and name not in CACHE._values:
+            value = json.loads(payload) if isinstance(payload, str) else payload
+            CACHE._values[name] = (time.monotonic() - TTL[name] - 1, value)
+
+
 def _refresh_loop() -> None:
     import multiprocessing
     from concurrent.futures import ProcessPoolExecutor
 
     from app.mandates.router import get_mandate_service
 
+    _load_snapshots(get_mandate_service())
     time.sleep(5)
     pool = ProcessPoolExecutor(max_workers=1, mp_context=multiprocessing.get_context("spawn"))
     while True:
@@ -502,6 +536,7 @@ def _refresh_loop() -> None:
                 value = pool.submit(_child_compute, name, service.db_url,
                                     service.schema).result(timeout=600)
                 CACHE._values[name] = (time.monotonic(), value)
+                _save_snapshot(service, name, value)
             except Exception as exc:
                 log.warning("live %s refresh failed: %s", name, exc)
         time.sleep(20)

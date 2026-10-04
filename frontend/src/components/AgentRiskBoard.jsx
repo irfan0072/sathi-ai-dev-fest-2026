@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
 import { featureLabel } from '../copy';
+import { phone } from '../ids';
 
 const levelTone = (level) => ({ high: 'badge-error', medium: 'badge-warning', low: 'badge-success' }[String(level).toLowerCase()] || 'badge-ghost');
 
@@ -9,7 +10,7 @@ export function AgentEvidence({ data }) {
     <div className="panel shadow-sm">
       <div className="panel-body">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h3 className="font-mono text-lg font-semibold">{data.agent_id}</h3>
+          <h3 className="font-mono text-lg font-semibold">{phone(data.agent_id)}</h3>
           <span className={`badge ${levelTone(data.level)}`}>{({ high: 'Needs checking', medium: 'Watch', low: 'Looks normal' })[String(data.level).toLowerCase()] || data.level}</span>
         </div>
         <div className="flex items-center gap-4">
@@ -128,7 +129,7 @@ export default function AgentRiskBoard() {
                   <tbody>
                     {board.agents.map((a) => (
                       <tr key={a.agent_id} onClick={() => setSelected(a.agent_id)} className={`cursor-pointer hover:bg-base-200/60 ${selected === a.agent_id ? 'bg-primary/10' : ''}`}>
-                        <td className="font-mono text-xs">{a.agent_id}</td>
+                        <td className="font-mono text-xs">{phone(a.agent_id)}</td>
                         <td className="capitalize">{a.region}</td>
                         <td><span className={`badge badge-sm ${levelTone(a.level)}`}>{(a.risk * 100).toFixed(0)}% · {levelText[a.level]}</span></td>
                         <td className="tabular-nums">{a.cashouts_30d.toLocaleString()}</td>
