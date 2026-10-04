@@ -56,6 +56,39 @@ def twilio_signature(auth_token: str, url: str, params: dict[str, str]) -> str:
     return base64.b64encode(digest).decode()
 
 
+# Twilio error codes seen when placing a call, with the fix in plain words.
+TWILIO_FIXES = {
+    21219: "This phone is not verified on your trial account. In the Twilio Console open "
+           "Phone Numbers > Manage > Verified Caller IDs and add it (+8801XXXXXXXXX).",
+    21215: "Calls to this country are blocked. In the Twilio Console open Voice > Settings > "
+           "Geo permissions and tick Bangladesh, then save.",
+    13227: "Calls to this country are blocked. In the Twilio Console open Voice > Settings > "
+           "Geo permissions and tick Bangladesh, then save.",
+    21210: "The From number is not one of your Twilio numbers. Set TWILIO_FROM_NUMBER to the "
+           "number in Phone Numbers > Manage > Active numbers (+1XXXXXXXXXX).",
+    21212: "The From number is not valid. Use your Twilio number in +1XXXXXXXXXX form.",
+    21211: "The phone number is not valid. Use +8801XXXXXXXXX (13 digits after +).",
+    21214: "This phone number cannot receive calls. Try another number.",
+    21216: "Calls to this number are blocked by Twilio. Try another number.",
+    20003: "Twilio rejected the Account SID or Auth Token. Copy both again from Account Info.",
+    20404: "Account SID not found. Copy it again from Account Info in the Twilio Console.",
+}
+
+
+def twilio_error(exc: urllib.error.HTTPError) -> str:
+    """Twilio's own error code and message, plus the fix when we know it."""
+    code, message = None, ""
+    try:
+        data = json.loads(exc.read().decode() or "{}")
+        code, message = data.get("code"), str(data.get("message") or "")
+    except Exception:
+        pass
+    fix = TWILIO_FIXES.get(code) if isinstance(code, int) else None
+    head = f"Twilio error {code}: {message}".strip() if code else \
+        f"Twilio rejected the call (HTTP {exc.code})."
+    return f"{head} {fix}" if fix else head
+
+
 class TwilioVoiceProvider:
     name = "twilio"
     api_base = "https://api.twilio.com/2010-04-01"
@@ -106,7 +139,7 @@ class TwilioVoiceProvider:
             with self._open(request, timeout=self._timeout) as response:
                 data = json.loads(response.read().decode() or "{}")
         except urllib.error.HTTPError as exc:
-            raise VoiceProviderError(f"Twilio rejected the call (HTTP {exc.code}).") from None
+            raise VoiceProviderError(twilio_error(exc)) from None
         except (urllib.error.URLError, TimeoutError, ValueError):
             raise VoiceProviderError("Twilio is unreachable.") from None
         sid = data.get("sid")

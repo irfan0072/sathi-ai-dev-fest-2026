@@ -201,7 +201,26 @@ def test_twilio_test_call_uses_inline_twiml():
     assert result["ok"] and result["call_sid"] == "CA1"
     form = urllib.parse.parse_qs(seen[0].data.decode())
     assert form["To"] == ["+8801712345678"] and "<Say" in form["Twiml"][0]
-    assert "trial" in probes.twilio_test_call(TW, "+880171", _opener(400))["detail"].lower()
+    assert "HTTP 400" in probes.twilio_test_call(TW, "+880171", _opener(400))["detail"]
+
+
+def _twilio_error(code: int, message: str):
+    def open_(request, timeout):
+        raise urllib.error.HTTPError(request.full_url, 400, "err", {}, io.BytesIO(
+            json.dumps({"code": code, "message": message}).encode()))
+    return open_
+
+
+def test_twilio_test_call_explains_the_real_twilio_error():
+    unverified = probes.twilio_test_call(TW, "+8801712345678",
+                                         _twilio_error(21219, "The number is unverified."))
+    assert "21219" in unverified["detail"] and "Verified Caller IDs" in unverified["detail"]
+    geo = probes.twilio_test_call(TW, "+8801712345678",
+                                  _twilio_error(21215, "Geo permission not enabled."))
+    assert "Geo permissions" in geo["detail"] and "Verified Caller" not in geo["detail"]
+    sender = probes.twilio_test_call(TW, "+8801712345678",
+                                     _twilio_error(21210, "From is not a valid number."))
+    assert "TWILIO_FROM_NUMBER" in sender["detail"]
 
 
 def test_test_endpoints_audit_and_rate_limit(secured, durable_service, monkeypatch):

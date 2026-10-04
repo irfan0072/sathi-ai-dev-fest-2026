@@ -187,21 +187,25 @@ def twilio_test_call(env: dict[str, str], to_number: str,
            'এটি সাথী পরীক্ষামূলক কল। আপনার সেটআপ কাজ করছে। ধন্যবাদ।</Say></Response>')
     body = urllib.parse.urlencode({"To": to_number, "From": env["TWILIO_FROM_NUMBER"],
                                    "Twiml": xml}).encode()
+    from app.voice.providers import twilio_error
+
+    request = urllib.request.Request(
+        f"https://api.twilio.com/2010-04-01/Accounts/{urllib.parse.quote(sid)}/Calls.json",
+        data=body, method="POST",
+        headers={"Authorization": _basic(sid, env["TWILIO_AUTH_TOKEN"]),
+                 "Content-Type": "application/x-www-form-urlencoded"})
     try:
-        status, data = _request(
-            f"https://api.twilio.com/2010-04-01/Accounts/{urllib.parse.quote(sid)}/Calls.json",
-            {"Authorization": _basic(sid, env["TWILIO_AUTH_TOKEN"]),
-             "Content-Type": "application/x-www-form-urlencoded"},
-            data=body, method="POST", opener=opener)
-    except (urllib.error.URLError, TimeoutError):
+        with opener(request, timeout=10.0) as response:
+            status = getattr(response, "status", 200)
+            data = json.loads(response.read().decode() or "{}")
+    except urllib.error.HTTPError as exc:
+        # Show Twilio's real reason (unverified number, geo permission, wrong From...).
+        return _result("twilio", started, False, twilio_error(exc), exc.code)
+    except (urllib.error.URLError, TimeoutError, ValueError):
         return _result("twilio", started, False, "Twilio is unreachable.")
     if status in (200, 201) and data and data.get("sid"):
         return _result("twilio", started, True, "Test call placed. Your phone should ring.",
                        status, call_sid=data["sid"])
-    if status == 400:
-        return _result("twilio", started, False,
-                       "Twilio refused the number. Trial accounts can only call verified "
-                       "numbers, and Bangladesh must be enabled in Voice geo permissions.", status)
     return _result("twilio", started, False, f"Twilio rejected the call (HTTP {status}).", status)
 
 
