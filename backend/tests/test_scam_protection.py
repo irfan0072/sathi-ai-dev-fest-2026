@@ -239,6 +239,9 @@ def test_assistant_checks_a_seller_number_without_leaking(wallets):
             "message": f"{num(904)} number e taka dibo, safe?"}).json()
         assert out["intent"] == "check_number" and "2" in out["reply"]
         assert num(904) not in out["reply"] and "017•••••904" in out["reply"]
+        # A warning, never an accusation: reports are unproven claims.
+        for word in ("scam", "fraud", "প্রতারক", "do not send", "pathaben na"):
+            assert word not in out["reply"].lower(), word
         plain = client.post("/api/v1/assistant/chat", headers=cust(42), json={
             "message": f"balance of {num(905)}"}).json()
         assert plain["guard"] == "other_people"

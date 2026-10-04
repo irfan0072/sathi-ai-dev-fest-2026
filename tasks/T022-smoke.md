@@ -1,2 +1,0 @@
-# T022 — update obsolete static page identity check
-The new console title is 'Sathi (সাথী) — AI Scoped Mandate & Anomaly Console'. scripts/smoke_skeleton.py:check_frontend still matches only exact 'Sathi Console', so it rejects the valid new UI. Update only that title check to accept actual Sathi...Console title while still requiring the root element and HTTP200. Keep retries/URLs/API health strict. Code edit only, no commands/Git/docs/config/tasks edits. Codex runs real smoke and browser checks. No new feature or arbitrary success fallback.

@@ -453,9 +453,8 @@ Full policy: [`docs/responsible-ai.md`](docs/responsible-ai.md).
 │   ├── config.yaml         Frozen configuration (hash-checked; do not edit)
 │   ├── assumptions.md      Documented assumptions
 │   └── artifacts/          Verified model bundles and evaluation manifest
-├── docs/                   Architecture, API, evaluation, live mode, deploy guide, reports
+├── docs/                   Architecture, API, evaluation, live mode, deploy guide
 ├── scripts/                Evaluation, scale seed, smoke tests, env setup, IVR stand-in
-├── tasks/                  Development task board and review records
 ├── compose.yaml            Local Docker stack
 ├── render.yaml             Render deployment blueprint
 └── Makefile                Common commands
@@ -478,7 +477,7 @@ Full policy: [`docs/responsible-ai.md`](docs/responsible-ai.md).
 
 - **Synthetic data only.** No real personal data, upay data or external datasets are used. All names, numbers and transactions are generated, except phone numbers a tester enters for their own test accounts.
 - **Assumed figures.** All fees, limits, costs and impact numbers are assumptions for demonstration, not upay figures.
-- **AI-assisted development.** This project was built with AI coding assistants, including OpenAI Codex, Google Antigravity (IDE and CLI) and Anthropic Claude Code, under the team's direction and review. The full history is in [`docs/ai-dev-log.md`](docs/ai-dev-log.md) and decisions in [`docs/decisions.md`](docs/decisions.md).
+- **AI-assisted development.** This project was built with AI coding assistants, including OpenAI Codex, Google Antigravity (IDE and CLI) and Anthropic Claude Code, under the team's engineering direction, verification, and code review.
 - **Models.** All models are trained by the team on synthetic data. No pretrained external model weights are used. External LLMs (Gemini, OpenAI) are optional and only word explanations; they never make decisions.
 - **Third-party services.** Twilio, Alpha SMS, Gemini and OpenAI are optional and used only when credentials are provided.
 - **Open source.** All dependencies are open source.

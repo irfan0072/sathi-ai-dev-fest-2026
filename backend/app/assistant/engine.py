@@ -338,21 +338,25 @@ class Assistant:
         r"(safe|scam|fraud|trust|check|legit|real|fake|thik|nirapod|bishshash|bisshas|"
         r"নিরাপদ|বিশ্বাস|ভুয়া|প্রতারক|ঠিক আছে|চেক|pay korbo|taka dibo|টাকা দেব)", re.I)
     CHECK_TEXT = {
-        "bn": {"high": "সতর্কতা: {masked} নম্বরটি নিয়ে {reports}টি অভিযোগ আছে{verified}। এই নম্বরে টাকা "
-                       "পাঠাবেন না; ক্যাশ অন ডেলিভারি বা ভেরিফায়েড মার্চেন্ট ব্যবহার করুন।",
+        "bn": {"high": "সাবধান: {masked} নম্বরটি কমিউনিটির {reports}টি সতর্কবার্তায় আছে{verified}। "
+                       "এগুলো অন্য গ্রাহকদের অভিযোগ, নিশ্চিত নয়। চেনা মানুষকেই টাকা পাঠান; অনলাইনে "
+                       "ক্যাশ অন ডেলিভারি চান।",
                "caution": "সাবধান: {masked} নম্বরটি নিয়ে কিছু সন্দেহজনক তথ্য আছে। শুধু পরিচিত মানুষকে টাকা "
                           "পাঠান।",
                "none": "{masked} নম্বর নিয়ে কোনো অভিযোগ পাইনি। তবু অচেনা অনলাইন বিক্রেতাকে আগে টাকা "
                        "পাঠাবেন না।"},
-        "banglish": {"high": "Sotorkota: {masked} number niye {reports} ta complaint "
-                             "ache{verified}. Ei number e taka pathaben na; cash on "
-                             "delivery ba verified merchant use korun.",
+        "banglish": {"high": "Sabdhan: {masked} number ta community-r {reports} ta alert e "
+                             "ache{verified}. Egulo onno customer der report, nishchit na. "
+                             "Chena manush hole tobei taka pathan; online e cash on delivery "
+                             "chan.",
                      "caution": "Sabdhan: {masked} number niye kichu sondehojonok tottho ache. "
                                 "Shudhu porichito manush ke taka pathan.",
                      "none": "{masked} number niye kono complaint paini. Tobu ochena online "
                              "seller ke age taka pathaben na."},
-        "en": {"high": "Warning: {masked} has {reports} scam report(s){verified}. Do not send "
-                       "money; use cash on delivery or a verified upay merchant.",
+        "en": {"high": "Please check first: {masked} appears in {reports} community "
+                       "alert(s){verified}. These are reports by other customers, not "
+                       "confirmed. Send only if you know this person; for online shopping, "
+                       "ask for cash on delivery.",
                "caution": "Be careful: {masked} shows some warning signs. Only pay people you "
                           "know.",
                "none": "No reports found for {masked}. Still, never pay unknown online sellers "
