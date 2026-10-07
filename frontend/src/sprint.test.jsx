@@ -166,3 +166,38 @@ describe('extended benchmark view', () => {
     expect(html).toContain('119/120');
   });
 });
+
+describe('browser voice for the handset', () => {
+  it('reports no support outside a browser and never invents a confidence', async () => {
+    const { voiceSupport, listenOnce, speechLang } = await import('./voice');
+    expect(voiceSupport()).toEqual({ speak: false, listen: false });
+    expect(speechLang('en')).toBe('en-IN');
+    expect(speechLang('bn')).toBe('bn-BD');
+    let message = '';
+    listenOnce('bn', { onResult() {}, onSilence() {}, onError: (m) => { message = m; }, onEnd() {} });
+    expect(message).toContain('keypad');
+  });
+});
+
+describe('speech recognition errors', () => {
+  it('turns service-not-allowed into a keypad instruction and blocks retries', async () => {
+    const { recognitionProblem } = await import('./voice');
+    const blocked = recognitionProblem('service-not-allowed');
+    expect(blocked.blocked).toBe(true);
+    expect(blocked.message).toContain('Use the keypad');
+    expect(recognitionProblem('network').blocked).toBe(false);
+  });
+});
+
+describe('safari message', () => {
+  it('explains Dictation and Chrome for Safari, and still blocks retries', async () => {
+    const original = Object.getOwnPropertyDescriptor(globalThis, 'navigator');
+    Object.defineProperty(globalThis, 'navigator', { configurable: true, value: { userAgent: 'Mozilla/5.0 (Macintosh) AppleWebKit/605 Version/17.0 Safari/605.1.15' } });
+    const { recognitionProblem } = await import('./voice');
+    const r = recognitionProblem('service-not-allowed');
+    if (original) Object.defineProperty(globalThis, 'navigator', original);
+    expect(r.blocked).toBe(true);
+    expect(r.message).toContain('Dictation');
+    expect(r.message).toContain('Chrome or Edge');
+  });
+});

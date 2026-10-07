@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api';
 import Icon from './Icon';
+import { listenOnce, speak, stopSpeaking, voiceSupport } from '../voice';
 import { callStatus, checkNeeded, riskLevel } from '../copy';
 import { phone } from '../ids';
 
@@ -124,6 +125,26 @@ export function IncomingCall({ onFinished }) {
 
   const [said, setSaid] = useState('');
   const [keypadOnly, setKeypadOnly] = useState(false);
+  const [voiceOn, setVoiceOn] = useState(true);   // the handset reads each prompt aloud
+  const [listening, setListening] = useState(false);
+  const [micBlocked, setMicBlocked] = useState(false);  // browser refused speech recognition
+  const support = voiceSupport();
+  const promptText = answered && incoming ? (spoken.length ? spoken.join(' ') : (incoming.prompt || incoming.prompt_bn)) : '';
+  // Speak every new prompt (browser text-to-speech, a local simulation of the call audio).
+  useEffect(() => {
+    if (voiceOn && promptText && !ended) speak(promptText, incoming?.language);
+    return undefined;
+  }, [promptText, voiceOn, ended]);
+  useEffect(() => () => stopSpeaking(), []);
+  const listen = () => {
+    stopSpeaking(); setError(''); setListening(true);
+    listenOnce(incoming?.language, {
+      onResult: (text, confidence) => send(text, { confidence }),   // null when the browser gives none
+      onSilence: () => send(null, { noInput: true }),
+      onError: (message, blocked) => { setError(message); if (blocked) setMicBlocked(true); },
+      onEnd: () => setListening(false),
+    });
+  };
   const send = async (speech = null, { confidence = 0.32, noInput = false } = {}) => {
     setError('');
     try {
@@ -215,8 +236,22 @@ export function IncomingCall({ onFinished }) {
                 Type the cash you got, then press #. If you did not make this cash-out, press * then #. Pressing only # does nothing.
               </p>
               {keypadOnly && <p className="muted mt-1 text-center text-[11px]" data-testid="keypad-only">Keypad only now: speech is switched off for this call.</p>}
+              <div className="mt-1 flex items-center justify-between gap-2 text-[11px]" data-testid="voice-controls">
+                <label className="flex cursor-pointer items-center gap-1">
+                  <input type="checkbox" className="toggle toggle-xs" checked={voiceOn} disabled={!support.speak}
+                    onChange={(e) => { setVoiceOn(e.target.checked); if (!e.target.checked) stopSpeaking(); }} />
+                  {support.speak ? 'Read the call aloud' : 'Reading aloud not supported here'}
+                </label>
+                {support.speak && <button type="button" className="btn btn-ghost btn-xs" onClick={() => speak(promptText, incoming?.language)}>Repeat</button>}
+              </div>
               {!incoming.mandate_id && !keypadOnly && (
                 <>
+                  <button type="button" className="btn btn-primary btn-sm mt-2 w-full focus-ring" disabled={!support.listen || listening || micBlocked}
+                    onClick={listen} aria-label="Speak your answer" data-testid="mic-button">
+                    <Icon name="phone" className="size-4" />
+                    {!support.listen ? 'Voice input not supported in this browser: use the keypad' : micBlocked ? 'Voice input unavailable: use the keypad below' : listening ? 'Listening… say the amount' : 'Speak your answer'}
+                  </button>
+                  <p className="muted mt-1 text-center text-[10px]">Browser simulation of speech. A real call is spoken and heard by the phone provider. Unclear speech switches to the keypad.</p>
                   <p className="muted mt-1 text-center text-[11px]">9 # talk to a person · 8 # English / বাংলা</p>
                   <form
                     className="join mt-2 w-full"

@@ -33,6 +33,17 @@ times, then goes to a person. It is never shown as confirmed.
 | **USSD** menu session | **Not built** (see plan below) | - | A separately provisioned operator/aggregator service and assigned code | **No** |
 | Call capacity / throughput | Queue, retry and lease mechanisms exist; synthetic 5M-row table was a database performance test | - | Measured provider concurrency, rate caps and tariffs | **No** |
 
+## Browser handset voice (local simulation)
+
+The customer handset panel can **read each prompt aloud** (browser text-to-speech, `bn-BD` / `en-IN`,
+with Repeat and an off switch) and **listen to a spoken answer** (browser speech recognition, one
+attempt per press of "Speak your answer"). The transcript and the browser's own confidence go
+through the same server path as a real provider's: a good confidence is parsed deterministically; a
+missing, low or invalid confidence, or silence, switches the call to keypad-only. The browser never
+invents a confidence. Support and Bangla quality depend on the browser and are **not validated**;
+this is a demo of the call's voice, not the production voice path. Tested with a mocked Web Speech
+API in Chromium (prompt spoken in `bn-BD`; confidence 0.9 completes; no confidence -> keypad only).
+
 ## Prompts (what a feature-phone customer hears, in words)
 
 1. Greeting, "a cash-out was just made", "type the cash you received and press hash, or say it".
