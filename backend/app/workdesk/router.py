@@ -382,6 +382,12 @@ def case_file(case_id: int, principal: Staff) -> Any:
                  "amount": float(r[3]) if r[3] is not None else None,
                  "confidence": float(r[4]) if r[4] is not None else None,
                  "recorded_by": r[5], "at": _iso(r[6])} for r in cur.fetchall()]
+        cur.execute("SELECT t.followup_status, t.followup_attempts FROM call_tasks t "
+                    "JOIN txn_checks c USING (check_id) WHERE c.case_id = %s;", (case_id,))
+        fu = cur.fetchone()
+        case["followup"] = ({"status": fu[0], "attempts": fu[1],
+                             "blocks_clearing": fu[0] in ("required", "attempted", "uncertain",
+                                                          "unreachable")} if fu else None)
         if case["agent_id"]:
             cur.execute(
                 "SELECT count(*) FILTER (WHERE status = 'suspicious'), count(*), "

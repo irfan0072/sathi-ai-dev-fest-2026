@@ -22,7 +22,7 @@ export const caseReason = {
 export const reasonLabel = (reason) => caseReason[reason] || String(reason || '').replaceAll('_', ' ');
 
 export const caseStatus = {
-  open: 'Open', escalated: 'Escalated', approved: 'Approved', denied: 'Denied',
+  open: 'Open', escalated: 'Escalated', approved: 'Cleared: no wrongdoing', denied: 'Problem confirmed',
 };
 
 export const priorityName = { urgent: 'Urgent', high: 'High', normal: 'Normal' };
@@ -143,8 +143,21 @@ export const checkStatus = {
 // What agents and customers see (never the result itself).
 export const publicCheck = {
   waiting: { label: 'Confirming with customer…', tone: 'badge-info' },
-  done: { label: 'Confirmation done', tone: 'badge-success' },
+  done: { label: 'Confirmation finished', tone: 'badge-success' },
   missed: { label: 'Customer missed the call', tone: 'badge-warning' },
+  unreachable: { label: 'Customer not reached', tone: 'badge-warning' },
+  manual: { label: 'A supervisor will follow up', tone: 'badge-secondary' },
 };
 
-export const takaFmt = (v) => (v == null ? '—' : `৳${Number(v).toLocaleString('en-US', { maximumFractionDigits: 2 })}`);
+// Exact money: whole taka stay whole, anything else always shows two decimals (7.50, 7.49).
+// Never rounds a ledger value. Use roundedTaka for deliberately approximate aggregates.
+export const exactTaka = (v) => {
+  if (v == null || v === '' || Number.isNaN(Number(v))) return '—';
+  const n = Number(v);
+  const cents = Math.round(n * 100);
+  const whole = cents % 100 === 0;
+  return `${n < 0 ? '−' : ''}৳${(Math.abs(cents) / 100).toLocaleString('en-US', {
+    minimumFractionDigits: whole ? 0 : 2, maximumFractionDigits: whole ? 0 : 2 })}`;
+};
+export const takaFmt = exactTaka;
+export const roundedTaka = (v) => (v == null ? '—' : `≈৳${Math.round(v).toLocaleString('en-US')}`);

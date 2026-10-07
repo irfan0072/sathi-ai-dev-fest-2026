@@ -222,3 +222,18 @@ def get_metrics_summary(
 ) -> dict[str, Any]:
     """Retrieve comprehensive evaluation metrics and fairness audit summary."""
     return _artifact_query(service.get_metrics_summary)
+
+
+@router.get("/metrics/agent-benchmark-v2")
+def agent_benchmark_v2(
+    principal: Annotated[AuthenticatedPrincipal,
+                         Depends(require_roles("analyst", "super_admin", "supervisor"))],
+) -> dict[str, Any]:
+    """Hash-verified, read-only extended agent benchmark. Synthetic evidence."""
+    from app.evaluation.benchmark_view import BenchmarkUnavailable, load_summary
+
+    try:
+        return load_summary()
+    except BenchmarkUnavailable as exc:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail={
+            "error": {"code": "BENCHMARK_UNAVAILABLE", "message": str(exc)}})

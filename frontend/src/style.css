@@ -225,3 +225,7 @@
 .form-control { display: flex; flex-direction: column; }
 .form-control > .textarea, .form-control > .select { width: 100%; }
 textarea.textarea { width: 100%; }
+
+/* Badges grow with their content instead of overflowing a fixed height (long labels such as
+   "94% · Needs checking" wrap cleanly), and keep readable text in both themes. */
+.badge { height: auto; min-height: 1.25rem; padding-block: 0.125rem; line-height: 1.25; }

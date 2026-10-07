@@ -93,3 +93,23 @@ def test_artifacts_hash_verified(tmp_path: Path):
     with pytest.raises(IntelligenceArtifactError):
         load_artifact("secrets", tmp_path)
 
+
+
+def test_thin_history_agent_gets_a_labelled_peer_estimate_not_agent_specific_advice():
+    data = _tiny_dataset()
+    data["agents"].append({"agent_id": "A_thin", "volume_band": "low"})
+    start = datetime.datetime(2026, 10, 1, 4, tzinfo=datetime.timezone.utc)
+    for day in (66, 68, 69):                                  # three tiny recent cash-outs only
+        data["transactions"].append({
+            "agent_id": "A_thin", "user_id": "U1", "txn_type": "cash_out", "amount": 100.0,
+            "ts": (start + datetime.timedelta(days=day, hours=2)).isoformat(),
+            "channel": "agent_initiated"})
+    agents = {a["agent_id"]: a for a in liquidity.train_and_evaluate(data)["agents"]}
+    thin, busy = agents["A_thin"], agents["A5"]
+    assert busy["history_supported"] is True and busy["advice_mode"] == "agent_specific"
+    assert busy["pressure_ratio"] is not None
+    assert thin["history_supported"] is False and thin["active_days_28"] <= 3
+    assert thin["advice_mode"] == "peer_fallback" and thin["pressure_ratio"] is None
+    assert thin["exceeds_recent_max"] is False
+    assert thin["peer_peak_p90_bdt"] is not None
+    assert thin["recommended_opening_float_bdt"] % 500 == 0

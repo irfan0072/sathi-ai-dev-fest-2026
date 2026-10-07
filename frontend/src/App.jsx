@@ -182,7 +182,7 @@ export default function App() {
           onLogout={() => api.logout()}
         />
         <div
-          className="border-b border-warning/40 bg-warning/15 px-4 py-2 text-center text-[11px] font-medium text-warning-content sm:text-xs"
+          className="border-b border-warning/60 bg-warning/20 px-4 py-2 text-center text-[11px] font-medium text-base-content sm:text-xs"
           role="region"
           aria-label="Demo warning"
         >

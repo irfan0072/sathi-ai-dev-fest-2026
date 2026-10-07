@@ -4,10 +4,11 @@ import { api } from '../../api';
 import { StateBar } from '../Charts';
 import { eventLabel } from '../../copy';
 import {
-  Alert, Bars, Kpi, LiveDot, PageHead, Panel, bdt, compact, num, pct, timeAgo, usePoll,
+  Alert, Bars, Kpi, LiveDot, PageHead, Panel, bdt, compact, num, pct, timeAgo, useDeployment, usePoll,
 } from './kit';
 
 function Simulator({ sim, onChange }) {
+  const { readOnly } = useDeployment();
   const [rate, setRate] = useState(sim?.rate_per_minute ?? 12);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -17,6 +18,14 @@ function Simulator({ sim, onChange }) {
     catch (err) { setError(err.message); }
     finally { setBusy(false); }
   };
+  if (readOnly) {
+    return (
+      <div className="rounded-box border border-base-300 bg-base-100 px-3 py-2 text-sm" data-testid="simulator-disabled">
+        <span className="font-medium">Live traffic simulator</span>{' '}
+        <span className="muted">Disabled in the public demo (it changes platform settings). Record a cash-out as an agent to see the workflow.</span>
+      </div>
+    );
+  }
   return (
     <div className="flex flex-wrap items-center gap-2 rounded-box border border-base-300 bg-base-100 px-3 py-2">
       <span className="text-sm font-medium">Live traffic simulator</span>

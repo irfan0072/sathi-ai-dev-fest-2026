@@ -189,6 +189,7 @@ export const api = {
   }),
   getReceipt: (id) => request(`/api/v1/receipts/${encodeURIComponent(id)}`),
   getMetricsSummary: () => request('/api/v1/metrics/summary'),
+  getAgentBenchmarkV2: () => request('/api/v1/metrics/agent-benchmark-v2'),
   getVoiceConfig: () => request('/api/v1/voice/config'),
   getSettingsReadiness: () => request('/api/v1/settings/readiness'),
   runSettingsProbe: (only) => request(

@@ -64,7 +64,7 @@ export default function Header({ title = '', session = null, onLogin = () => {},
 
       <div className="flex items-center gap-2">
         {deployment?.simulated_only && (
-          <span className="badge badge-warning badge-soft hidden py-3 text-xs font-medium md:inline-flex" title={deployment.label} data-testid="deployment-mode">
+          <span className="badge badge-outline border-warning bg-warning/20 text-base-content hidden py-3 text-xs font-medium md:inline-flex" title={deployment.label} data-testid="deployment-mode">
             Public simulated demo
           </span>
         )}

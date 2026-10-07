@@ -61,6 +61,7 @@ class DigitResult:
     twiml: str
     spoken: list[str]
     mandate_status: str | None
+    input_mode: str | None = None  # "dtmf_only" when the next step is keypad-only
 
 
 def mask_number(number: str) -> str:
@@ -277,7 +278,8 @@ class VoiceService:
             with conn.cursor() as cur:
                 cur.execute(
                     "SELECT call_id, mandate_id, user_id, provider, to_masked, status, "
-                    "digit_attempts, created_at, updated_at, check_id, language, no_input_count "
+                    "digit_attempts, created_at, updated_at, check_id, language, no_input_count, "
+                    "input_mode, speech_unusable_count "
                     f"FROM voice_calls {where};",
                     params,
                 )
@@ -292,6 +294,7 @@ class VoiceService:
             "to": r[4], "status": r[5], "digit_attempts": r[6],
             "created_at": r[7].isoformat(), "updated_at": r[8].isoformat(),
             "language": r[10], "no_input_count": r[11],
+            "input_mode": r[12], "speech_unusable_count": r[13],
         }
 
     # ---------------------------------------------------------------- authentication
@@ -317,6 +320,22 @@ class VoiceService:
         return True
 
     @staticmethod
+    def _speech_allowed(call: dict[str, Any]) -> bool:
+        """Speech is only collected for post-cash-out checks and only until it has failed once;
+        after that the provider is asked for the keypad only (`input="dtmf"`)."""
+        return bool(call.get("check_id")) and call.get("input_mode", "speech_dtmf") != "dtmf_only"
+
+    def _force_dtmf(self, call_id: str, reason: str) -> None:
+        """Persist keypad-only mode. Irreversible for this call."""
+        with self.mandates.get_connection() as conn, conn.cursor() as cur:
+            cur.execute(
+                "UPDATE voice_calls SET input_mode = 'dtmf_only', "
+                "speech_unusable_count = speech_unusable_count + 1, "
+                "input_mode_reason = COALESCE(input_mode_reason, %s), updated_at = now() "
+                "WHERE call_id = %s;", (reason[:60], call_id))
+            conn.commit()
+
+    @staticmethod
     def prompt_for(call: dict[str, Any]) -> str:
         return scripts.line(call.get("language"), scripts.prompt_key(call))
 
@@ -325,7 +344,8 @@ class VoiceService:
         if call["status"] not in LIVE_STATUSES:
             return twiml.close(call.get("language", "bn"))
         self._set_status(call_id, "in_progress")
-        return twiml.gather(gather_url, self.prompt_for(call), speech=bool(call.get("check_id")),
+        return twiml.gather(gather_url, self.prompt_for(call),
+                            speech=self._speech_allowed(call),
                             language=call.get("language", "bn"))
 
     def provider_status(self, call_id: str, provider_status: str) -> dict[str, Any]:
@@ -368,14 +388,21 @@ class VoiceService:
         self._set_status(call_id, "in_progress", digit_attempts=attempts)
 
         if call.get("check_id"):
-            if no_input and not has_speech:
+            # An empty callback (no digits, no speech, or only the finish key) is silence or a
+            # timeout. It is never a denial: only the explicit "*" command or an explicit
+            # spoken phrase is. Do not rely on provider-specific fields such as FinishedOnKey.
+            if not invalid_input and (no_input or not raw.replace("#", "")) and not has_speech:
                 return self._no_input(call, gather_url)
             special = self._check_keys(call, raw, speech_text, gather_url)
             if special is not None:
                 return special
             return self._check_digits(call_id, call["check_id"], raw[:12], gather_url,
                                       speech=speech_text, confidence=confidence, language=lang,
-                                      invalid_input=invalid_input)
+                                      invalid_input=invalid_input,
+                                      input_mode=call.get("input_mode", "speech_dtmf"))
+
+        if digits == "" and "*" not in raw:
+            return self._mandate_no_input(call, gather_url)
 
         if digits == "":
             status = self._reject(
@@ -423,6 +450,21 @@ class VoiceService:
         return DigitResult("mismatch", twiml.close(lang), [scripts.line(lang, "close")],
                            result["status"])
 
+    def _mandate_no_input(self, call: dict[str, Any], gather_url: str) -> DigitResult:
+        """Empty answer on a withdrawal request: ask again once, then end as unanswered. It is
+        not a refusal, so no case is opened from it."""
+        lang = call.get("language", "bn")
+        count = call.get("no_input_count", 0) + 1
+        self._bump_no_input(call["call_id"], count)
+        if count < 2:
+            text = scripts.line(lang, "no_input_mandate")
+            return DigitResult("in_progress", twiml.gather(gather_url, text, language=lang),
+                               [text], None)
+        self._set_status(call["call_id"], "no_answer")
+        self._record_no_answer(call["mandate_id"])
+        text = scripts.line(lang, "goodbye_no_input")
+        return DigitResult("no_answer", twiml.close(lang, text), [text], "no_answer")
+
     def _no_input(self, call: dict[str, Any], gather_url: str) -> DigitResult:
         """Silence: ask once more kindly, then end and let the scheduler retry later."""
         from app.callcenter.service import CallCenterService
@@ -433,10 +475,12 @@ class VoiceService:
         CallCenterService(self.mandates).record_response(
             call["check_id"], "no_input", call_id=call["call_id"])
         if count < 2:
+            # A speech timeout: the next step is keypad-only, persisted across callbacks.
+            self._force_dtmf(call["call_id"], "speech_timeout")
+            text = scripts.line(lang, "no_input")
             return DigitResult("in_progress",
-                               twiml.gather(gather_url, scripts.line(lang, "no_input"),
-                                            speech=True, language=lang),
-                               [scripts.line(lang, "no_input")], None)
+                               twiml.gather(gather_url, text, speech=False, language=lang),
+                               [text], None, "dtmf_only")
         self._set_status(call["call_id"], "no_answer")
         self._no_answer(call)
         text = scripts.line(lang, "goodbye_no_input")
@@ -469,13 +513,15 @@ class VoiceService:
                                    raw=new)
             prompt = scripts.line(new, "check_prompt")
             return DigitResult("in_progress",
-                               twiml.gather(gather_url, prompt, speech=True, language=new),
+                               twiml.gather(gather_url, prompt,
+                                            speech=self._speech_allowed(call), language=new),
                                [prompt], None)
         return None
 
     def _check_digits(self, call_id: str, check_id: int, raw: str, gather_url: str,
                       speech: str | None = None, confidence: Any = None,
-                      language: str = "bn", invalid_input: bool = False) -> DigitResult:
+                      language: str = "bn", invalid_input: bool = False,
+                      input_mode: str = "speech_dtmf") -> DigitResult:
         from app.callcenter.interpret import Answer, interpret
         from app.callcenter.service import CallCenterService
         from app.txn.service import TxnCheckService
@@ -490,10 +536,19 @@ class VoiceService:
             center.on_unclear(check_id, call_id, answer.raw, answer.confidence,
                               final=result != "retry", reason=answer.reason)
             if result == "retry":
-                text = scripts.line(language, "unclear")
+                unusable_speech = bool((speech or "").strip()) or invalid_input
+                if unusable_speech and input_mode != "dtmf_only":
+                    # Unusable, low-confidence or unconfirmed speech: the provider is asked for
+                    # the keypad only from now on (persisted, so a restart cannot undo it).
+                    self._force_dtmf(call_id, answer.reason or "unusable_speech")
+                    input_mode = "dtmf_only"
+                text = scripts.line(language, "keypad_only" if input_mode == "dtmf_only"
+                                    else "unclear")
                 return DigitResult("in_progress",
-                                   twiml.gather(gather_url, text, speech=True, language=language),
-                                   [text], None)
+                                   twiml.gather(gather_url, text,
+                                                speech=input_mode != "dtmf_only",
+                                                language=language),
+                                   [text], None, input_mode)
             self._set_status(call_id, "unclear")
             return DigitResult("unclear", twiml.close(language),
                                [scripts.line(language, "close")], result)
@@ -508,8 +563,9 @@ class VoiceService:
         if result == "retry":
             text = scripts.line(language, "retry")
             return DigitResult("in_progress",
-                               twiml.gather(gather_url, text, speech=True, language=language),
-                               [text], None)
+                               twiml.gather(gather_url, text,
+                                            speech=input_mode != "dtmf_only", language=language),
+                               [text], None, input_mode)
         check = checks.get(check_id) or {}
         center.on_resolved(check_id, check.get("status", ""))
         call_status = {"match": "verified", "mismatch": "mismatch", "denied": "rejected",

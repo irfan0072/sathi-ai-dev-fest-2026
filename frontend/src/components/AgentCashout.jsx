@@ -10,8 +10,8 @@ function FlowSteps({ last }) {
   const state = last?.check;
   const steps = [
     { label: 'Cash given', done: Boolean(last) },
-    { label: 'Sathi calls the customer', done: state === 'done' || state === 'missed', active: state === 'waiting' },
-    { label: 'Confirmation done', done: state === 'done' },
+    { label: 'Sathi calls the customer', done: ['done', 'missed', 'unreachable', 'manual'].includes(state), active: state === 'waiting' },
+    { label: 'Confirmation finished', done: state === 'done' },
   ];
   return (
     <ul className="steps steps-vertical w-full sm:steps-horizontal">
@@ -105,10 +105,12 @@ export default function AgentCashout({ session }) {
                   <span className="muted">fee {takaFmt(last.fee)} · customer {phone(last.user_id)} · receipt #{last.txn_id}</span>
                 </div>
                 <FlowSteps last={last} />
-                <div className={`alert alert-soft text-sm ${last.check === 'missed' ? 'alert-warning' : last.check === 'done' ? 'alert-success' : 'alert-info'}`}>
+                <div className={`alert alert-soft text-sm ${['missed', 'unreachable'].includes(last.check) ? 'alert-warning' : last.check === 'done' ? 'alert-success' : 'alert-info'}`}>
                   {last.check === 'waiting' && <span className="loading loading-ring loading-sm" />}
-                  <span>{last.check === 'done' ? 'The customer has answered the confirmation call. Nothing else to do.'
+                  <span>{last.check === 'done' ? 'The confirmation call is finished. Nothing else to do.'
                     : last.check === 'missed' ? 'The customer did not answer. A supervisor will follow up.'
+                      : last.check === 'unreachable' ? 'The customer could not be reached after several tries. Nothing was confirmed.'
+                        : last.check === 'manual' ? 'A supervisor will follow up with the customer.'
                       : 'Sathi is calling the customer to confirm the amount.'}</span>
                 </div>
               </>

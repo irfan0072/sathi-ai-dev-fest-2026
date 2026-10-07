@@ -123,6 +123,7 @@ export function IncomingCall({ onFinished }) {
   }, [answered]);
 
   const [said, setSaid] = useState('');
+  const [keypadOnly, setKeypadOnly] = useState(false);
   const send = async (speech = null, { confidence = 0.32, noInput = false } = {}) => {
     setError('');
     try {
@@ -132,6 +133,7 @@ export function IncomingCall({ onFinished }) {
           ? await api.answerSimulatedSpeech({ callId: incoming.call_id, speech, confidence })
           : await api.answerSimulatedCall({ callId: incoming.call_id, digits });
       setSpoken(result.spoken_bn); setDigits('');
+      if (result.input_mode === 'dtmf_only') setKeypadOnly(true);
       if (result.call_ended) {
         setEnded(true);
         if (!incoming.mandate_id) { onFinished(null); return; }
@@ -144,7 +146,9 @@ export function IncomingCall({ onFinished }) {
   };
   const press = (key) => {
     if (key === '#') { send(); return; }
-    if (key !== '*') setDigits((prev) => (prev + key).slice(0, 8));
+    // "*" alone is the explicit "I did not make this cash-out" key; it is not an amount digit.
+    if (key === '*') { setDigits('*'); return; }
+    setDigits((prev) => (prev === '*' ? key : prev + key).slice(0, 8));
   };
 
   if (!incoming && !answered) {
@@ -208,9 +212,10 @@ export function IncomingCall({ onFinished }) {
                 ))}
               </div>
               <p className="muted mt-2">
-                Type the cash you got, then press #. If you did not take any cash, just press #.
+                Type the cash you got, then press #. If you did not make this cash-out, press * then #. Pressing only # does nothing.
               </p>
-              {!incoming.mandate_id && (
+              {keypadOnly && <p className="muted mt-1 text-center text-[11px]" data-testid="keypad-only">Keypad only now: speech is switched off for this call.</p>}
+              {!incoming.mandate_id && !keypadOnly && (
                 <>
                   <p className="muted mt-1 text-center text-[11px]">9 # talk to a person · 8 # English / বাংলা</p>
                   <form
@@ -229,7 +234,7 @@ export function IncomingCall({ onFinished }) {
                   <div className="mt-1 grid grid-cols-2 gap-1">
                     <button type="button" className="btn btn-ghost btn-xs border-dashed border-base-300 focus-ring"
                       onClick={() => send('উম... আমি ঠিক বুঝতে পারছি না')}
-                      title="Say something the AI cannot understand. Twice sends the call to a supervisor.">
+                      title="Say something the call cannot understand. Twice sends the call to a supervisor.">
                       Mumble (unclear)
                     </button>
                     <button type="button" className="btn btn-ghost btn-xs border-dashed border-base-300 focus-ring"

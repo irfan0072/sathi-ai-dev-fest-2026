@@ -40,7 +40,7 @@ BEHAVIOURS = (
     (850, "unclear"),        # mumbles twice -> manual supervisor queue
     (870, "human"),          # presses 9 to talk to a person
     (930, "mismatch"),       # types a lower amount twice -> suspicious + case
-    (970, "deny"),           # presses # alone: "I did not do this"
+    (970, "deny"),           # presses * : the explicit "I did not do this"
     (990, "confirm_retry"),  # wrong first, right second
     (1000, "duress"),        # secret help signal
 )
@@ -267,7 +267,7 @@ class Worker:
                     voice.handle_digits(call_id, "", "", speech=random.choice(MUMBLES),
                                         confidence=round(random.uniform(0.15, 0.5), 2))
                 elif behaviour == "deny":
-                    voice.handle_digits(call_id, "", "")
+                    voice.handle_digits(call_id, "*", "")
                 elif behaviour == "duress":
                     voice.handle_digits(call_id, f"0{amount}", "")
                 elif behaviour == "mismatch":

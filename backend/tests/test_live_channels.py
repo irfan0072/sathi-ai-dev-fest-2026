@@ -201,12 +201,24 @@ def test_silent_duress_holds_mandate_and_hides_outcome(
     assert ok["spoken_bn"] == normal_close
 
 
-def test_empty_answer_means_customer_denied(simulated_voice, durable_service):
+def test_empty_answer_is_silence_not_denial(simulated_voice, durable_service):
+    mandate_id = _request()["mandate_id"]
+    client.post(f"/api/v1/mandates/{mandate_id}/call", headers=AGENT)
+    call_id = simulated_voice.latest_for_mandate(mandate_id)["call_id"]
+    # An empty answer is silence: asked again once, then unanswered. Never a refusal.
+    for _ in range(2):
+        client.post(f"/api/v1/voice/calls/{call_id}/simulated-answer", headers=CUSTOMER,
+                    json={"digits": ""})
+    assert durable_service.mandates.get(mandate_id).status == "requested"
+    assert not _cases(durable_service, "customer_denied_request")
+
+
+def test_star_is_the_explicit_mandate_denial(simulated_voice, durable_service):
     mandate_id = _request()["mandate_id"]
     client.post(f"/api/v1/mandates/{mandate_id}/call", headers=AGENT)
     call_id = simulated_voice.latest_for_mandate(mandate_id)["call_id"]
     client.post(f"/api/v1/voice/calls/{call_id}/simulated-answer", headers=CUSTOMER,
-                json={"digits": ""})
+                json={"digits": "*"})
     assert durable_service.mandates.get(mandate_id).status == "rejected"
     assert _cases(durable_service, "customer_denied_request")
 

@@ -48,7 +48,7 @@ const trackMap = [
 ];
 
 const pipeline = [
-  { layer: 'Data', desc: 'Live PostgreSQL ledger: 5M synthetic customers, 20k agents, real-time cash-outs' },
+  { layer: 'Data', desc: 'Live PostgreSQL ledger of synthetic customers and agents. A 5-million-customer table was used once as a performance (scale) test; the counts on screen are the live runtime counts' },
   { layer: 'Patterns', desc: 'How people usually pay and cash out' },
   { layer: 'AI', desc: 'Spots unusual activity and predicts needs' },
   { layer: 'Rules', desc: 'Fixed safety rules for every cash-out' },
@@ -88,8 +88,8 @@ export default function ArchitecturePage() {
               PIN to the agent. Now someone else can take her money.
             </p>
             <p className="text-sm text-base-content/80">
-              We estimate <strong>30–50% of village cash-outs</strong> happen this way (our estimate, not official
-              upay numbers).
+              Agent-assisted cash-out is a widely reported pattern, but <strong>we have no measured
+              share for Bangladesh</strong>: no number here comes from upay or from a survey of our own.
             </p>
             <blockquote
               lang="bn"
@@ -113,7 +113,7 @@ export default function ArchitecturePage() {
               {[
                 'Every cash-out is checked, not only risky ones',
                 'We call her registered phone; the call never says the amount',
-                'Secret help: if forced, she types 0 first (like 03000). It looks normal, but the cash is stopped and a supervisor is alerted',
+                'Secret help: if forced, she types 0 first (like 03000). It looks normal to anyone nearby. The money has already left the account, so Sathi cannot stop it; an urgent case goes to a supervisor, who needs an independent contact before anything is cleared',
                 'A different amount is marked suspicious, never “fraud”',
                 'Agents never see the result, so they cannot pressure the customer',
               ].map((item) => (

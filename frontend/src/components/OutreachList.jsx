@@ -19,7 +19,7 @@ export function OutreachGuide() {
     <PageGuide
       what="Some customers (older people, people who cannot read well, students on allowance) let an agent do the cash-out for them. They are the people most often cheated. This page finds them, so upay can offer Sathi’s free confirmation call to them first."
       steps={[
-        'Sathi takes every customer active in the last 30 days from the live database.',
+        'Sathi scores a capped pool (at most 6,000) of the most recently active customers from the live database, not every customer.',
         'It measures behaviour: how long the PIN takes, how many steps a payment needs, how often an agent does it for them, how much of the balance they withdraw at once.',
         'A trained LightGBM model turns these signals into a chance (0-100%) that the person needs help.',
         'For any customer, “Why?” shows which signals raised or lowered their score.',

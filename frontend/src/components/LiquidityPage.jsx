@@ -58,9 +58,22 @@ export function LiquidityGuide({ agent = false }) {
   );
 }
 
-function AgentAdvice({ agent }) {
+export function AgentAdvice({ agent }) {
   if (!agent) return null;
-  const ratio = agent.typical_daily_bdt ? agent.peak_p90_bdt / agent.typical_daily_bdt : null;
+  if (agent.history_supported === false) {
+    return (
+      <div className="rounded-box border border-warning/50 bg-warning/10 p-3 text-sm" data-testid="thin-history">
+        <strong>Not enough history for agent-specific advice.</strong> This agent had cash-outs on only{' '}
+        {agent.active_days_28} of the last 28 days (recent peak {bdt(agent.max_daily_35d_bdt)}). The
+        forecast above comes from the model, but it is not reliable for such a thin record, so no
+        peak-versus-usual ratio is shown.{' '}
+        {agent.peer_peak_p90_bdt != null
+          ? <>Qualified peer estimate (median of similar agents with enough history): keep about <strong>{bdt(agent.recommended_opening_float_bdt)}</strong> ready on the busiest day. This is a peer estimate, not this agent&apos;s own pattern.</>
+          : 'No comparable peers with enough history either, so there is no cash advice yet.'}
+      </div>
+    );
+  }
+  const ratio = agent.pressure_ratio ?? (agent.typical_daily_bdt ? agent.peak_p90_bdt / agent.typical_daily_bdt : null);
   return (
     <div className="rounded-box bg-base-200 p-3 text-sm">
       On <strong>{dayName(agent.peak_date)}</strong> this agent may need up to <strong>{bdt(agent.peak_p90_bdt)}</strong>
@@ -104,7 +117,7 @@ export function AgentForecast({ data }) {
   return (
     <div className="flex flex-col gap-4">
       <div className="grid gap-3 sm:grid-cols-3">
-        <Tile label="Keep this much cash ready" value={bdt(data.recommended_opening_float_bdt)} note={`on ${data.peak_date}`} />
+        <Tile label={data.history_supported === false ? 'Peer estimate: cash to keep ready' : 'Keep this much cash ready'} value={bdt(data.recommended_opening_float_bdt)} note={data.history_supported === false ? 'peers with enough history, not this agent' : `on ${data.peak_date}`} />
         <Tile label="Busiest day coming" value={bdt(data.peak_p90_bdt)} note={data.peak_date} />
         <Tile label="Your busiest day last month" value={bdt(data.max_daily_35d_bdt)} note={data.exceeds_recent_max ? 'More customers than usual are coming. Keep extra cash.' : data.max_daily_35d_bdt == null ? 'No past data yet' : 'Normal week ahead'} />
       </div>
@@ -115,7 +128,7 @@ export function AgentForecast({ data }) {
           <AgentAdvice agent={data} />
           <DayTable days={data.days} />
           <p className="muted">
-            {data.basis?.startsWith('own') ? 'Based on your past cash-outs.' : 'Based on agents like you, because you have no history yet.'}{' '}
+            {data.basis?.startsWith('own') ? 'Based on your past cash-outs.' : data.basis?.startsWith('qualified') ? 'Qualified peer estimate: your own history is too thin.' : 'Based on agents like you, because you have no history yet.'}{' '}
             This only helps you plan; it never limits a customer&apos;s cash-out.
           </p>
         </div>

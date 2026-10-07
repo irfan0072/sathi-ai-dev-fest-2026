@@ -5,11 +5,12 @@ import CaseBrief from './CaseBrief';
 import { WatchButton } from './CommandCenter';
 import { caseStatus, eventLabel, priorityName, reasonLabel } from '../copy';
 import { phone } from '../ids';
+import { FollowupNotice } from './ops/kit';
 
 const decisions = [
-  { id: 'approved', label: 'Approve', tone: 'btn-success' },
-  { id: 'denied', label: 'Deny', tone: 'btn-error' },
-  { id: 'escalated', label: 'Send to fraud team', tone: 'btn-warning' },
+  { id: 'approved', label: 'Cleared: no wrongdoing', tone: 'btn-success' },
+  { id: 'denied', label: 'Problem confirmed', tone: 'btn-error' },
+  { id: 'escalated', label: 'Escalate to fraud team', tone: 'btn-warning' },
 ];
 const priorityTone = { urgent: 'badge-error', high: 'badge-warning', normal: 'badge-ghost' };
 const statusTone = (status) => (status === 'open' ? 'badge-info' : status === 'escalated' ? 'badge-error' : 'badge-ghost');
@@ -27,11 +28,11 @@ const slaText = (c) => {
   return left >= 0 ? `${fmt(left)} left to respond` : `${fmt(left)} late`;
 };
 
-function Timeline({ caseId }) {
+function Timeline({ caseId, onFollowup = () => {} }) {
   const [events, setEvents] = useState(null);
   useEffect(() => {
     let live = true;
-    api.getCaseTimeline(caseId).then((v) => { if (live) setEvents(v.events); }).catch(() => { if (live) setEvents([]); });
+    api.getCaseTimeline(caseId).then((v) => { if (live) { setEvents(v.events); onFollowup(v.followup); } }).catch(() => { if (live) setEvents([]); });
     return () => { live = false; };
   }, [caseId]);
   if (!events) return <span className="loading loading-dots loading-xs" />;
@@ -57,6 +58,7 @@ export default function ReviewQueue({ initialCaseId = null, session = null }) {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
+  const [followup, setFollowup] = useState(null);
 
   const canDecide = session?.role !== 'supervisor';
   const canWatchlist = session?.role !== 'supervisor';
@@ -191,7 +193,7 @@ export default function ReviewQueue({ initialCaseId = null, session = null }) {
                 <CaseBrief key={selected.case_id} caseId={selected.case_id} canGenerate={canDecide} />
                 <details className="collapse collapse-arrow bg-base-200" open>
                   <summary className="collapse-title min-h-0 py-2 text-sm">What happened, step by step</summary>
-                  <div className="collapse-content"><Timeline key={selected.case_id} caseId={selected.case_id} /></div>
+                  <div className="collapse-content"><Timeline key={selected.case_id} caseId={selected.case_id} onFollowup={setFollowup} /></div>
                 </details>
                 <details className="collapse collapse-arrow bg-base-200">
                   <summary className="collapse-title min-h-0 py-2 text-sm">Technical details</summary>
@@ -208,7 +210,8 @@ export default function ReviewQueue({ initialCaseId = null, session = null }) {
                         onChange={(e) => setNote(e.target.value)}
                       />
                     </label>
-                    <div className="grid grid-cols-3 gap-2">
+                    <FollowupNotice followup={followup} />
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                       {decisions.map((d) => (
                         <button
                           key={d.id}

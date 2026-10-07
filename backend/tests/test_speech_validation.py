@@ -81,8 +81,10 @@ def test_valid_paths_still_work():
 
 
 def test_silence_denial_keypad_help_and_duress_keep_their_meaning():
-    assert interpret("", None, None).kind == "denied"                    # '#' alone
-    assert interpret("#", None, None).kind == "denied"
+    assert interpret("", None, None).kind == "unclear"                   # empty: never denial
+    assert interpret("#", None, None).kind == "unclear"                  # finish key alone
+    assert interpret("*", None, None).kind == "denied"                   # explicit keypad denial
+    assert interpret("*#", None, None).kind == "denied"
     assert interpret("", "ami kori nai", 0.9).kind == "denied"           # explicit denial phrase
     assert interpret("", "na", 0.9).kind == "unclear"                    # bare 'no' is not denial
     assert interpret("", "ami kori nai", None).kind == "unclear"         # no confidence: keypad

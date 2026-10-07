@@ -18,7 +18,7 @@ const RESULTS = [
 ];
 const interpretedText = {
   amount: 'said an amount', denied: 'said they did not do it', duress: 'secret help signal',
-  unclear: 'AI could not understand', no_answer: 'did not pick up', callback: 'asked for call back',
+  unclear: 'could not be understood', no_answer: 'did not pick up', callback: 'asked for call back',
   unreachable: 'unreachable', no_input: 'stayed silent', human_requested: 'asked for a person',
   language_switch: 'switched language',
 };
@@ -212,7 +212,7 @@ function TaskDetail({ taskId, session, supervisors, onChanged, onClose }) {
           <ol className="flex flex-col gap-1.5 text-sm">
             {task.responses.map((r) => (
               <li key={r.response_id} className="flex flex-wrap items-baseline gap-x-2 rounded-lg bg-base-200/60 px-2 py-1">
-                <Badge tone={r.interpreted === 'unclear' ? 'badge-secondary' : r.interpreted === 'no_answer' ? 'badge-ghost' : 'badge-info'}>{r.channel === 'manual' ? 'Supervisor' : 'AI call'}</Badge>
+                <Badge tone={r.interpreted === 'unclear' ? 'badge-secondary' : r.interpreted === 'no_answer' ? 'badge-ghost' : 'badge-info'}>{r.channel === 'manual' ? 'Supervisor' : 'Automated call'}</Badge>
                 <span>{interpretedText[r.interpreted] || r.interpreted}{r.amount != null ? `: ৳${r.amount}` : ''}</span>
                 {r.raw_input && <span className="muted italic">"{r.raw_input}"</span>}
                 {r.confidence != null && <span className="muted">· confidence {pct(r.confidence)}</span>}
@@ -346,8 +346,8 @@ export default function CallCenter({ session }) {
       <PageHead
         title={isAdmin ? 'Call management' : 'Call queue'}
         lead={isAdmin
-          ? 'Every confirmation call: automatic retries for missed calls, customers marked unreachable after all retries, and answers the AI could not understand waiting for a supervisor.'
-          : 'Customers the AI could not confirm. Take a call from the pending list, phone the customer, and record what they said. Two supervisors can never take the same call.'}
+          ? 'Every confirmation call: automatic retries for missed calls, customers marked unreachable after all retries, and answers that could not be understood waiting for a supervisor.'
+          : 'Customers the automated call could not confirm. Take a call from the pending list, phone the customer, and record what they said. Two supervisors can never take the same call.'}
       >
         <LiveDot />
         {isAdmin && <button className="btn btn-sm btn-primary focus-ring" onClick={distribute}>Share pending calls evenly</button>}
@@ -379,7 +379,7 @@ export default function CallCenter({ session }) {
       <div className={`grid gap-4 ${selected ? 'xl:grid-cols-[1fr_1fr]' : ''}`}>
         <Panel bodyClass="p-0">
           {items.length === 0 ? (
-            <Empty title={data ? 'Nothing here right now' : 'Loading…'} body={scope === 'pending' ? 'When the AI cannot confirm a customer, the call appears here.' : undefined} />
+            <Empty title={data ? 'Nothing here right now' : 'Loading…'} body={scope === 'pending' ? 'When the automated call cannot confirm a customer, it appears here.' : undefined} />
           ) : (
             <div className="overflow-x-auto">
               <table className="table table-sm">

@@ -11,7 +11,7 @@ export function UpliftGuide() {
     <PageGuide
       what="Inviting customers to Sathi costs money (SMS ৳0.5, call ৳3, agent visit ৳40). Some people would join without an invite, and some will never join. This page finds the people an invite actually changes, so the budget is not wasted."
       steps={[
-        'In a past test, half of the customers got an invite at random and half did not.',
+        'In a generated, randomised experiment (synthetic: the outcomes were simulated from stated assumptions, not observed), half of the customers got an invite at random and half did not.',
         'Two LightGBM models learn the chance of joining with an invite and without one (a “T-learner”).',
         'The difference is the uplift: how much the invite itself raises that person’s chance.',
         'Each customer is scored from their live activity in the last 30 days, and ranked by uplift.',

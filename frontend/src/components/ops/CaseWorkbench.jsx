@@ -5,7 +5,7 @@ import Icon from '../Icon';
 import CaseBrief from '../CaseBrief';
 import { WatchButton } from '../CommandCenter';
 import {
-  Alert, AssignMenu, Badge, Empty, LiveDot, PageHead, Panel, Pager, Tabs, bdt, pct, priorityTone,
+  Alert, AssignMenu, Badge, Empty, FollowupNotice, LiveDot, PageHead, Panel, Pager, Tabs, bdt, pct, priorityTone,
   timeAgo, usePoll, useSupervisors, when,
 } from './kit';
 
@@ -72,8 +72,9 @@ function NoteBox({ caseId, onSaved }) {
   );
 }
 
-function AuditForm({ caseId, onSaved }) {
-  const [form, setForm] = useState({ decision: 'denied', risk_level: 'high', customer_contacted: true, findings: '', action_taken: '', recommendation: '' });
+export function AuditForm({ caseId, followup = null, onSaved }) {
+  // No decision and no "customer contacted" claim are pre-selected: both are deliberate choices.
+  const [form, setForm] = useState({ decision: '', risk_level: 'high', customer_contacted: false, findings: '', action_taken: '', recommendation: '' });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.type === 'checkbox' ? e.target.checked : e.target.value });
@@ -86,10 +87,12 @@ function AuditForm({ caseId, onSaved }) {
   return (
     <form onSubmit={submit} className="flex flex-col gap-3 rounded-box border border-secondary/30 bg-secondary/5 p-4">
       <div className="font-semibold">Audit report and decision</div>
+      <FollowupNotice followup={followup} />
       <div className="grid gap-3 sm:grid-cols-3">
         <label className="form-control">
           <span className="mb-1 text-xs font-medium">Decision</span>
-          <select className="select select-bordered select-sm focus-ring" value={form.decision} onChange={set('decision')}>
+          <select required className="select select-bordered select-sm focus-ring" value={form.decision} onChange={set('decision')}>
+            <option value="" disabled>Choose a decision…</option>
             <option value="approved">Cleared: no wrongdoing</option>
             <option value="denied">Problem confirmed</option>
             <option value="escalated">Escalate to fraud team</option>
@@ -103,7 +106,7 @@ function AuditForm({ caseId, onSaved }) {
         </label>
         <label className="flex items-center gap-2 pt-5 text-sm">
           <input type="checkbox" className="checkbox checkbox-sm" checked={form.customer_contacted} onChange={set('customer_contacted')} />
-          Customer contacted
+          I contacted the customer (tick only if you did)
         </label>
       </div>
       <label className="form-control">
@@ -217,7 +220,7 @@ function CaseFile({ caseId, session, supervisors, onChanged, onClose }) {
           <ul className="flex flex-col gap-1 text-xs">
             {file.responses.map((r, i) => (
               <li key={i} className="rounded bg-base-200/60 px-2 py-1">
-                <strong>{r.channel === 'manual' ? `Supervisor (${r.recorded_by})` : 'AI call'}</strong>: {r.interpreted}
+                <strong>{r.channel === 'manual' ? `Supervisor (${r.recorded_by})` : 'Automated call'}</strong>: {r.interpreted}
                 {r.amount != null ? ` ৳${r.amount}` : ''}{r.raw_input ? ` · "${r.raw_input}"` : ''}{r.confidence != null ? ` · ${pct(r.confidence)} sure` : ''}
                 <span className="muted"> · {timeAgo(r.at)}</span>
               </li>
@@ -247,7 +250,7 @@ function CaseFile({ caseId, session, supervisors, onChanged, onClose }) {
       {file.can_act && <NoteBox caseId={file.case_id} onSaved={load} />}
       {file.reports.length > 0 && <div className="text-sm font-semibold">Case audit</div>}
       {file.reports.map((r) => <ReportView key={r.report_id} r={r} />)}
-      {file.can_act && <AuditForm caseId={file.case_id} onSaved={() => { load(); onChanged(); }} />}
+      {file.can_act && <AuditForm caseId={file.case_id} followup={file.followup} onSaved={() => { load(); onChanged(); }} />}
       {open && !file.can_act && session.role === 'supervisor' && (
         <p className="muted">Take this case to add notes and write the audit report.</p>
       )}

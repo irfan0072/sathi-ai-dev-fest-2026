@@ -20,19 +20,22 @@ screen with the label *Hackathon concept, synthetic data*.
 
 **0:20-1:40 Complete protection and human follow-up (80 s).** Use the live console, three windows:
 
-1. *Agent* records a cash-out of ৳5,000. The agent sees only "waiting", then "checked".
-2. *Customer handset* rings. The call never says the amount. The customer types **3000**, twice.
-3. *Supervisor* opens **Call queue -> Independent follow-up**. The case shows the ledger and the
-   typed amount. The follow-up panel does not offer "reached independently" for the registered
-   number ("the agent may hold that phone"); the API refuses it with 422 if forced (the
-   `scripts/demo_scenario.py` transcript shows the refusal). Trying to **clear the case** is refused
-   (HTTP 409, independent contact required). Record the in-person contact (simulated in the demo;
-   a real one is pending), take the case, decide. The audit trail shows every step.
-4. Replay with the **help signal** (a leading zero): same neutral closing sentence for the
-   customer; an urgent case appears for staff; contact **uncertain** stays open and is escalated.
-5. One sentence on silence and speech: silence is never a denial; "about three thousand" is not
-   accepted as an exact amount; a provider outage retries and then reaches a person (the cash-out
-   is never reversed or debited twice).
+1. *Agent* records a cash-out of ৳700 (Cash-out page). The agent sees only "waiting", never a result.
+2. *Customer handset panel* (phone width) rings. Label it honestly: "ordinary phone-call
+   simulation; a real feature phone needs cellular voice coverage only, no app or mobile data".
+   The call never says the amount. The customer *says* something unclear ("umm...") and the handset
+   switches to **keypad only** (the speech box disappears; the provider is told `input=dtmf`).
+3. The customer types **0700#** (a leading zero is the silent help signal) and hears the same
+   neutral ending as for any other answer.
+4. *Supervisor* opens **Call queue -> Independent follow-up**: the help-signal task is **urgent** and
+   first, above an ordinary mismatch. The follow-up panel does not offer "reached independently" for
+   the registered number ("the agent may hold that phone"). *Analyst* opens the case: the page says
+   up front that clearing needs an independent contact; pressing **Cleared: no wrongdoing** is refused
+   (HTTP 409). Record an in-person contact (simulated in the demo; a real one is pending), then decide.
+5. Show separately, each in a few seconds: a **matching** answer (verified, no case), an **unanswered**
+   call (retry, then "Customer not reached", never "answered"), and **star** = the explicit
+   "I did not make this" key (an empty answer or a lone # is silence, never a denial).
+6. `scripts/demo_scenario.py` prints every step with its HTTP result if the live demo fails.
 
 **1:40-2:20 Quantified AI improvement with denominators (40 s).** Open `docs/evaluation-agent-v2.md`.
 "The canonical test had 60 agents and 2 skimmers, so we built an independent synthetic benchmark:
@@ -66,6 +69,15 @@ the fixed threshold, and the economics are negative unless a separate interventi
 All of it is synthetic; we need a governed pilot to know more."
 
 ## Likely judge questions (realistic answers)
+
+- **Does it work on a feature phone with no mobile data?** The intended path is an ordinary
+  cellular voice call: Bangla prompt, then spoken amount or keypad. Locally implemented and tested:
+  keypad-only fallback (persisted, provider told `input=dtmf`), empty-callback-is-not-denial, `*` as
+  explicit denial, urgent help-signal follow-up. Simulated here: the handset and the provider.
+  Pending: a provisioned voice/IVR provider, Bangla audio, caller-number permission, and a field
+  test. Without voice coverage the check stays pending and goes to a person; it is never confirmed.
+- **What about USSD?** A separate service needing an operator or aggregator and an assigned code. Not
+  built, no code invented. The adapter rules are in `docs/feature-phone-channels.md`.
 
 - **Is the Bangla speech recognition fine-tuned?** No. The call provider transcribes; a word
   parser reads the amount afterwards. Approximate, conflicting or low-confidence speech goes to the

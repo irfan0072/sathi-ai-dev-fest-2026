@@ -7,7 +7,7 @@ import { phone } from '../ids';
 const levelStyle = {
   high: { box: 'border-error/50 bg-error/10', badge: 'badge-error', title: 'Please check carefully before you send' },
   caution: { box: 'border-warning/60 bg-warning/10', badge: 'badge-warning', title: 'Be careful with this number' },
-  none: { box: 'border-success/40 bg-success/10', badge: 'badge-success', title: 'No reports found' },
+  none: { box: 'border-base-300 bg-base-200/60', badge: 'badge-ghost', title: 'No community alerts found (this is not a safety guarantee)' },
 };
 const ID_TYPES = [
   ['upay_number', 'upay number'], ['facebook', 'Facebook page'], ['instagram', 'Instagram'],
@@ -25,7 +25,7 @@ function RiskBox({ check }) {
   return (
     <div className={`flex flex-col gap-2 rounded-box border p-4 ${style.box}`} role="status">
       <div className="flex flex-wrap items-center gap-2">
-        <Icon name={check.warning_level === 'none' ? 'check' : 'warning'} className="size-5" />
+        <Icon name={check.warning_level === 'none' ? 'info' : 'warning'} className="size-5" />
         <strong>{check.advisory?.title || style.title}</strong>
         <span className="font-mono text-sm">{check.masked}</span>
         {check.paid_before && <Badge tone="badge-ghost">you paid before</Badge>}
@@ -217,7 +217,7 @@ function ReportForm({ onDone, preset }) {
       </div>
       <Alert>{error}</Alert>
       <div className="flex items-center justify-between gap-3">
-        <p className="muted text-xs">Your report is anonymous: nobody, including upay staff, can see who posted it.</p>
+        <p className="muted text-xs">Your name and number are not shown to other customers and the record keeps only a keyed hash of the reporter. That is pseudonymous, not an absolute guarantee: whoever holds the system key and the data could in principle link a report.</p>
         <button className="btn btn-primary btn-sm focus-ring" disabled={busy}>Post report</button>
       </div>
     </form>
@@ -250,7 +250,7 @@ export function CommunityPage() {
         <div className="grid gap-3 sm:grid-cols-3">
           <Kpi icon="warning" label="Reports in the last 30 days" value={feed.stats_30d.reports} tone="bg-error/15 text-error" />
           <Kpi icon="receipt" label="Money reported lost" value={bdt(feed.stats_30d.amount_lost)} />
-          <Kpi icon="shield" label="Your identity" value="Always hidden" note="Reports are anonymous" tone="bg-success/15 text-success" />
+          <Kpi icon="shield" label="Your identity" value="Not shown" note="Pseudonymous reports" tone="bg-success/15 text-success" />
         </div>
       )}
       <Tabs items={[{ id: 'check', label: 'Check a seller' }, { id: 'report', label: 'Report a scam' }, { id: 'mine', label: 'My reports' }]} value={tab} onChange={setTab} />

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
+import ExtendedBenchmarkTab from './ExtendedBenchmarkTab';
 import PageGuide from './PageGuide';
 
 const of10 = (v) => (v == null ? '?' : Math.round(v * 10));
@@ -10,6 +11,7 @@ const tabHelp = {
   agents: 'Can the AI find agents who cheat (skimmers) without blaming honest busy agents? Skimmer recall: share of cheating agents found. Honest HV false flags: honest high-volume agents wrongly flagged (lower is better).',
   adoption: 'A simulation: if a share of eligible customers used Sathi, how much skimming loss would be stopped? It assumes everyone follows the process, so it is an upper limit, not a measured result.',
   robustness: 'Does the AI still work when cheating is lighter or heavier, when some signals are removed, or when training labels are noisy?',
+  extended: 'A larger synthetic benchmark added in the final round: 3 independent replications, final held-out cohorts scored once. Synthetic, hash-verified, and it keeps the subtle-skimming failure visible. The tabs to the left are the original 60-agent canonical run, unchanged.',
   fairness: 'Does the AI find people who need help equally well across age, gender, region and urban/rural? TPR gap: the biggest difference between groups. Target: no more than 10 points.',
 };
 
@@ -66,7 +68,7 @@ function PlainSummary({ data }) {
     },
     half && {
       title: 'Money it could save',
-      text: `In the simulation, if half of eligible customers use Sathi, about ৳${Math.round(half.loss_prevented_bdt).toLocaleString('en-US')} of ৳${Math.round(adopt.eligible_assisted_skimming_loss_bdt).toLocaleString('en-US')} skimming loss is stopped. This assumes everyone follows the process.`,
+      text: `Hypothetical upper bound, not the detection-only workflow: if half of eligible customers used Sathi and everyone followed the mandate process perfectly, about ৳${Math.round(half.loss_prevented_bdt).toLocaleString('en-US')} of ৳${Math.round(adopt.eligible_assisted_skimming_loss_bdt).toLocaleString('en-US')} skimming loss would be avoided. The confirmation call after a cash-out only detects; it does not stop money.`,
     },
   ].filter(Boolean);
   if (!items.length) return null;
@@ -174,6 +176,7 @@ const TABS = [
   { id: 'adoption', label: 'Adoption impact', icon: 'users' },
   { id: 'robustness', label: 'Robustness', icon: 'shield' },
   { id: 'fairness', label: 'Fairness audit', icon: 'info' },
+  { id: 'extended', label: 'Extended agent benchmark (v2)', icon: 'chart' },
 ];
 
 function TabNav({ active, onChange }) {
@@ -624,6 +627,7 @@ export function EvidenceTables({ data }) {
           {tab === 'adoption' && <AdoptionTab data={data} />}
           {tab === 'robustness' && <RobustnessTab data={data} />}
           {tab === 'fairness' && <FairnessTab data={data} />}
+          {tab === 'extended' && <ExtendedBenchmarkTab />}
         </div>
       </div>
     </div>

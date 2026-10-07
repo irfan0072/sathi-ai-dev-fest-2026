@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { api } from '../../api';
-import { Alert, Badge, Empty, Kpi, PageHead, Panel, bdt, timeAgo, usePoll } from './kit';
+import { Alert, Badge, Empty, Kpi, PageHead, Panel, PublicDemoNote, bdt, timeAgo, useDeployment, usePoll } from './kit';
 
 const regions = ['dhaka', 'chittagong', 'rajshahi', 'khulna', 'barishal', 'sylhet', 'rangpur', 'mymensingh'];
 const blank = { kind: 'customer', phone: '', display_name: '', pin: '', region: 'dhaka', opening_balance: '10000' };
 
 export default function TestAccounts() {
   const [data, error, reload] = usePoll(() => api.getAccounts(), 10000);
+  const { readOnly } = useDeployment();
   const [form, setForm] = useState(blank);
   const [flash, setFlash] = useState('');
   const [busy, setBusy] = useState(false);
@@ -40,7 +41,7 @@ export default function TestAccounts() {
   const customers = items.filter((a) => a.kind === 'customer');
   return (
     <div className="flex flex-col gap-5">
-      <PageHead title="Test accounts" lead="Create real customers and agents with your own phone numbers. They sign in with that number and a PIN. Confirmation calls and SMS for a test customer go to their number when a real call service is set up in Settings." />
+      <PageHead title="Test accounts" lead="Create customers and agents with your own phone numbers (private deployments only). They sign in with that number and a PIN. Confirmation calls and SMS for a test customer go to their number when a real call service is set up in Settings." />
       <Alert kind="info">{flash}</Alert>
       <Alert>{error}</Alert>
       <div className="grid gap-3 sm:grid-cols-3">
@@ -49,7 +50,8 @@ export default function TestAccounts() {
         <Kpi icon="phone" label="Calls go to" value="Their own number" note="Seeded wallets are never dialled" />
       </div>
 
-      <Panel title="Add a test account">
+      {readOnly && <PublicDemoNote what="Creating accounts with real phone numbers, adding money, resetting PINs and deactivating accounts are unavailable." />}
+      {!readOnly && <Panel title="Add a test account">
         <form onSubmit={create} className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
           <select className="select select-bordered select-sm focus-ring" value={form.kind} onChange={set('kind')} aria-label="Account type">
             <option value="customer">Customer</option><option value="agent">Agent</option>
@@ -72,10 +74,10 @@ export default function TestAccounts() {
             {busy && <span className="loading loading-spinner loading-xs" />}Create
           </button>
         </form>
-      </Panel>
+      </Panel>}
 
       <Panel bodyClass="p-0">
-        {items.length === 0 ? <Empty icon="users" title="No test accounts yet" body="Add one above with your own phone number." /> : (
+        {items.length === 0 ? <Empty icon="users" title="No test accounts yet" body={readOnly ? 'None exist in this public demo.' : 'Add one above with your own phone number.'} /> : (
           <div className="overflow-x-auto">
             <table className="table table-sm">
               <thead><tr><th>Name</th><th>Phone</th><th>Type</th><th>Region</th><th>Balance</th><th>Last sign-in</th><th /></tr></thead>
@@ -89,10 +91,11 @@ export default function TestAccounts() {
                     <td>{a.kind === 'customer' ? bdt(a.balance ?? 0) : '—'}</td>
                     <td className="muted text-xs">{a.last_login_at ? timeAgo(a.last_login_at) : 'never'}</td>
                     <td className="flex flex-wrap gap-1">
+                      {readOnly ? <span className="muted text-xs">view only</span> : <>
                       {a.kind === 'customer' && <button className="btn btn-xs btn-ghost border-base-300" onClick={() => addMoney(a)}>Add money</button>}
                       <button className="btn btn-xs btn-ghost border-base-300" onClick={() => resetPin(a)}>Reset PIN</button>
                       <button className={`btn btn-xs ${a.active ? 'btn-ghost border-base-300' : 'btn-success'}`}
-                        onClick={() => act(() => api.updateAccount(a.account_id, { active: !a.active }))}>{a.active ? 'Deactivate' : 'Activate'}</button>
+                        onClick={() => act(() => api.updateAccount(a.account_id, { active: !a.active }))}>{a.active ? 'Deactivate' : 'Activate'}</button></>}
                     </td>
                   </tr>
                 ))}

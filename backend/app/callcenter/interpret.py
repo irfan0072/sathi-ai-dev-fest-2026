@@ -14,7 +14,8 @@ ASR model and it never listens to audio. Safety policy for spoken answers:
   person (`MISSING_CONFIDENCE_POLICY`). Keypad digits never need a confidence.
 - Approximate ("about three thousand"), alternative ("three or four thousand") and
   conflicting ("three thousand five thousand") amounts are "unclear", never exact.
-- Silence is handled before this module (it is never a denial). An explicit denial phrase is.
+- Silence and empty callbacks are handled before this module and are never a denial. Denial is
+  explicit: "*" on the keypad, or a clear spoken phrase.
 """
 
 from __future__ import annotations
@@ -214,19 +215,23 @@ def interpret(digits: Any, speech: Any = None, confidence: Any = None,
         return Answer("unclear", reason="invalid_input")
     raw = (digits or "").strip()
     if raw:
+        # "*" alone is the explicit keypad denial ("I did not make this cash-out"). A bare
+        # "#" (finish key with nothing typed) is an empty answer, never a denial.
+        if raw.replace("#", "") == "*":
+            return Answer("denied", raw=raw)
         if re.search(r"[^0-9#]", raw):
             return Answer("unclear", raw=raw, reason="invalid_keys")
         keys = raw.replace("#", "")
         if keys == "":
-            return Answer("denied", raw=raw)
+            return Answer("unclear", raw=raw, reason="empty_input")
         if len(keys) > MAX_AMOUNT_DIGITS + 1 or int(keys) == 0:
             return Answer("unclear", raw=raw, reason="out_of_range")
         return Answer("amount", digits=keys, raw=raw)
 
     text = (speech or "").strip()
     if not text:
-        # "#" alone (empty digits, no speech) means "I did not do this".
-        return Answer("denied", raw="")
+        # Nothing was typed or said: silence or a timeout. Never a denial or a confirmation.
+        return Answer("unclear", raw="", reason="empty_input")
     if len(text) > MAX_TRANSCRIPT_CHARS:
         return Answer("unclear", raw=text[:MAX_TRANSCRIPT_CHARS], reason="too_long")
     score, status = clean_confidence(confidence)

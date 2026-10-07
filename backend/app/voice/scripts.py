@@ -34,7 +34,7 @@ SCRIPTS: dict[str, dict[str, str]] = {
             "আসসালামু আলাইকুম। আমি সাথী, ইউপে-এর নিরাপত্তা সহকারী। "
             "আপনার একাউন্ট থেকে এইমাত্র একটি ক্যাশ-আউট হয়েছে, তাই আমরা নিশ্চিত হতে ফোন করেছি। "
             "আপনি হাতে কত টাকা পেয়েছেন, তা কীপ্যাডে লিখে হ্যাশ চাপুন, অথবা বলুন। "
-            "আপনি এই ক্যাশ-আউট না করে থাকলে শুধু হ্যাশ চাপুন। "
+            "আপনি এই ক্যাশ-আউট না করে থাকলে শুধু তারকা চিহ্ন, মানে স্টার চাপুন। "
             "কারো সাথে কথা বলতে ৯ চাপুন। ইংরেজির জন্য ৮ চাপুন। "
             "আমরা কখনো আপনার পিন বা ওটিপি জানতে চাই না।"
         ),
@@ -42,13 +42,16 @@ SCRIPTS: dict[str, dict[str, str]] = {
             "আসসালামু আলাইকুম। আমি সাথী, ইউপে-এর নিরাপত্তা সহকারী। "
             "একজন এজেন্ট আপনার একাউন্ট থেকে টাকা তোলার অনুরোধ করেছেন। "
             "আপনি কত টাকা তুলতে চান, তা কীপ্যাডে লিখে হ্যাশ চাপুন। "
-            "আপনি অনুরোধ না করে থাকলে শুধু হ্যাশ চাপুন। "
+            "আপনি অনুরোধ না করে থাকলে শুধু স্টার চাপুন। "
             "কখনো কাউকে আপনার পিন বলবেন না।"
         ),
         "retry": "আরেকবার চেষ্টা করি। হাতে কত টাকা পেয়েছেন, কীপ্যাডে লিখে হ্যাশ চাপুন।",
         "mandate_retry": "আরেকবার চেষ্টা করি। টাকার পরিমাণ লিখে হ্যাশ চাপুন।",
         "unclear": "দুঃখিত, আপনার উত্তর ঠিক বুঝতে পারিনি। টাকার পরিমাণটি কীপ্যাডে লিখে হ্যাশ চাপুন।",
-        "no_input": "আমি কোনো উত্তর পাইনি। কোনো তাড়া নেই। হাতে কত টাকা পেয়েছেন, লিখে হ্যাশ চাপুন।",
+        "no_input": "আমি কোনো উত্তর পাইনি। কোনো তাড়া নেই। এখন কীপ্যাডে হাতে পাওয়া টাকা লিখে হ্যাশ চাপুন।",
+        "keypad_only": (
+            "দুঃখিত, বুঝতে পারিনি। এখন শুধু কীপ্যাড ব্যবহার করুন। হাতে পাওয়া টাকা লিখে হ্যাশ চাপুন। কারো সাথে কথা বলতে নয় চাপুন।"),  # noqa: E501
+        "no_input_mandate": "আমি কোনো উত্তর পাইনি। কত টাকা তুলতে চান, কীপ্যাডে লিখে হ্যাশ চাপুন।",
         "goodbye_no_input": "ঠিক আছে, আমরা একটু পরে আবার ফোন করব। ধন্যবাদ।",
         "handoff": "অবশ্যই। আমাদের একজন সুপারভাইজার শিগগিরই আপনাকে এই নম্বরে ফোন করবেন। ধন্যবাদ।",
         "close": "ধন্যবাদ। আপনার উত্তর রেকর্ড করা হয়েছে। আল্লাহ হাফেজ।",
@@ -58,20 +61,23 @@ SCRIPTS: dict[str, dict[str, str]] = {
             "আসসালামু আলাইকুম, আমি সাথী, ইউপে থেকে বলছি। "
             "আপনার একাউন্ট থেকে একটু আগে একটা ক্যাশ-আউট হয়েছে, তাই কনফার্ম করার জন্য কল করলাম। "
             "হাতে কত টাকা পেয়েছেন, সেটা কীপ্যাডে টাইপ করে হ্যাশ চাপুন, বা মুখে বলুন। "
-            "ক্যাশ-আউটটা আপনি না করে থাকলে শুধু হ্যাশ চাপুন। "
+            "ক্যাশ-আউটটা আপনি না করে থাকলে শুধু স্টার চাপুন। "
             "কারো সাথে কথা বলতে চাইলে নাইন চাপুন। ইংলিশের জন্য এইট চাপুন। "
             "আমরা কখনো আপনার পিন বা ওটিপি চাইব না।"
         ),
         "mandate_prompt": (
             "আসসালামু আলাইকুম, আমি সাথী, ইউপে থেকে বলছি। "
             "একজন এজেন্ট আপনার একাউন্ট থেকে টাকা তোলার রিকোয়েস্ট করেছেন। "
-            "কত টাকা তুলতে চান, টাইপ করে হ্যাশ চাপুন। রিকোয়েস্ট না করে থাকলে শুধু হ্যাশ চাপুন। "
+            "কত টাকা তুলতে চান, টাইপ করে হ্যাশ চাপুন। রিকোয়েস্ট না করে থাকলে শুধু স্টার চাপুন। "
             "কাউকে কখনো পিন বলবেন না।"
         ),
         "retry": "আরেকবার ট্রাই করি। হাতে কত টাকা পেয়েছেন, টাইপ করে হ্যাশ চাপুন।",
         "mandate_retry": "আরেকবার ট্রাই করি। অ্যামাউন্টটা টাইপ করে হ্যাশ চাপুন।",
         "unclear": "সরি, ঠিক বুঝতে পারিনি। অ্যামাউন্টটা কীপ্যাডে টাইপ করে হ্যাশ চাপুন।",
-        "no_input": "কোনো উত্তর পাইনি, সমস্যা নেই। হাতে কত টাকা পেয়েছেন, টাইপ করে হ্যাশ চাপুন।",
+        "no_input": "কোনো উত্তর পাইনি, সমস্যা নেই। এখন কীপ্যাডে হাতে পাওয়া টাকা টাইপ করে হ্যাশ চাপুন।",
+        "keypad_only": (
+            "সরি, বুঝতে পারিনি। এখন শুধু কীপ্যাড ব্যবহার করুন। হাতে পাওয়া টাকা টাইপ করে হ্যাশ চাপুন। কারো সাথে কথা বলতে নাইন চাপুন।"),  # noqa: E501
+        "no_input_mandate": "কোনো উত্তর পাইনি। কত টাকা তুলতে চান, টাইপ করে হ্যাশ চাপুন।",
         "goodbye_no_input": "ঠিক আছে, একটু পরে আবার কল করব। থ্যাংক ইউ।",
         "handoff": "অবশ্যই। আমাদের একজন সুপারভাইজার শিগগিরই এই নম্বরে আপনাকে কল করবেন। থ্যাংক ইউ।",
         "close": "থ্যাংক ইউ। আপনার উত্তর রেকর্ড হয়ে গেছে। আল্লাহ হাফেজ।",
@@ -81,7 +87,7 @@ SCRIPTS: dict[str, dict[str, str]] = {
             "Hello, this is Sathi, the safety assistant from upay. "
             "A cash-out was just made from your account, so we are calling to confirm it. "
             "Please type the amount of cash you received and press hash, or say it. "
-            "If you did not make this cash-out, just press hash. "
+            "If you did not make this cash-out, just press star. "
             "To talk to a person, press 9. For Bangla, press 8. "
             "We will never ask for your PIN or OTP."
         ),
@@ -89,14 +95,17 @@ SCRIPTS: dict[str, dict[str, str]] = {
             "Hello, this is Sathi, the safety assistant from upay. "
             "An agent has asked to withdraw money from your account. "
             "Type the amount you want to withdraw and press hash. "
-            "If you did not ask for this, just press hash. Never tell anyone your PIN."
+            "If you did not ask for this, just press star. Never tell anyone your PIN."
         ),
         "retry": "Let us try once more. Please type the cash you received and press hash.",
         "mandate_retry": "Let us try once more. Please type the amount and press hash.",
         "unclear": "Sorry, I did not understand. Please type the amount on the keypad and "
                    "press hash.",
-        "no_input": "I did not hear an answer. Take your time. Type the cash you received and "
-                    "press hash.",
+        "no_input": "I did not hear an answer. Take your time. Now use the keypad: type the cash "
+                    "you received and press hash.",
+        "keypad_only": "Sorry, I did not understand. Please use the keypad only. Type the cash "
+                       "you received and press hash. To talk to a person, press 9.",
+        "no_input_mandate": "I did not hear an answer. Type the amount you want and press hash.",
         "goodbye_no_input": "No problem, we will call you again a little later. Thank you.",
         "handoff": "Of course. A supervisor will call you on this number shortly. Thank you.",
         "close": "Thank you. Your answer has been recorded. Goodbye.",

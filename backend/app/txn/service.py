@@ -312,10 +312,13 @@ class TxnCheckService:
             case_id = cur.fetchone()[0]
             # The call may have come from the handset the agent holds, so this answer alone
             # cannot clear the case: it needs an independent follow-up (see CallCenterService).
+            # The secret help signal is urgent for staff. Urgency is set here and kept by every
+            # later transition (call resolution, retries, claims); customers never see it.
             cur.execute("UPDATE call_tasks SET followup_status = 'required', "
-                        "priority = CASE WHEN priority = 'urgent' THEN 'urgent' ELSE 'high' END,"
-                        " updated_at = now() WHERE check_id = %s "
-                        "AND followup_status = 'not_required';", (check_id,))
+                        "priority = CASE WHEN priority = 'urgent' OR %s = 'duress' "
+                        "THEN 'urgent' ELSE 'high' END, updated_at = now() "
+                        "WHERE check_id = %s AND followup_status = 'not_required';",
+                        (outcome, check_id))
             if note:
                 cur.execute(
                     "INSERT INTO case_notes (case_id, author, note_type, body) "

@@ -145,7 +145,7 @@ def test_unclear_answer_goes_to_manual_queue_and_supervisor_resolves(
     call = _live_call(durable_service, out["txn_id"])
     _answer(call, digits="", speech="umm ami bujhi nai", confidence=0.3)
     assert _task(durable_service, out["txn_id"])["status"] == "auto"  # asked again
-    _answer(call, digits="*")
+    _answer(call, digits="ab")  # unreadable keys
     task = _task(durable_service, out["txn_id"])
     assert task["status"] == "needs_manual" and task["manual_reason"] == "unclear_response"
     assert task["check_status"] == "manual_review"
@@ -242,8 +242,11 @@ def test_speech_amount_is_understood(durable_service):
 @pytest.mark.parametrize(("digits", "speech", "conf", "kind", "value"), [
     ("3000", None, None, "amount", "3000"),
     ("3000#", None, None, "amount", "3000"),
-    ("#", None, None, "denied", ""),
-    ("", None, None, "denied", ""),
+    ("*", None, None, "denied", ""),
+    ("*#", None, None, "denied", ""),
+    ("#", None, None, "unclear", ""),     # finish key alone is an empty answer, not a denial
+    ("", None, None, "unclear", ""),      # nothing typed or said: never a denial
+    ("*5", None, None, "unclear", ""),
     ("*12", None, None, "unclear", ""),
     ("0", None, None, "unclear", ""),
     ("123456789", None, None, "unclear", ""),

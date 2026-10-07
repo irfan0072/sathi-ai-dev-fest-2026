@@ -17,6 +17,8 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
+MIN_ACTIVE_DAYS = 7      # days with cash-outs in the last 28 needed for agent-specific advice
+MIN_TYPICAL_BDT = 1000  # typical daily cash-out below this is too thin to scale advice from
 HORIZON = 7
 DHAKA_OFFSET = pd.Timedelta(hours=6)
 FEATURES = [
@@ -152,15 +154,24 @@ def train_and_evaluate(data: dict[str, Any], seed: int = 42,
     # 30-day allowance cycle; an alert means demand beyond anything seen in that cycle.
     wide = daily.pivot(index="day", columns="agent_id", values="demand").sort_index()
     cycle_max = wide.loc[:origin].iloc[-35:].max()
+    # History support: individual advice needs a real recent history. An agent with fewer than
+    # MIN_ACTIVE_DAYS days with cash-outs in the last 28 gets a clearly labelled peer fallback
+    # (median of supported agents in the same volume band), and no peak/typical ratio, because
+    # a ratio over a tiny denominator is meaningless. The forecast itself is not capped or
+    # re-tuned; the page just stops presenting it as the agent's own pattern.
+    active_days = (wide.loc[:origin].iloc[-28:] > 0).sum()
     agents_out = []
     for agent_id, group in future.groupby("agent_id"):
         group = group.sort_values("h")
         typical = float(group["mean_28"].iloc[0])
         recent_max = float(cycle_max[agent_id])
         peak = group.loc[group["p90"].idxmax()]
-        pressure = float(peak["p90"]) / typical if typical > 0 else 0.0
+        supported = int(active_days[agent_id]) >= MIN_ACTIVE_DAYS and typical >= MIN_TYPICAL_BDT
+        pressure = float(peak["p90"]) / typical if supported else None
         agents_out.append({
             "agent_id": agent_id,
+            "active_days_28": int(active_days[agent_id]),
+            "history_supported": bool(supported),
             "typical_daily_bdt": round(typical, 2),
             "max_daily_35d_bdt": round(recent_max, 2),
             # Alert when even the expected (not P90) peak beats the busiest recent day.
@@ -174,11 +185,27 @@ def train_and_evaluate(data: dict[str, Any], seed: int = 42,
             ],
             "peak_date": peak["target_day"].date().isoformat(),
             "peak_p90_bdt": round(float(peak["p90"]), 2),
-            "pressure_ratio": round(pressure, 3),
+            "pressure_ratio": round(pressure, 3) if pressure is not None else None,
             "recommended_opening_float_bdt": round(float(np.ceil(peak["p90"] / 500.0) * 500), 2),
         })
-    agents_out.sort(key=lambda a: (not a["exceeds_recent_max"], -a["headroom_needed_bdt"]))
     band_of = {a["agent_id"]: a.get("volume_band", "medium") for a in data["agents"]}
+    for member in agents_out:
+        if member["history_supported"]:
+            continue
+        peers = [m["peak_p90_bdt"] for m in agents_out
+                 if m["history_supported"]
+                 and band_of.get(m["agent_id"]) == band_of.get(member["agent_id"])]
+        peers = peers or [m["peak_p90_bdt"] for m in agents_out if m["history_supported"]]
+        peers = [p for p in peers if p > 0]  # a zero peer forecast is no advice, not "keep 0"
+        member["advice_mode"] = "peer_fallback" if peers else "insufficient_history"
+        member["exceeds_recent_max"] = False   # an alert needs a real baseline
+        member["headroom_needed_bdt"] = 0.0
+        member["peer_peak_p90_bdt"] = round(float(np.median(peers)), 2) if peers else None
+        member["recommended_opening_float_bdt"] = (
+            round(float(np.ceil(np.median(peers) / 500.0) * 500), 2) if peers else None)
+    for member in agents_out:
+        member.setdefault("advice_mode", "agent_specific")
+    agents_out.sort(key=lambda a: (not a["exceeds_recent_max"], -a["headroom_needed_bdt"]))
     cohorts = {}
     for band_name in VOLUME_BANDS:
         members = [a for a in agents_out if band_of.get(a["agent_id"]) == band_name]

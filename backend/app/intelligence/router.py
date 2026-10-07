@@ -70,7 +70,11 @@ def agent_liquidity(
         return _unavailable(exc)
     own = next((a for a in data["agents"] if a["agent_id"] == agent_id), None)
     if own is not None:
-        return {**own, "basis": "own live cash-out history (last 90 days)",
+        thin = own.get("history_supported") is False
+        basis = ("qualified peer estimate: this agent has only "
+                 f"{own.get('active_days_28', 0)} active day(s) in the last 28, too little for "
+                 "agent-specific advice" if thin else "own live cash-out history (last 90 days)")
+        return {**own, "basis": basis,
                 "model": data["model"], "computed_at": data.get("computed_at"),
                 "forecast_origin": data["forecast_origin"], "provenance": data["provenance"]}
     cohort = data["cohorts"].get("medium") or next(iter(data["cohorts"].values()))

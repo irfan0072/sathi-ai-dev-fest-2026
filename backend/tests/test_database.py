@@ -385,6 +385,7 @@ def test_integration_migrate_twice(test_db_schema):
         "013_registered_accounts.sql",
         "014_live_snapshots.sql",
         "015_failure_recovery_followup.sql",
+        "016_dtmf_mode_priority.sql",
     ]
 
     # Second migration run: should no-op
@@ -399,7 +400,7 @@ def test_integration_migrate_twice(test_db_schema):
                 "SELECT version, checksum FROM schema_migrations ORDER BY version ASC;"
             )
             rows = cur.fetchall()
-            assert len(rows) == 15
+            assert len(rows) == 16
             assert rows[0][0] == "001_initial.sql"
             assert len(rows[0][1]) == 64
             assert rows[1][0] == "002_durable_mandates.sql"

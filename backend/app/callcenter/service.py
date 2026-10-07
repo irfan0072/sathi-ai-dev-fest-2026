@@ -266,7 +266,8 @@ class CallCenterService:
             cur.execute(
                 "UPDATE call_tasks SET status = 'resolved', resolution = %s, resolved_by = %s, "
                 "resolved_at = now(), next_attempt_at = NULL, last_outcome = 'answered', "
-                "priority = CASE WHEN %s = 'suspicious' THEN 'high' ELSE priority END, "
+                "priority = CASE WHEN priority = 'urgent' THEN 'urgent' "
+                "WHEN %s = 'suspicious' THEN 'high' ELSE priority END, "
                 "updated_at = now() WHERE check_id = %s AND status <> 'resolved';",
                 (check_status, actor, check_status, check_id))
             conn.commit()

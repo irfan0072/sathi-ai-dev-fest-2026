@@ -28,8 +28,11 @@ def _err(status: int, code: str, message: str) -> JSONResponse:
 
 def _public(item: dict[str, Any], role: str) -> dict[str, Any]:
     """What agents and customers may see: never the check result itself."""
-    state = {"pending": "waiting", "calling": "waiting", "no_answer": "missed"}.get(
-        item["status"], "done")
+    # Honest, neutral states. "done" never means "the customer answered": unreachable and
+    # manual-review checks have their own states, and mismatch/denial/help-signal results
+    # (suspicious) stay hidden behind "done".
+    state = {"pending": "waiting", "calling": "waiting", "no_answer": "missed",
+             "unreachable": "unreachable", "manual_review": "manual"}.get(item["status"], "done")
     out = {"txn_id": item["txn_id"], "amount": item["amount"], "fee": item["fee"],
            "ts": item["ts"], "check": state}
     if role == "agent":

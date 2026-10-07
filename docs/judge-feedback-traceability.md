@@ -33,3 +33,20 @@ Scores in the judge screenshots (73.34/100) are the baseline; this document pred
 | 16 | upay-aligned presentation | Teal Sathi theme | Header and banner now carry a "Hackathon concept for upay, not endorsed by upay" label and a "Public simulated demo" chip on a public deployment; honest AI wording (rules detect, AI ranks for review, review scores are not probabilities, synthetic outcomes and capped customer pools are labelled). **No upay brand colours or logo were applied:** the public site was read, it exposes no palette, and no team-approved asset kit was supplied. Swap the theme tokens in `frontend/src/style.css` once approved assets exist | Frontend tests (67), ESLint, production build, browser smoke at desktop and 390 px width (`scripts/browser_smoke.py`) | **Partial** (labels and wording); visual alignment **pending** approved assets |
 | 17 | Readiness says healthy without verifying integrations | `/health` accepted >= 2 migrations | Readiness requires every migration file; reports `integrations: not_verified_by_health` and the deployment mode | `test_health.py`, `test_bootstrap.py` | **Implemented (local proof)** |
 | 18 | Video link missing | Placeholder in report | Recording checklist in `docs/demo-script.md`; no link invented | n/a | **Pending (team)** |
+
+## Round 2 additions (feature-phone voice/keypad and browser-review fixes)
+
+| # | Request | Change | Evidence | Status |
+|---|---|---|---|---|
+| 19 | Feature phone, no mobile data | Voice call with speech or keypad; **persisted keypad-only fallback** (`input="dtmf"`); empty callback is silence; `*` is the explicit denial; neutral ending; urgent help-signal follow-up | `tests/test_feature_phone_voice.py` (17), browser journey screenshots in `docs/screenshots/final/`, `docs/feature-phone-channels.md` | **Implemented (local simulation)**; provider contract, Bangla audio, coverage, tariffs **pending**; real-user validation **none** |
+| 20 | USSD | Plan and adapter rules only | `docs/feature-phone-channels.md` | **Not implemented**; needs operator/aggregator and an assigned code |
+| 21 | Urgent secret help | Task priority urgent, preserved | `test_secret_help_is_urgent...` | Implemented (local) |
+| 22 | Unreachable shown as answered | Honest public states | `test_public_state_mapping...` | Implemented (local) |
+| 23 | Money precision, ledger order | Exact cents; order labelled | frontend + API tests | Implemented (local) |
+| 24 | Unsafe case-decision defaults | Explicit choice, contact unticked, follow-up status shown | frontend tests, browser | Implemented (local) |
+| 25 | Stale or misleading claims | Rewritten in the console | screenshots | Implemented; source DOCX/PDF still stale (see status doc) |
+| 26 | Contrast, clipped badges | Theme-safe banner, auto-height badges | screenshots, light and dark | Implemented |
+| 27 | Public-demo UX matches API | Controls hidden with a note | tests, browser | Implemented |
+| 28 | Small scam fixtures, neutral unknown | Minimal idempotent fixtures, neutral styling | tests, browser | Implemented (synthetic only) |
+| 29 | Sparse-history forecast | History-support gate, peer fallback | `test_thin_history_agent...` | Implemented; statistical repair not attempted |
+| 30 | Extended benchmark reviewable | Console tab from the verified archive | endpoint tests | Implemented (synthetic evidence) |

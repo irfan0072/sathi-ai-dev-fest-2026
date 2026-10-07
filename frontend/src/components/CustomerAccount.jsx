@@ -8,8 +8,10 @@ import { phone } from '../ids';
 
 const customerCheck = {
   waiting: { label: 'Please answer our call', tone: 'badge-info' },
-  done: { label: 'Thank you, answered', tone: 'badge-success' },
+  done: { label: 'Check finished', tone: 'badge-success' },
   missed: { label: 'Missed call', tone: 'badge-warning' },
+  unreachable: { label: 'We could not reach you', tone: 'badge-warning' },
+  manual: { label: 'A person will contact you', tone: 'badge-secondary' },
 };
 
 export default function CustomerAccount() {
@@ -32,7 +34,7 @@ export default function CustomerAccount() {
         <h2 className="page-title">My account</h2>
         <p className="page-lead mt-1">
           After every cash-out, Sathi calls you in your language. Type or say the cash you got and press #. If you did not
-          take any cash, just press #. Press 9 to talk to a person. Questions? Ask Sathi Sahayak below.
+          make this cash-out, press * (star). Pressing only # does nothing. Press 9 to talk to a person. Questions? Ask Sathi Sahayak below.
         </p>
       </div>
       {error && <div role="alert" className="alert alert-error alert-soft text-sm">{error}</div>}

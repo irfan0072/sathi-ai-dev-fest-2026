@@ -76,3 +76,13 @@ committed but the call could not be placed. The task is retried with back-off up
 `calls.max_auto_attempts`, then moves to the supervisor queue with reason `provider_failure`.
 If the provider may have accepted the call (timeout, 5xx), no second call is placed until the
 live call settles. A delivery error never reverses or debits the ledger.
+
+
+## Round 2 additions (7 October 2026)
+
+- `voice_calls.input_mode` (`speech_dtmf` | `dtmf_only`), `speech_unusable_count`, `input_mode_reason` (migration 016). After unusable speech or a speech timeout the provider response is `input="dtmf"` (Twilio) and, for the vendor-neutral BD IVR reply, `gather.input = "dtmf"` (provisional, vendor-unconfirmed field).
+- Keypad grammar: digits then `#` = amount; leading `0` = silent help; `9` = a person; `8` = language; `*` (optionally `#`) = explicit denial. Empty callbacks and a lone `#` are silence, never denial. A Gather callback with no `Digits` and no `SpeechResult` is silence regardless of `FinishedOnKey`.
+- Public check state (`GET /api/v1/transactions`): `waiting`, `missed`, `unreachable`, `manual`, `done`. `done` never means the customer answered.
+- `GET /api/v1/metrics/agent-benchmark-v2` (analyst, supervisor, super_admin): hash-verified read-only summary of the extended benchmark; 503 `BENCHMARK_UNAVAILABLE` if the archive is missing or altered.
+- Case timeline and case file include `followup: {status, attempts, blocks_clearing}`.
+- Liquidity agent forecast adds `active_days_28`, `history_supported`, `advice_mode` (`agent_specific` | `peer_fallback` | `insufficient_history`), `peer_peak_p90_bdt`; `pressure_ratio` is `null` without enough history.

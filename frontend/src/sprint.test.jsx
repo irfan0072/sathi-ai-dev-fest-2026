@@ -87,3 +87,82 @@ describe('navigation', () => {
     expect(tabs.find((t) => t.id === 'agents').label).toBe('Agent review ranking');
   });
 });
+
+// ---- visual follow-up regression tests -------------------------------------------------
+import { exactTaka, roundedTaka } from './copy';
+import { ExtendedBenchmarkView } from './components/ExtendedBenchmarkTab';
+import { FollowupNotice, PublicDemoNote } from './components/ops/kit';
+import { AuditForm } from './components/ops/CaseWorkbench';
+import { AgentAdvice } from './components/LiquidityPage';
+
+describe('exact money', () => {
+  it('keeps cents on fees and balances and only rounds when asked', () => {
+    expect(exactTaka(7.5)).toBe('৳7.50');
+    expect(exactTaka(7.49)).toBe('৳7.49');
+    expect(exactTaka(0)).toBe('৳0');
+    expect(exactTaka(3000)).toBe('৳3,000');
+    expect(exactTaka('12.30')).toBe('৳12.30');
+    expect(exactTaka(null)).toBe('—');
+    expect(roundedTaka(7.5)).toBe('≈৳8');
+  });
+});
+
+describe('case decision defaults', () => {
+  it('has no pre-selected decision and no pre-checked contact claim', () => {
+    const html = clean(renderToString(<AuditForm caseId={1} followup={{ status: 'required', blocks_clearing: true }} onSaved={() => {}} />));
+    expect(html).toContain('Choose a decision');
+    expect(html).not.toMatch(/checkbox[^>]*checked/);
+    expect(html).toContain('Cleared: no wrongdoing');
+    expect(html).toContain('Independent contact needed');
+    expect(html).toContain('cannot be cleared');
+  });
+  it('shows the clearance requirement and not a pre-claimed contact', () => {
+    expect(renderToString(<FollowupNotice followup={{ status: 'uncertain' }} />)).toContain('Uncertain: still open');
+    expect(renderToString(<FollowupNotice followup={{ status: 'not_required' }} />)).toBe('');
+    expect(renderToString(<FollowupNotice followup={{ status: 'reached_independently' }} />)).toContain('can be cleared');
+  });
+});
+
+describe('public demo and thin history', () => {
+  it('explains disabled management instead of showing dead buttons', () => {
+    const html = renderToString(<PublicDemoNote what="Creating staff is unavailable." />);
+    expect(html).toContain('Disabled in the public demo');
+    expect(html).toContain('still work');
+  });
+  it('does not present sparse history as the agent\'s own pattern and hides the ratio', () => {
+    const html = clean(renderToString(<AgentAdvice agent={{
+      history_supported: false, active_days_28: 3, max_daily_35d_bdt: 500, peak_p90_bdt: 29000,
+      typical_daily_bdt: 18, peer_peak_p90_bdt: 4200, recommended_opening_float_bdt: 4500, peak_date: '2026-10-12' }} />));
+    expect(html).toContain('Not enough history for agent-specific advice');
+    expect(html).toContain('only 3');
+    expect(html).toContain('peer estimate');
+    expect(html).not.toContain('×');
+    expect(html).not.toContain('1621');
+  });
+});
+
+describe('extended benchmark view', () => {
+  const r = (n, d) => ({ numerator: n, denominator: d, rate: n / d, ci95: [0, 0.05] });
+  const method = (label, recall) => ({ label, recall, honest_high_volume_false_flags: r(0, 240) });
+  const scenario = (name, base, cand) => ({ scenario: name, skimmers: 120, methods: {
+    rule_baseline: method('Rule baseline', r(0, 120)), ensemble_v1: method('Deployed ensemble', base),
+    ensemble_v2_shortfall: method('Candidate (dev-selected, NOT deployed)', cand) } });
+  const data = {
+    version: 'agent-benchmark-v2.0', replications: 3, agents_generated_total: 9000,
+    final_held_out: { agents: 3600, skimmers: 120, honest_agents: 3480, honest_high_volume: 240 },
+    protocol_sha256: 'a'.repeat(64), final_results_sha256: 'b'.repeat(64),
+    canonical_comparison: 'The canonical held-out cohort has 60 agents, 2 skimmers.',
+    scenarios: [scenario('moderate', r(120, 120), r(120, 120)), scenario('subtle', r(0, 120), r(0, 120)),
+      scenario('unchanged_fee_shortfall_moderate', r(0, 120), r(119, 120))],
+  };
+  it('shows held-out denominators, the 0/120 subtle result and the undeployed candidate', () => {
+    const html = clean(renderToString(<ExtendedBenchmarkView data={data} />));
+    expect(html).toContain('3,600');
+    expect(html).toContain('120 / 3,480');
+    expect(html).toContain('0/120 (0.0%)');
+    expect(html).toContain('NOT deployed');
+    expect(html).toContain('not the held-out denominator');
+    expect(html).toContain('unchanged_fee_shortfall_moderate');
+    expect(html).toContain('119/120');
+  });
+});

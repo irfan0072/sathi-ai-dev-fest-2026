@@ -193,7 +193,7 @@ def simulated_answer(
                                    confidence=body.confidence, no_input=body.no_input)
     # Like a real call, the handset only hears speech: outcome stays hidden from bystanders.
     return {"call_ended": result.call_status != "in_progress", "spoken_bn": result.spoken,
-            "spoken": result.spoken}
+            "spoken": result.spoken, "input_mode": result.input_mode or call.get("input_mode")}
 
 
 # ------------------------------------------------------------------- provider webhooks
@@ -244,10 +244,11 @@ async def provider_gather(call_id: str, request: Request) -> Any:
         # Raw provider value: the interpreter validates it (finite, 0..1) before anything is
         # stored, and a missing or invalid confidence never becomes an invented number.
         confidence_value = params.get("Confidence")
-        # Twilio sends FinishedOnKey="#" when the customer pressed hash, and an empty value
-        # when the gather timed out in silence. Silence must never count as "I did not do it".
-        no_input = ("FinishedOnKey" in params and params.get("FinishedOnKey") != "#"
-                    and not params.get("Digits") and not params.get("SpeechResult"))
+        # The documented Gather callback carries Digits and/or SpeechResult. With
+        # actionOnEmptyResult an empty callback has neither: that is silence or a timeout, and
+        # it must never count as "I did not do it". Do not rely on FinishedOnKey.
+        no_input = not (params.get("Digits") or "").strip() and not (
+            params.get("SpeechResult") or "").strip()
         result = service.handle_digits(call_id, params.get("Digits", ""),
                                        _gather_url(service, call_id, request),
                                        speech=params.get("SpeechResult"),
@@ -309,8 +310,11 @@ async def bd_ivr_event(call_id: str, request: Request) -> Any:
                                        confidence=event.get("confidence"),
                                        no_input=kind == "timeout")
         if result.call_status == "in_progress":
+            # "input": "dtmf" tells the gateway to collect keypad digits only (our provisional,
+            # vendor-unconfirmed field; a gateway that ignores it still gets the keypad prompt).
+            keypad = {**gather, "input": "dtmf"} if result.input_mode == "dtmf_only" else gather
             return {"action": "gather", "say": result.spoken[0], "language": provider.language,
-                    "gather": gather}
+                    "gather": keypad}
         return {"action": "hangup", "say": result.spoken[0], "language": provider.language}
     if kind == "status":
         _after_status(service, call_id,

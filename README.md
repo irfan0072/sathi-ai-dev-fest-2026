@@ -8,6 +8,8 @@ Team: **Runtime Terrors**
 > Fixed rules decide verified or suspicious; the AI ranks cases for review; a person makes every
 > decision. A hackathon concept for upay, not endorsed by upay.
 
+**Feature-phone access (local simulation, provider-contract pending).** The intended path is an ordinary cellular voice call (no app, login or handset mobile data): short Bangla prompt, spoken amount or keypad, deterministic validation, neutral ending. Unusable speech switches the call to a persisted keypad-only mode; an empty callback or a lone `#` is silence, never a denial; `*` is the explicit denial; a leading zero is the silent help signal and is urgent for staff. Tested against a fake-signed provider and a browser handset panel; no real call was made, USSD is not built, and nothing has been validated with real users. See [`docs/feature-phone-channels.md`](docs/feature-phone-channels.md).
+
 **Final-round addendum (7 October 2026).** What was added after the judges' feedback, and what is
 still pending, is in [`docs/final-sprint-status.md`](docs/final-sprint-status.md); every judge request is
 mapped to evidence and a literal status in [`docs/judge-feedback-traceability.md`](docs/judge-feedback-traceability.md).

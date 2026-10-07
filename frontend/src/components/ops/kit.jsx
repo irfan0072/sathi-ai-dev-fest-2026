@@ -1,7 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Icon from '../Icon';
+import { api } from '../../api';
 
-export const bdt = (v) => (v == null ? '—' : `৳${Math.round(v).toLocaleString('en-US')}`);
+import { exactTaka, roundedTaka } from '../../copy';
+
+// Exact by default (fees, balances, receipts agree to the cent). Aggregates that are
+// deliberately approximate use roundedTaka.
+export const bdt = exactTaka;
+export const bdtRounded = roundedTaka;
 export const num = (v) => (v == null ? '—' : Number(v).toLocaleString('en-US'));
 export const pct = (v) => (v == null ? '—' : `${(v * 100).toFixed(0)}%`);
 export const compact = (v) => {
@@ -152,10 +158,10 @@ export const taskTone = {
 };
 export const taskLabel = {
   auto: 'Calling', retry_scheduled: 'Retry scheduled', needs_manual: 'Needs a person',
-  assigned: 'Assigned', in_progress: 'On call', resolved: 'Resolved', ignored: 'Ignored (unreachable)',
+  assigned: 'Assigned', in_progress: 'On call', resolved: 'Call finished', ignored: 'Unreachable after all tries',
 };
 export const manualReason = {
-  unclear_response: 'AI could not understand the answer',
+  unclear_response: 'The answer could not be understood (speech or keypad)',
   retries_exhausted: 'No answer after all retries',
   admin_escalated: 'Sent by admin',
   customer_callback: 'Customer asked for a call back',
@@ -182,6 +188,48 @@ export const checkText = {
   no_answer: 'No answer', manual_review: 'Supervisor review', unreachable: 'Unreachable',
 };
 export const priorityTone = { urgent: 'badge-error', high: 'badge-warning', normal: 'badge-ghost' };
+
+// Shown before a decision is submitted: clearing a case needs an independent contact. The
+// server enforces this (409 INDEPENDENT_CONTACT_REQUIRED); the notice just says so up front.
+export function FollowupNotice({ followup }) {
+  if (!followup || followup.status === 'not_required') return null;
+  const done = followup.status === 'reached_independently';
+  return (
+    <div role="note" data-testid="followup-notice"
+      className={`rounded-box border p-2 text-xs ${done ? 'border-success/40 bg-success/10' : 'border-warning/50 bg-warning/10'}`}>
+      <strong>Independent contact: {followupLabel[followup.status] || followup.status}.</strong>{' '}
+      {done
+        ? 'An in-person contact reached the customer, so this case can be cleared.'
+        : 'This case cannot be cleared as "no wrongdoing" until an in-person contact reaches the customer. Reaching the registered number again does not count. You can still confirm a problem or escalate.'}
+    </div>
+  );
+}
+
+// Deployment metadata (public, cached once). `readOnly` is true on the public simulated demo,
+// where the API refuses management writes; the console then hides those controls instead of
+// showing buttons that fail.
+let deploymentPromise = null;
+export function useDeployment() {
+  const [info, setInfo] = useState(null);
+  useEffect(() => {
+    let live = true;
+    deploymentPromise = deploymentPromise || api.getDeployment().catch(() => null);
+    deploymentPromise.then((d) => { if (live) setInfo(d); });
+    return () => { live = false; };
+  }, []);
+  return { info, readOnly: Boolean(info?.management_read_only) };
+}
+
+export function PublicDemoNote({ what }) {
+  return (
+    <div role="note" data-testid="public-demo-note"
+      className="rounded-box border border-warning/50 bg-warning/10 p-3 text-sm">
+      <strong>Disabled in the public demo.</strong> {what} The public demo uses published synthetic
+      PINs and simulated providers only, so management writes, real phone numbers and real provider
+      setup are switched off. The synthetic cash-out, call, case and follow-up flows still work.
+    </div>
+  );
+}
 
 export function Badge({ tone = 'badge-ghost', children }) {
   return <span className={`badge badge-sm whitespace-nowrap ${tone}`}>{children}</span>;

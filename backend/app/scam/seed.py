@@ -101,9 +101,55 @@ def family_transfers(get_connection: Callable, count: int = 5) -> int:
     return made
 
 
+MINIMAL_USERS = (SCAM_SELLER, SHOP_SELLER, "U_9_1000002")  # alerted, shop, normal receiver
+
+
+def seed_minimal_scam_demo(get_connection: Callable) -> dict[str, Any]:
+    """Tiny, clearly synthetic receiver fixtures that work without the 5M scale population.
+
+    Creates three synthetic wallets (alerted 01900000500, shop 01900000600, normal
+    01901000002) and synthetic community alerts about the first one. Idempotent (an audit
+    marker), never touches existing balances, ledgers or evaluation data (ON CONFLICT DO
+    NOTHING; the scale seed uses the same ids with the same rule). Not about real people.
+    """
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT 1 FROM audit_log WHERE action IN ('scam_demo_seeded', "
+                    "'scam_demo_minimal_seeded') LIMIT 1;")
+        if cur.fetchone():
+            return {"seeded": False, "reason": "already seeded"}
+        for user_id in MINIMAL_USERS:
+            cur.execute("INSERT INTO users (user_id, group_label, gender, age_band, region, "
+                        "urban_rural) VALUES (%s, 'independent_urban', 'other', '26-40', 'dhaka', "
+                        "'urban') ON CONFLICT (user_id) DO NOTHING;", (user_id,))
+        conn.commit()
+    community = CommunityService(get_connection)
+    number = _exists(get_connection, SCAM_SELLER)
+    stories = [
+        (payer(100), "upay_number", number, "not_delivered", 1250,
+         "Synthetic demo alert: paid a social-media page, nothing was delivered."),
+        (payer(101), "upay_number", number, "not_delivered", 1250,
+         "Synthetic demo alert: same page, same price, no delivery after five days."),
+        (payer(102), "facebook", SCAM_PAGE, "not_delivered", 1250,
+         "Synthetic demo alert: page takes advance payment and deletes comments."),
+    ]
+    made = 0
+    for reporter, kind, ident, category, lost, text in stories:
+        try:
+            community.create(reporter, kind, ident, category, text, lost, None, True)
+            made += 1
+        except Exception:
+            continue
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("INSERT INTO audit_log (actor, action, entity, entity_id, policy_version, "
+                    "detail, ts) VALUES ('system', 'scam_demo_minimal_seeded', 'p2p', 'demo', "
+                    "'v1.0', %s::jsonb, now());", (f'{{"reports": {made}}}',))
+        conn.commit()
+    return {"seeded": True, "mode": "minimal", "reports": made}
+
+
 def seed_scam_demo(get_connection: Callable) -> dict[str, Any]:
     if not _exists(get_connection, SCAM_SELLER) or not _exists(get_connection, payer(1)):
-        return {"seeded": False, "reason": "scale population not loaded"}
+        return seed_minimal_scam_demo(get_connection)
     with get_connection() as conn, conn.cursor() as cur:
         cur.execute("SELECT 1 FROM audit_log WHERE action = 'scam_demo_seeded' LIMIT 1;")
         if cur.fetchone():

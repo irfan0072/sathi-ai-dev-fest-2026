@@ -107,7 +107,7 @@ def test_mismatch_retries_once_then_flags_suspicious(durable_service):
 
 def test_denied_and_secret_help_are_suspicious_and_hidden(durable_service):
     denied = _cashout(1000)
-    _answer("")
+    _answer("*")
     assert _check(denied["txn_id"])["outcome"] == "denied"
     duress = _cashout(1500)
     spoken = _answer("01500")
@@ -170,7 +170,8 @@ def test_supervisor_views_dashboard_timeline_and_ai_summary(durable_service):
     assert overview["check_totals"]["suspicious"] == 1 and overview["check_totals"]["cashouts"] == 1
     timeline = client.get(f"/api/v1/cases/{check['case_id']}/timeline", headers=ANALYST).json()
     labels = [e["label"] for e in timeline["events"]]
-    assert "cashout_recorded" in labels and "AI marked it suspicious" in labels
+    assert "cashout_recorded" in labels
+    assert any(label.startswith("Marked suspicious by a fixed rule") for label in labels)
     brief = client.post(f"/api/v1/cases/{check['case_id']}/brief", headers=ANALYST).json()
     assert brief["brief"]["headline"].startswith("Customer typed a different amount")
     assert any(f["field"] == "transaction.customer_typed_bdt" for f in brief["facts"])

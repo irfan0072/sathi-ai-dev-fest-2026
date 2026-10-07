@@ -137,3 +137,59 @@ them with the addendum wording before submission:
 | Innovation | Independent-contact gate on clearing a case; uncertain stays open | The supervised in-person contact itself |
 | Prototype quality | Repeatable scenario, evidence page, browser-smoke-tested UI, labels | upay brand assets |
 | Business/customer impact | Reproducible, configurable economics with the negative cases and an evidence export with denominators | Real pilot data, invoices, a supported intervention |
+
+---
+
+# Round 2 (7 October 2026, feature-phone voice/keypad and browser-review fixes)
+
+Brief: `docs/claude-final-feature-phone-prompt.md` (supersedes earlier prompts) and
+`docs/visual-review-followup.md`. First-sprint work, guards and frozen artifacts were preserved.
+Implementation window about 1 hour, then verification. Optional USSD simulator was **deferred on
+purpose** (plan only: `docs/feature-phone-channels.md`).
+
+## Reproduced, fixed, tested
+
+| Finding | Layer fixed | Evidence |
+|---|---|---|
+| Keypad "fallback" still listened to speech (`_check_digits` re-sent `speech=True`) | `voice/service.py`: persisted `voice_calls.input_mode` (migration 016); every provider response after unusable speech, low/missing confidence, approximate speech or a speech timeout is `input="dtmf"`. BD IVR event reply carries provisional `gather.input = "dtmf"` | `tests/test_feature_phone_voice.py` asserts the emitted TwiML and the stored mode, and that a new service object (restart) keeps it |
+| Empty Gather callback (no Digits, SpeechResult or FinishedOnKey) and a lone `#` could become a denial | `voice/router.py` no longer reads `FinishedOnKey`; empty = silence = re-prompt, bounded, then a person. Mandate flow likewise | signed empty callback test, `#` test |
+| No unambiguous denial command | `*` (then optional `#`) is the explicit denial; spoken phrases still work; prompts, handset, simulator, tests updated | `test_explicit_star_is_the_denial` |
+| Secret help `0700#` queued as `high` | task priority set to `urgent` in `txn/service.py`; `on_resolved` keeps urgent; sorts first in both queues | `test_secret_help_is_urgent_...`, browser journey |
+| Unreachable shown as "Thank you, answered" | `txn/router._public` adds `unreachable` and `manual` states; customer/agent labels rewritten ("Check finished", "We could not reach you") | `test_public_state_mapping...`, rendered in the browser |
+| Fee 7.50 shown as 8 | exact formatter (`exactTaka`, `bdt` in kit), rounded variant only for approximate aggregates; ledger order relabelled "newest record first (by transaction number)" | frontend tests 7.50 / 7.49 / 0, API test |
+| Case form defaults to "Problem confirmed" with "Customer contacted" pre-ticked | no pre-selected decision, contact unticked, labels "Cleared / Problem confirmed / Escalate", independent-follow-up notice before submit, server gate unchanged. Timeline: "Marked suspicious by a fixed rule" | frontend + `test_case_views_show_followup...` |
+| Misleading narrative | "cash is stopped" removed; 5M/20k labelled a scale test, live counts shown; unsupported 30-50% removed; "AI call" -> "Automated call"; outreach pool stated as capped at 6,000; Invite-planner "past test" labelled generated and simulated; counterfactual labelled hypothetical; anonymity reworded to pseudonymous | grep + screenshots |
+| Dark-mode banner unreadable, clipped badges | `text-base-content` on the banner, `.badge { height:auto }`, public-demo chip contrast | screenshots light/dark, 1366 and 390 px |
+| Public demo shows dead buttons | `useDeployment` hides simulator Start, test-account and staff writes with a "Disabled in the public demo" note | `sprint.test.jsx`, browser |
+| Scam demo numbers empty on a small setup | `seed_minimal_scam_demo` (idempotent, 3 synthetic wallets, 3 synthetic alerts); "none" result is neutral, not green | `test_minimal_scam_fixtures...`, browser: alerted / normal / unknown |
+| Sparse-history forecast (29,000 vs 500 peak, 1621x) | liquidity output adds `active_days_28`, `history_supported`; fewer than 7 active days (or typical < 1,000) gives a labelled peer fallback or "insufficient history", no ratio, no cap | `test_thin_history_agent...` |
+| New benchmark invisible in the console | **AI test results -> Extended agent benchmark (v2)**, from the hash-verified archive (`/api/v1/metrics/agent-benchmark-v2`): 3,600 held-out agents, 120 skimmers, 3,480 honest, 240 honest high-volume; subtle 0/120 prominent; candidate marked NOT deployed | `test_benchmark_endpoint_*` (tamper test returns 503) |
+
+Not changed: frozen config, data, artifacts, retry budget, append-only audit, independent-contact gate.
+
+## Channel status (local implementation versus the world)
+
+See the full table in `docs/feature-phone-channels.md`. Short form: voice call with speech/keypad,
+keypad-only fallback, `*` denial, urgent help signal, retry/lease/duplicate safety are **implemented
+and tested locally against a fake-signed or simulated provider**. A real feature-phone call, a
+provisioned IVR/voice provider, Bangla audio quality, caller-ID, tariffs, call capacity and USSD
+are **provider-contract pending**. **Real-user validated: none.**
+
+## Round 2 verification (PostgreSQL 18.4 disposable; not the PostgreSQL 16 CI target)
+
+| Check | Result |
+|---|---|
+| Backend, full run | 797 passed, 8 skipped, 1 failed: a test still asserting the old "AI marked it suspicious" label. Test corrected (the label is now rule-based); that file re-run alone: 8 passed. The corrected full suite was **not** re-run end to end. Total expected 798 passed / 8 skipped (baseline 762 / 8). The 8 skips are live-provider tests |
+| Frontend | 73 passed (baseline 67), ESLint, production build pass |
+| Ruff, structure check | Pass |
+| Frozen bundle, benchmark archive hashes, frozen paths | Verify / intact / untouched |
+| Browser (`scripts/browser_final_review.py`, Playwright Chromium, real UI + API, public-demo mode, simulated provider) | **52 passed, 0 failed**: journey (agent cash-out -> handset unusable speech -> keypad-only -> `0700#` -> neutral ending -> urgent first in follow-up queue -> analyst sees the clearance requirement and clearing is refused), alerted / normal / unknown receivers, 10 pages x 1366 and 390 px x light and dark with no page overflow or page errors. API log: no errors. Screenshots: `docs/screenshots/final/` (after only; the review's before-images are in the reviewer's folder, not in this repository) |
+| Not tested | A matching-answer and unanswered-call journey in the browser (covered by backend tests and `scripts/demo_scenario.py`); a real handset, provider or USSD; PostgreSQL 16; live providers; wide-table scroll discoverability beyond the benchmark caption; focus-ring checks |
+
+## Honest remaining gaps
+
+USSD not built; no provisioned voice provider, Bangla audio check, caller-ID, tariff or capacity
+measurement; no real-user validation; sparse-history forecasts use a support gate with a peer
+fallback, not a repaired model; live demo liquidity data is tiny so the demo agent shows "no cash
+advice yet"; source DOCX/PDF still hold stale claims (listed above); demo video link must come from
+the team.

@@ -4,8 +4,8 @@ import { api } from '../../api';
 import Icon from '../Icon';
 import { eventLabel } from '../../copy';
 import {
-  Alert, Badge, Empty, Kpi, LiveDot, PageHead, Panel, Pager, bdt, checkText, checkTone,
-  num, pct, timeAgo, usePoll, when,
+  Alert, Badge, Empty, Kpi, LiveDot, PageHead, Panel, Pager, PublicDemoNote, bdt, checkText, checkTone,
+  num, pct, timeAgo, useDeployment, usePoll, when,
 } from './kit';
 
 /** Keyset-paginated list loader shared by every directory. */
@@ -213,6 +213,7 @@ function AgentDetail({ agentId, onClose }) {
 
 // ---------------------------------------------------------------------------- staff
 export function StaffPage() {
+  const { readOnly } = useDeployment();
   const [data, error, reload] = usePoll(() => api.getStaff(), 10000);
   const [form, setForm] = useState({ staff_id: '', display_name: '', role: 'supervisor', pin: '' });
   const [flash, setFlash] = useState('');
@@ -260,8 +261,9 @@ export function StaffPage() {
                   <td>{s.open_calls}</td><td>{s.open_cases}</td><td>{s.calls_resolved_24h}</td><td>{s.reports_24h}</td>
                   <td className="muted text-xs">{s.last_login_at ? timeAgo(s.last_login_at) : 'never'}</td>
                   <td className="flex gap-1">
-                    <button className="btn btn-xs btn-ghost border-base-300" onClick={() => resetPin(s)}>Reset PIN</button>
-                    {s.staff_id !== session?.subject && (
+                    {readOnly && <span className="muted text-xs">view only</span>}
+                    {!readOnly && <button className="btn btn-xs btn-ghost border-base-300" onClick={() => resetPin(s)}>Reset PIN</button>}
+                    {!readOnly && s.staff_id !== session?.subject && (
                       <button className={`btn btn-xs ${s.active ? 'btn-ghost border-base-300' : 'btn-success'}`} onClick={() => toggle(s)}>{s.active ? 'Deactivate' : 'Activate'}</button>
                     )}
                   </td>
@@ -271,7 +273,8 @@ export function StaffPage() {
           </table>
         </div>
       </Panel>
-      <Panel title="Add a staff member">
+      {readOnly && <PublicDemoNote what="Creating staff, resetting PINs and deactivating accounts are unavailable." />}
+      {!readOnly && <Panel title="Add a staff member">
         <form onSubmit={create} className="grid gap-3 sm:grid-cols-5">
           <input required className="input input-bordered input-sm font-mono focus-ring" placeholder="staff id (sup_rahim)" value={form.staff_id} onChange={(e) => setForm({ ...form, staff_id: e.target.value.toLowerCase() })} />
           <input required className="input input-bordered input-sm focus-ring" placeholder="Full name" value={form.display_name} onChange={(e) => setForm({ ...form, display_name: e.target.value })} />
@@ -281,7 +284,7 @@ export function StaffPage() {
           <input required className="input input-bordered input-sm font-mono focus-ring" placeholder="PIN (4-8 digits)" inputMode="numeric" value={form.pin} onChange={(e) => setForm({ ...form, pin: e.target.value.replace(/\D/g, '').slice(0, 8) })} />
           <button className="btn btn-primary btn-sm focus-ring" disabled={busy}>Create</button>
         </form>
-      </Panel>
+      </Panel>}
     </div>
   );
 }
@@ -303,7 +306,7 @@ export function LedgerPage() {
   const set = (k) => (e) => setFilters({ ...filters, [k]: e.target.value });
   return (
     <div className="flex flex-col gap-5">
-      <PageHead title="All transactions" lead={`Every transaction on the platform, newest first, with its customer confirmation result. ${totalText(list.total)}.`}>
+      <PageHead title="All transactions" lead={`Every transaction on the platform, newest record first (ordered by transaction number; imported history can carry older timestamps), with its customer confirmation result. ${totalText(list.total)}.`}>
         <label className="flex items-center gap-2 text-sm"><input type="checkbox" className="toggle toggle-sm toggle-success" checked={live} onChange={(e) => setLive(e.target.checked)} /> Live</label>
         {live && <LiveDot />}
       </PageHead>

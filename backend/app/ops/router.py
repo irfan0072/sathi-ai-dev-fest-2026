@@ -291,10 +291,17 @@ def case_timeline(
                         "label": f"Confirmation call: {CALL_TEXT.get(r[1], r[1])}",
                         "actor": "Sathi"} for r in cur.fetchall()]
             events.append({"at": check[5].isoformat(), "kind": "case",
-                           "label": "AI marked it suspicious" if check[4] == "suspicious"
-                           else f"Check: {check[4]}", "actor": "Sathi AI"})
+                           "label": "Marked suspicious by a fixed rule (typed amount differed, "
+                           "denial or help signal)" if check[4] == "suspicious"
+                           else f"Check: {check[4]}", "actor": "Sathi (rule)"})
+        cur.execute("SELECT t.followup_status, t.followup_attempts FROM call_tasks t "
+                    "JOIN txn_checks c USING (check_id) WHERE c.case_id = %s;", (case_id,))
+        row = cur.fetchone()
+        followup = ({"status": row[0], "attempts": row[1],
+                     "blocks_clearing": row[0] in ("required", "attempted", "uncertain",
+                                                    "unreachable")} if row else None)
     events.sort(key=lambda e: e["at"])
-    return {"case_id": case_id, "events": events}
+    return {"case_id": case_id, "events": events, "followup": followup}
 
 
 class WatchlistRequest(BaseModel):
