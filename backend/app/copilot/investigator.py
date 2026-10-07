@@ -4,9 +4,14 @@ The brief answers the guideline's three questions: what happened, why it is risk
 what to do next. It is generated only from a numbered list of structured evidence facts.
 
 Provider chain: Gemini (default gemini-2.5-flash) -> OpenAI (default gpt-4o) -> a
-deterministic template. Every LLM answer is schema-checked: each claim must cite fact IDs
-that exist and the next step must come from a fixed list. Anything else is discarded and
-the next provider is tried. The brief never decides a case; analysts do.
+deterministic template. Every LLM answer is schema-checked (each claim cites fact IDs that
+exist, the next step comes from a fixed list) AND text-guarded (`copilot.guard`: secrets,
+phone numbers, accusations, invented amounts, "held/recovered" claims on a completed
+cash-out, contradicted amounts). A cited fact ID only proves the reference exists, so the
+guards are pattern-level and are labelled as such. Anything that fails is discarded and the
+next provider is tried. An external model only receives a minimised allowlist of typed
+facts (no identifiers, timestamps or free text). The brief never decides a case; analysts do.
+Mode "deterministic" (template only) never calls an external model.
 """
 
 from __future__ import annotations
@@ -17,6 +22,8 @@ import os
 import urllib.error
 import urllib.request
 from typing import Any, Callable
+
+from app.copilot.guard import BriefGuardError, check_brief, external_facts
 
 NEXT_STEPS = {
     "call_customer_on_registered_number": "Call the customer on the registered number, "
@@ -49,6 +56,11 @@ class BriefValidationError(ValueError):
     pass
 
 
+GUARD_LIMITS = ("Pattern-level checks only: they block secrets, phone numbers, accusations, "
+                "invented amounts and contradicted claims, but cannot prove that a sentence "
+                "means what its cited fact means.")
+
+
 def evidence_facts(evidence: dict[str, Any]) -> list[dict[str, Any]]:
     """Flatten nested evidence into numbered, size-limited facts."""
     facts: list[dict[str, Any]] = []
@@ -70,7 +82,10 @@ def evidence_facts(evidence: dict[str, Any]) -> list[dict[str, Any]]:
     return facts[:80]
 
 
-def validate_brief(raw: Any, facts: list[dict[str, Any]]) -> dict[str, Any]:
+def validate_brief(raw: Any, facts: list[dict[str, Any]],
+                   evidence: dict[str, Any] | None = None, guard: bool = True) -> dict[str, Any]:
+    """Structure check plus the deterministic text guards. `guard=False` is only for the
+    template, whose sentences are written in code from typed fields, not by a model."""
     if isinstance(raw, str):
         try:
             raw = json.loads(raw)
@@ -94,24 +109,34 @@ def validate_brief(raw: Any, facts: list[dict[str, Any]]) -> dict[str, Any]:
         if not isinstance(item, dict) or not isinstance(item.get("point"), str):
             raise BriefValidationError("Invalid why_risky item")
         cited = item.get("evidence")
-        if not isinstance(cited, list) or not cited or not all(c in ids for c in cited):
+        if not isinstance(cited, list) or not cited or not all(
+                isinstance(c, str) and c in ids for c in cited):
             raise BriefValidationError("Claim cites unknown or no evidence")
-        checked.append({"point": item["point"].strip()[:300], "evidence": cited[:6]})
+        checked.append({"point": item["point"].strip()[:300],
+                        "evidence": cited[:6]})
     step = raw.get("recommended_next_step")
     if step not in NEXT_STEPS:
         raise BriefValidationError("Next step outside the allowed list")
     questions = raw.get("questions_for_customer") or []
     if not isinstance(questions, list):
         raise BriefValidationError("questions_for_customer must be a list")
-    return {
+    if not all(isinstance(q, str) for q in questions):
+        raise BriefValidationError("questions_for_customer must contain only text")
+    brief = {
         "headline": text("headline", 160),
         "what_happened": text("what_happened", 600),
         "why_risky": checked,
         "recommended_next_step": step,
         "recommended_next_step_text": NEXT_STEPS[step],
-        "questions_for_customer": [str(q)[:200] for q in questions[:4]],
+        "questions_for_customer": [q.strip()[:200] for q in questions[:4] if q.strip()],
         "summary_bn": text("summary_bn", 400),
     }
+    if guard:
+        try:
+            check_brief(brief, facts, evidence)
+        except BriefGuardError as exc:
+            raise BriefValidationError(str(exc)) from None
+    return brief
 
 
 def _post_json(url: str, payload: dict[str, Any], headers: dict[str, str],
@@ -185,19 +210,35 @@ def clients_from_env(env: dict[str, str] | None = None, order: str = "gemini_fir
     return [c for c in ordered if c is not None]
 
 
+def _duress_plan(cash_out_completed: bool) -> tuple[str, str, str, str]:
+    """The help signal can arrive before a mandate code (the mandate is held) or after a
+    completed cash-out (the money has already moved; Sathi only detects and escalates)."""
+    if cash_out_completed:
+        return (
+            "Silent help signal after a completed cash-out",
+            "On the confirmation call after the cash-out, the customer used the silent help "
+            "code. The cash-out had already completed. This check records the signal for a "
+            "human; it does not move money.",
+            "call_customer_on_registered_number",
+            "ক্যাশ-আউট সম্পন্ন হওয়ার পর গ্রাহক গোপন বিপদ সংকেত দিয়েছেন। লেনদেনটি আগেই সম্পন্ন "
+            "হয়েছিল। এজেন্ট থেকে দূরে গ্রাহকের সাথে যোগাযোগ করুন।",
+        )
+    return (
+        "Silent duress signal on the verification call",
+        "The customer answered the verification call with the silent duress code. "
+        "The mandate was held before any code was issued.",
+        "call_customer_on_registered_number",
+        "গ্রাহক যাচাই কলে গোপন বিপদ সংকেত দিয়েছেন। এজেন্ট থেকে দূরে গ্রাহকের সাথে যোগাযোগ করুন।",
+    )
+
+
 def template_brief(evidence: dict[str, Any], facts: list[dict[str, Any]]) -> dict[str, Any]:
     """Deterministic brief from the case reason; always available, always grounded."""
     by_field = {fact["field"]: fact["id"] for fact in facts}
     reason = evidence.get("case", {}).get("reason", "unknown")
     cite = [by_field.get("case.reason", facts[0]["id"] if facts else "F1")]
     plans = {
-        "duress_signal": (
-            "Silent duress signal on the verification call",
-            "The customer answered the verification call with the silent duress code. "
-            "The mandate was held before any code was issued.",
-            "call_customer_on_registered_number",
-            "গ্রাহক যাচাই কলে গোপন বিপদ সংকেত দিয়েছেন। এজেন্ট থেকে দূরে গ্রাহকের সাথে যোগাযোগ করুন।",
-        ),
+        "duress_signal": _duress_plan("transaction" in evidence),
         "stated_amount_mismatch": (
             "Customer stated a different amount than the agent requested",
             "The amount the customer confirmed did not match the agent's request.",
@@ -248,7 +289,7 @@ def template_brief(evidence: dict[str, Any], facts: list[dict[str, Any]]) -> dic
     }
     headline, happened, step, bn = plans.get(reason, (
         f"Review case: {reason}",
-        "A review case was opened for this mandate.",
+        "A review case was opened for this item.",
         "request_more_information",
         "এই লেনদেনটি পর্যালোচনার জন্য খোলা হয়েছে। আরও তথ্য সংগ্রহ করুন।",
     ))
@@ -267,7 +308,7 @@ def template_brief(evidence: dict[str, Any], facts: list[dict[str, Any]]) -> dic
         "questions_for_customer": ["How much cash did you want to withdraw today?",
                                    "Was anyone with you or pressuring you during the request?"],
         "summary_bn": bn,
-    }, facts)
+    }, facts, guard=False)
 
 
 class CaseInvestigator:
@@ -276,20 +317,27 @@ class CaseInvestigator:
 
     def brief(self, evidence: dict[str, Any]) -> dict[str, Any]:
         facts = evidence_facts(evidence)
+        shared = external_facts(facts)  # minimised: the only facts an external model sees
         evidence_hash = hashlib.sha256(
             json.dumps(evidence, sort_keys=True, default=str).encode()).hexdigest()
-        user = "FACTS:\n" + json.dumps(facts, ensure_ascii=False)
+        user = "FACTS:\n" + json.dumps(shared, ensure_ascii=False)
         system = SYSTEM_PROMPT.format(steps=", ".join(NEXT_STEPS))
         attempts = []
         for client in self.clients:
             try:
-                brief = validate_brief(client.complete(system, user), facts)
+                brief = validate_brief(client.complete(system, user), shared, evidence)
                 return {"provider": client.name, "model": client.model, "brief": brief,
                         "facts": facts, "evidence_sha256": evidence_hash, "fallbacks": attempts,
-                        "generated": True}
+                        "generated": True, "mode": "llm_guarded",
+                        "mode_label": "AI-written text, pattern-checked (not proven)",
+                        "guard_limits": GUARD_LIMITS, "facts_shared_externally": len(shared)}
             except (urllib.error.URLError, TimeoutError, KeyError, IndexError, ValueError,
                     TypeError) as exc:
-                attempts.append({"provider": client.name, "error": type(exc).__name__})
-        return {"provider": "template", "model": "deterministic_v1",
+                attempts.append({"provider": client.name, "error": type(exc).__name__,
+                                 "guard": str(exc)[:120] if isinstance(
+                                     exc, BriefValidationError) else None})
+        return {"provider": "template", "model": "deterministic_v2",
                 "brief": template_brief(evidence, facts), "facts": facts,
-                "evidence_sha256": evidence_hash, "fallbacks": attempts, "generated": False}
+                "evidence_sha256": evidence_hash, "fallbacks": attempts, "generated": False,
+                "mode": "deterministic", "mode_label": "Deterministic summary from typed evidence",
+                "guard_limits": None, "facts_shared_externally": 0}

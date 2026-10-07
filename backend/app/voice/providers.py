@@ -24,7 +24,24 @@ log = logging.getLogger("sathi.voice")
 
 
 class VoiceProviderError(RuntimeError):
-    """Provider could not place the call. Message never contains credentials."""
+    """Provider could not place the call. Message never contains credentials.
+
+    `ambiguous` is True when the provider may still have accepted the request (timeout, 5xx,
+    unreadable response). The caller must then not place a second call blindly.
+    """
+
+    def __init__(self, message: str = "", ambiguous: bool = False) -> None:
+        super().__init__(message)
+        self.ambiguous = ambiguous
+
+
+def _is_ambiguous(exc: BaseException) -> bool:
+    """A timeout or a server error can happen after the provider accepted the call."""
+    if isinstance(exc, urllib.error.HTTPError):
+        return exc.code >= 500 or exc.code == 408
+    if isinstance(exc, urllib.error.URLError):
+        return isinstance(exc.reason, (TimeoutError, ConnectionResetError))
+    return isinstance(exc, (TimeoutError, ValueError))
 
 
 @dataclass
@@ -160,12 +177,14 @@ class TwilioVoiceProvider:
             with self._open(request, timeout=self._timeout) as response:
                 data = json.loads(response.read().decode() or "{}")
         except urllib.error.HTTPError as exc:
-            raise VoiceProviderError(twilio_error(exc)) from None
-        except (urllib.error.URLError, TimeoutError, ValueError):
-            raise VoiceProviderError("Twilio is unreachable.") from None
+            raise VoiceProviderError(twilio_error(exc), ambiguous=_is_ambiguous(exc)) from None
+        except (urllib.error.URLError, TimeoutError, ValueError) as exc:
+            raise VoiceProviderError("Twilio is unreachable.",
+                                     ambiguous=_is_ambiguous(exc)) from None
         sid = data.get("sid")
         if not sid:
-            raise VoiceProviderError("Twilio response did not include a call SID.")
+            raise VoiceProviderError("Twilio response did not include a call SID.",
+                                     ambiguous=True)
         return PlacedCall(provider_call_sid=str(sid), status="queued")
 
     def validate_request(self, url: str, params: dict[str, str], signature: str | None) -> bool:
@@ -226,12 +245,15 @@ class BdHttpIvrProvider:
             with self._open(request, timeout=self._timeout) as response:
                 data = json.loads(response.read().decode() or "{}")
         except urllib.error.HTTPError as exc:
-            raise VoiceProviderError(f"IVR gateway rejected the call (HTTP {exc.code}).") from None
-        except (urllib.error.URLError, TimeoutError, ValueError):
-            raise VoiceProviderError("IVR gateway is unreachable.") from None
+            raise VoiceProviderError(f"IVR gateway rejected the call (HTTP {exc.code}).",
+                                     ambiguous=_is_ambiguous(exc)) from None
+        except (urllib.error.URLError, TimeoutError, ValueError) as exc:
+            raise VoiceProviderError("IVR gateway is unreachable.",
+                                     ambiguous=_is_ambiguous(exc)) from None
         call_id = data.get("call_id") or data.get("id")
         if not call_id:
-            raise VoiceProviderError("IVR gateway response did not include a call id.")
+            raise VoiceProviderError("IVR gateway response did not include a call id.",
+                                     ambiguous=True)
         return PlacedCall(provider_call_sid=str(call_id), status="queued")
 
     def sign(self, body: bytes) -> str:

@@ -237,7 +237,7 @@ export default function UpliftPage() {
                       </tbody>
                     </table>
                   </div>
-                  <p className="muted">Out of {data.total_candidates?.toLocaleString()} customers scored.</p>
+                  <p className="muted">Out of {data.total_candidates?.toLocaleString()} customers scored: a capped pool of the most recently active customers (at most 20,000), not the whole customer database. Features come from live activity; the campaign outcomes behind the uplift model are simulated.</p>
                 </div>
               </div>
             )}

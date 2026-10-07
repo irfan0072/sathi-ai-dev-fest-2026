@@ -13,6 +13,7 @@ from app.auth.jwt import get_jwt_secret, is_jwt_secret_configured
 from app.data.config import load_config
 from app.data.database import get_connection, run_migrations
 from app.data.demo_seed import seed_demo_fixtures
+from app.deployment import deployment_mode
 
 
 class BootstrapError(RuntimeError):
@@ -33,14 +34,18 @@ def database_ready(
         return False
     principals = config["auth"]["principals"]
     try:
+        from app.data.database import get_migrations_dir
+
+        expected_migrations = len(list(get_migrations_dir().glob("*.sql")))
         with get_connection(make_conninfo(url, connect_timeout=3), schema=schema) as conn:
             with conn.cursor() as cur:
                 cur.execute(
-                    "SELECT (SELECT count(*) FROM schema_migrations) >= 2, "
+                    "SELECT (SELECT count(*) FROM schema_migrations) >= %s, "
                     "EXISTS(SELECT 1 FROM users WHERE user_id = %s), "
                     "EXISTS(SELECT 1 FROM agents WHERE agent_id = %s), "
                     "EXISTS(SELECT 1 FROM transactions WHERE user_id = %s)",
-                    (principals["demo_customer"]["subject"],
+                    (expected_migrations,
+                     principals["demo_customer"]["subject"],
                      principals["demo_agent"]["subject"],
                      principals["demo_customer"]["subject"]),
                 )
@@ -65,6 +70,10 @@ def readiness() -> dict[str, str]:
         "database": "ready" if database else "unavailable",
         "auth_signing": "configured" if signing else "unconfigured",
         "artifacts": "verified" if artifacts else "unavailable",
+        # "ok" means this API, its database and its signed artifacts work. It does not mean a
+        # real call, SMS or MFS integration was verified; those are not probed here.
+        "integrations": "not_verified_by_health",
+        "deployment_mode": deployment_mode(),
     }
 
 

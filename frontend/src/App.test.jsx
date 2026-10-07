@@ -225,7 +225,7 @@ describe('Role-scoped navigation', () => {
       expect(html).toContain('Cases to review');
       expect(html).toContain('Cash planning');
       expect(html).toContain('Invite planner');
-      expect(html).toContain('Agent risk (AI)');
+      expect(html).toContain('Agent review ranking');
       expect(html).toContain('Customers who need help');
       expect(html).toContain('AI test results');
       expect(html).toContain('How it works');

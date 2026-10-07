@@ -26,6 +26,15 @@ from app.mandates.router import get_mandate_service
 from app.mandates.service import MandateService
 
 
+class ClearanceBlockedError(Exception):
+    """A case cannot be cleared until an independent customer contact reached the customer."""
+
+    def __init__(self, followup_status: str) -> None:
+        super().__init__("An independent customer contact is required before this case can be "
+                         f"cleared (follow-up status: {followup_status}).")
+        self.followup_status = followup_status
+
+
 class AnalyticsService:
     """Verified offline evidence and durable runtime records, with separate provenance."""
 
@@ -202,6 +211,13 @@ class AnalyticsService:
 
                     if row is None:
                         raise KeyError(f"Case {case_id} not found in durable database cases store.")
+
+                    if decision == "approved":
+                        from app.callcenter.service import CallCenterService
+
+                        blocked = CallCenterService.clearance_block(cur, case_id)
+                        if blocked:
+                            raise ClearanceBlockedError(blocked)
 
                     cur.execute(
                         "UPDATE cases SET status = %s WHERE case_id = %s;",

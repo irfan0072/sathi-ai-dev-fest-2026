@@ -58,7 +58,7 @@ function PlainSummary({ data }) {
     },
     ens && agents?.denominators && {
       title: 'Catching cheating agents',
-      text: `In the test, the AI found ${whole(ens.recall_on_skimmers)} of the ${agents.denominators.total_skimmers} cheating agents and wrongly flagged ${whole(ens.false_flag_rate_honest_high_volume)} of the ${agents.denominators.total_honest_high_volume} honest busy agents.`,
+      text: `In this small synthetic test the model found ${whole(ens.recall_on_skimmers)} of the ${agents.denominators.total_skimmers} cheating agents and wrongly flagged ${whole(ens.false_flag_rate_honest_high_volume)} of the ${agents.denominators.total_honest_high_volume} honest busy agents. Subtle cheating is not caught at this threshold. A larger synthetic benchmark (3 x 3,000 agents) is in docs/evaluation-agent-v2.md. None of this is field evidence.`,
     },
     fair?.global_max_tpr_gap != null && {
       title: 'Fair to every group',

@@ -73,7 +73,8 @@ CALL_TEXT = {
     "mismatch": "wrong amount", "no_answer": "no answer", "failed": "call failed",
     "queued": "calling", "ringing": "ringing", "in_progress": "on the call",
 }
-SMS_TEXT = {"cashout_receipt": "receipt", "verification_call_missed": "missed-call note"}
+SMS_TEXT = {"cashout_receipt": "receipt", "cashout_notice": "cash-out notice (no amount)",
+            "verification_call_missed": "missed-call note"}
 
 
 def _json(value: Any) -> Any:
@@ -358,3 +359,34 @@ def remove_watchlist(
     if removed:
         service.log_audit(principal.subject, "agent_unwatchlisted", "agent", agent_id, {})
     return {"agent_id": agent_id, "watchlisted": False, "removed": bool(removed)}
+
+
+@router.get("/ops/workflow-evidence")
+def workflow_evidence(
+    principal: Annotated[AuthenticatedPrincipal,
+                         Depends(require_roles("analyst", "super_admin", "supervisor"))],
+) -> Any:
+    """Observed workflow counts from this database, with numerators and denominators.
+
+    Synthetic or simulated unless real partner data was loaded. Not field impact.
+    """
+    from app.deployment import describe
+    from app.ops.workflow_evidence import summarize
+    from app.settings.router import get_settings
+
+    values = get_settings().values()
+    environment = {**describe(), "voice_provider": values["voice.provider"],
+                   "sms_provider": values["sms.provider"],
+                   "ai_provider_order": values["ai.provider_order"]}
+    return summarize(get_mandate_service().get_connection, environment)
+
+
+@router.get("/ops/economics")
+def economics(
+    principal: Annotated[AuthenticatedPrincipal,
+                         Depends(require_roles("analyst", "super_admin", "supervisor"))],
+) -> Any:
+    """Assumption-based cost and break-even model. No invoices, no measured loss prevention."""
+    from app.ops.economics import full_report
+
+    return full_report()

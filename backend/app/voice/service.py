@@ -31,6 +31,9 @@ from app.voice import scripts, twiml
 from app.voice.providers import VoiceProvider, VoiceProviderError
 
 LIVE_STATUSES = ("queued", "ringing", "in_progress")
+# Errors raised while placing a call that mean "the customer was not reached yet".
+PLACEMENT_FAILURES = ("VOICE_PROVIDER_ERROR", "VOICE_PROVIDER_UNCERTAIN", "NO_REGISTERED_PHONE",
+                      "VOICE_NOT_CONFIGURED")
 PROVIDER_STATUS_MAP = {
     "queued": "queued",
     "initiated": "queued",
@@ -130,6 +133,14 @@ class VoiceService:
             call = self._place_call(check["user_id"], actor, "check_id", check_id, "transaction")
         except VoiceError as err:
             checks.set_error(check_id, err.message)
+            if err.code in PLACEMENT_FAILURES:
+                # The cash-out is already committed. Never strand it: schedule a bounded retry,
+                # or hand it to a person once the attempts are used up. No money moves.
+                from app.callcenter.service import CallCenterService
+
+                CallCenterService(self.mandates).on_placement_failed(
+                    check_id, err.code, err.message, automatic=automatic,
+                    uncertain=err.code == "VOICE_PROVIDER_UNCERTAIN")
             raise
         checks.set_calling(check_id)
         from app.callcenter.service import CallCenterService
@@ -197,10 +208,22 @@ class VoiceService:
         try:
             placed = self.provider.place_call(number, answer_url, status_url)
         except VoiceProviderError as exc:
+            if exc.ambiguous:
+                # The provider may have accepted the call. Keep the row live so the unique
+                # live-call guard blocks a duplicate; its status webhook (or the ring timeout
+                # worker) settles it and schedules any retry.
+                self.mandates.log_audit(actor, "voice_call_uncertain", entity, str(target_id),
+                                        {"call_id": call_id, "reason": str(exc)})
+                raise VoiceError("VOICE_PROVIDER_UNCERTAIN", str(exc), 502) from None
             self._set_status(call_id, "failed")
             self.mandates.log_audit(actor, "voice_call_failed", entity, str(target_id),
                                     {"call_id": call_id, "reason": str(exc)})
             raise VoiceError("VOICE_PROVIDER_ERROR", str(exc), 502) from None
+        except Exception as exc:  # a provider library bug must not leave a live ghost call
+            self._set_status(call_id, "failed")
+            self.mandates.log_audit(actor, "voice_call_failed", entity, str(target_id),
+                                    {"call_id": call_id, "reason": type(exc).__name__})
+            raise VoiceError("VOICE_PROVIDER_ERROR", "The call provider failed.", 502) from None
 
         self._set_status(call_id, placed.status, provider_call_sid=placed.provider_call_sid)
         self.mandates.log_audit(actor, "voice_call_placed", entity, str(target_id),
@@ -321,7 +344,7 @@ class VoiceService:
         return self.get_call(call_id)
 
     def handle_digits(self, call_id: str, digits: str | None, gather_url: str,
-                      speech: str | None = None, confidence: float | None = None,
+                      speech: Any = None, confidence: Any = None,
                       no_input: bool = False) -> DigitResult:
         """Apply one customer answer. `no_input` means the gather timed out in silence,
         which is never treated as "I did not do this"."""
@@ -330,6 +353,14 @@ class VoiceService:
         if call["status"] not in LIVE_STATUSES:
             return DigitResult(call["status"], twiml.close(lang), [scripts.line(lang, "close")],
                                None)
+        # Provider payloads are untrusted: keep non-text values out of persistence and the
+        # language learner. A wrong type is an unreadable answer ("unclear"), not silence.
+        invalid_input = (not isinstance(digits, (str, type(None)))
+                         or not isinstance(speech, (str, type(None))))
+        if not isinstance(digits, (str, type(None))):
+            digits = None
+        has_speech = speech is not None and (not isinstance(speech, str) or bool(speech.strip()))
+        speech_text = speech if isinstance(speech, str) else None
         raw = (digits or "").strip()
         digits = re.sub(r"[^0-9]", "", digits or "")
         mandate_id, user_id = call["mandate_id"], call["user_id"]
@@ -337,13 +368,14 @@ class VoiceService:
         self._set_status(call_id, "in_progress", digit_attempts=attempts)
 
         if call.get("check_id"):
-            if no_input and not (speech or "").strip():
+            if no_input and not has_speech:
                 return self._no_input(call, gather_url)
-            special = self._check_keys(call, raw, speech, gather_url)
+            special = self._check_keys(call, raw, speech_text, gather_url)
             if special is not None:
                 return special
             return self._check_digits(call_id, call["check_id"], raw[:12], gather_url,
-                                      speech=speech, confidence=confidence, language=lang)
+                                      speech=speech_text, confidence=confidence, language=lang,
+                                      invalid_input=invalid_input)
 
         if digits == "":
             status = self._reject(
@@ -442,20 +474,21 @@ class VoiceService:
         return None
 
     def _check_digits(self, call_id: str, check_id: int, raw: str, gather_url: str,
-                      speech: str | None = None, confidence: float | None = None,
-                      language: str = "bn") -> DigitResult:
-        from app.callcenter.interpret import interpret
+                      speech: str | None = None, confidence: Any = None,
+                      language: str = "bn", invalid_input: bool = False) -> DigitResult:
+        from app.callcenter.interpret import Answer, interpret
         from app.callcenter.service import CallCenterService
         from app.txn.service import TxnCheckService
 
         checks = TxnCheckService(self.mandates)
         center = CallCenterService(self.mandates)
-        answer = interpret(raw, speech, confidence,
-                           min_confidence=center.policy()["unclear_confidence"])
+        answer = (Answer("unclear", reason="invalid_input") if invalid_input else
+                  interpret(raw, speech, confidence,
+                            min_confidence=center.policy()["unclear_confidence"]))
         if answer.kind == "unclear":
             result = checks.handle_unclear(check_id)
             center.on_unclear(check_id, call_id, answer.raw, answer.confidence,
-                              final=result != "retry")
+                              final=result != "retry", reason=answer.reason)
             if result == "retry":
                 text = scripts.line(language, "unclear")
                 return DigitResult("in_progress",

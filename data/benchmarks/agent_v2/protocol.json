@@ -1,0 +1,95 @@
+{
+  "agent_split": {
+    "test": 0.4,
+    "train": 0.4,
+    "validation": 0.2
+  },
+  "agents_per_replication": 3000,
+  "benchmark_version": "agent-benchmark-v2.0",
+  "candidate": {
+    "description": "max(ensemble risk, support-aware repeated-shortfall risk). The shortfall risk uses the Wilson lower bound of an agent's cash-shortfall report rate against the train-population median rate, and needs shortfall reports from at least 2 distinct customers.",
+    "min_distinct_gap_customers": 2,
+    "min_reports": 5,
+    "name": "ensemble_v2_shortfall",
+    "scale": 0.05
+  },
+  "canonical_config_sha256": "3bb292b9fbb70e677b5fe1b3afae9b75c094378f321bca61c926c4a5d1e108f5",
+  "canonical_seeds_not_reused": [
+    42,
+    4242,
+    2026
+  ],
+  "declared_at": "2026-10-07T03:31:58.911814+00:00",
+  "development_scenarios": [
+    "moderate",
+    "subtle",
+    "obvious",
+    "unchanged_fee_shortfall_moderate",
+    "unchanged_fee_shortfall_subtle"
+  ],
+  "final_cohort_rule": "generated and scored once, only after dev_results.json exists and its hash is recorded; never used for any choice",
+  "final_scenarios": [
+    "moderate",
+    "subtle",
+    "obvious",
+    "unchanged_fee_shortfall_moderate",
+    "unchanged_fee_shortfall_subtle",
+    "sparse_reports",
+    "noisy_reports"
+  ],
+  "high_risk_threshold": 0.8,
+  "interval_method": "95% Wilson score interval on pooled independent-agent counts; per-replication values shown for seed variation",
+  "methods": [
+    "rule_baseline",
+    "peer_robust_zscore",
+    "isolation_forest",
+    "ensemble_v1",
+    "ensemble_v2_shortfall"
+  ],
+  "prevalence": "agent_mix and customers-per-agent proportions copied from the canonical config; documented 'moderate' skimming profile",
+  "protocol_sha256": "6b8ccda470b3f560c9bbfecb9ec7eb535abfebb4754fb9bd2e437e815de11ab5",
+  "replications": [
+    {
+      "replication": 1,
+      "seed_test": 1103,
+      "seed_train": 1101,
+      "seed_validation": 1102
+    },
+    {
+      "replication": 2,
+      "seed_test": 2203,
+      "seed_train": 2201,
+      "seed_validation": 2202
+    },
+    {
+      "replication": 3,
+      "seed_test": 3303,
+      "seed_train": 3301,
+      "seed_validation": 3302
+    }
+  ],
+  "review_budgets": {
+    "absolute_15": 15,
+    "pct_10": 0.1,
+    "pct_25": 0.25,
+    "pct_5": 0.05
+  },
+  "scenario_definitions": {
+    "moderate": "Documented default: fee overcharge plus payout reduction, moderate intensity",
+    "noisy_reports": "Moderate intensity, customer reports 70% accurate (default 90%)",
+    "obvious": "Obvious intensity: frequent large overcharges and payout reductions",
+    "sparse_reports": "Moderate intensity, only 20% of customers report cash received",
+    "subtle": "Subtle intensity: rare small overcharges and rare 1-3% payout reductions",
+    "unchanged_fee_shortfall_moderate": "Ledger fee is exactly correct; only the cash paid out is short (moderate payout reduction)",
+    "unchanged_fee_shortfall_subtle": "Ledger fee is exactly correct; only rare small cash shortfalls (subtle payout reduction)"
+  },
+  "selection_rule": {
+    "evaluated_on": "validation cohorts, pooled over replications; never on final cohorts",
+    "honest_hv_false_flag_increase_max_pp": 1.0,
+    "honest_hv_false_flag_increase_max_pp_on": "moderate",
+    "precision_at_5pct_not_lower_on": "moderate",
+    "recall_gain_min_pp": 5.0,
+    "recall_gain_min_pp_on": "unchanged_fee_shortfall_moderate"
+  },
+  "threshold_tuning": "none: 0.8 from data/config.yaml, fixed"
+}

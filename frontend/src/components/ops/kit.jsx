@@ -161,6 +161,17 @@ export const manualReason = {
   customer_callback: 'Customer asked for a call back',
   customer_requested_human: 'Customer pressed 9 to talk to a person',
   assistant_report: 'Customer reported a problem in the Sathi assistant',
+  provider_failure: 'The call could not be placed (provider problem)',
+};
+// Independent follow-up: the customer may have answered on a handset the agent controls, so a
+// registered-number call alone never clears a case.
+export const followupLabel = {
+  not_required: 'Not needed', required: 'Independent contact needed', attempted: 'Contact attempted',
+  reached_independently: 'Reached independently', uncertain: 'Uncertain: still open', unreachable: 'Unreachable: still open',
+};
+export const followupTone = {
+  not_required: 'badge-ghost', required: 'badge-warning', attempted: 'badge-info',
+  reached_independently: 'badge-success', uncertain: 'badge-error', unreachable: 'badge-error',
 };
 export const checkTone = {
   verified: 'badge-success', suspicious: 'badge-error', pending: 'badge-info', calling: 'badge-info',

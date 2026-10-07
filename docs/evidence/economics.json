@@ -1,0 +1,417 @@
+{
+  "assumptions": {
+    "answer_rate_per_attempt": 0.6,
+    "call_coverage": 1.0,
+    "case_minutes": 15.0,
+    "cost_per_call_attempt": 0.8,
+    "count_dispute_savings": false,
+    "detection_given_answered": 1.0,
+    "dispute_complaint_rate": 0.4,
+    "dispute_cost": 150.0,
+    "false_suspicious_rate": 0.02,
+    "hosting_per_check": 0.1,
+    "incident_rate": 0.027695800227014757,
+    "intervention_success_rate": 0.0,
+    "loss_per_incident": 61.0,
+    "manual_cost_per_hour": 250.0,
+    "manual_minutes": 8.0,
+    "max_attempts": 3,
+    "sms_missed_call": 0.25,
+    "sms_receipt": 0.3,
+    "unanswered_billing_fraction": 1.0,
+    "unclear_manual_share": 0.03,
+    "unreachable_manual_share": 0.0
+  },
+  "baseline": {
+    "benefit": {
+      "dispute_handling_avoided": 0.0,
+      "incidents": 27.7,
+      "incidents_detected": 25.92,
+      "incidents_reached_by_call": 25.92,
+      "loss_returned_by_a_separate_intervention": 0.0,
+      "total": 0.0
+    },
+    "cost": {
+      "call_attempts": 1248.0,
+      "case_review_and_independent_followup": 2790.2,
+      "hosting": 100.0,
+      "manual_review_unclear": 936.0,
+      "manual_review_unreachable": 0.0,
+      "sms": 316.0,
+      "total": 5390.2
+    },
+    "delivery": {
+      "answered_within_budget": 0.936,
+      "expected_attempts": 1.56,
+      "failed_attempts": 0.624,
+      "unanswered_after_budget": 0.064
+    },
+    "net": -5390.2
+  },
+  "break_even_intervention_success": null,
+  "break_even_loss_per_incident_at_intervention_rate": {
+    "10pct": 2081.16,
+    "25pct": 831.82,
+    "50pct": 415.91
+  },
+  "first_report_scenarios_reproduced": {
+    "A": {
+      "assumes": "every called incident is detected, 50% are PREVENTED, and 40% of those would have become 150-taka complaints",
+      "benefit": 1694,
+      "cost": 2200.0,
+      "net": -506
+    },
+    "B": {
+      "assumes": "every called incident is detected, 50% are PREVENTED, and 40% of those would have become 150-taka complaints",
+      "benefit": 2940,
+      "cost": 2200.0,
+      "net": 740
+    },
+    "C": {
+      "assumes": "every called incident is detected, 50% are PREVENTED, and 40% of those would have become 150-taka complaints",
+      "benefit": 1355,
+      "cost": 880.0,
+      "net": 475
+    }
+  },
+  "not_counted": [
+    "flagged cash gaps",
+    "closed cases",
+    "supervisor-confirmed findings without restitution",
+    "deterrence",
+    "customer trust",
+    "regulatory value"
+  ],
+  "same_scenarios_corrected_delivery_and_explicit_intervention": {
+    "A_all_calls_loss_61": {
+      "break_even_intervention_success_no_dispute_savings": null,
+      "break_even_loss_per_incident_at_50pct_intervention": 415.91,
+      "cost_per_1000": 5390.2,
+      "intervention_0pct": -5390.2,
+      "intervention_0pct_with_dispute_savings": -5390.2,
+      "intervention_10pct": -5232.07,
+      "intervention_10pct_with_dispute_savings": -5076.53,
+      "intervention_25pct": -4994.87,
+      "intervention_25pct_with_dispute_savings": -4606.02,
+      "intervention_50pct": -4599.54,
+      "intervention_50pct_with_dispute_savings": -3821.84
+    },
+    "B_all_calls_loss_150": {
+      "break_even_intervention_success_no_dispute_savings": null,
+      "break_even_loss_per_incident_at_50pct_intervention": 415.91,
+      "cost_per_1000": 5390.2,
+      "intervention_0pct": -5390.2,
+      "intervention_0pct_with_dispute_savings": -5390.2,
+      "intervention_10pct": -5001.35,
+      "intervention_10pct_with_dispute_savings": -4845.81,
+      "intervention_25pct": -4418.08,
+      "intervention_25pct_with_dispute_savings": -4029.23,
+      "intervention_50pct": -3445.95,
+      "intervention_50pct_with_dispute_savings": -2668.26
+    },
+    "C_targeted_40pct_loss_61": {
+      "break_even_intervention_success_no_dispute_savings": null,
+      "break_even_loss_per_incident_at_50pct_intervention": 488.31,
+      "cost_per_1000": 2026.47,
+      "intervention_0pct": -2026.47,
+      "intervention_0pct_with_dispute_savings": -2026.47,
+      "intervention_10pct": -1975.87,
+      "intervention_10pct_with_dispute_savings": -1926.1,
+      "intervention_25pct": -1899.96,
+      "intervention_25pct_with_dispute_savings": -1775.53,
+      "intervention_50pct": -1773.46,
+      "intervention_50pct_with_dispute_savings": -1524.6
+    }
+  },
+  "sensitivity": [
+    {
+      "answer_rate_per_attempt": 0.4,
+      "benefit": 0.0,
+      "cost": 5143.09,
+      "intervention_success_rate": 0.0,
+      "loss_per_incident": 61.0,
+      "net": -5143.09
+    },
+    {
+      "answer_rate_per_attempt": 0.4,
+      "benefit": 0.0,
+      "cost": 5143.09,
+      "intervention_success_rate": 0.0,
+      "loss_per_incident": 150.0,
+      "net": -5143.09
+    },
+    {
+      "answer_rate_per_attempt": 0.4,
+      "benefit": 0.0,
+      "cost": 5143.09,
+      "intervention_success_rate": 0.0,
+      "loss_per_incident": 300.0,
+      "net": -5143.09
+    },
+    {
+      "answer_rate_per_attempt": 0.4,
+      "benefit": 132.45,
+      "cost": 5143.09,
+      "intervention_success_rate": 0.1,
+      "loss_per_incident": 61.0,
+      "net": -5010.64
+    },
+    {
+      "answer_rate_per_attempt": 0.4,
+      "benefit": 325.7,
+      "cost": 5143.09,
+      "intervention_success_rate": 0.1,
+      "loss_per_incident": 150.0,
+      "net": -4817.39
+    },
+    {
+      "answer_rate_per_attempt": 0.4,
+      "benefit": 651.41,
+      "cost": 5143.09,
+      "intervention_success_rate": 0.1,
+      "loss_per_incident": 300.0,
+      "net": -4491.68
+    },
+    {
+      "answer_rate_per_attempt": 0.4,
+      "benefit": 331.13,
+      "cost": 5143.09,
+      "intervention_success_rate": 0.25,
+      "loss_per_incident": 61.0,
+      "net": -4811.96
+    },
+    {
+      "answer_rate_per_attempt": 0.4,
+      "benefit": 814.26,
+      "cost": 5143.09,
+      "intervention_success_rate": 0.25,
+      "loss_per_incident": 150.0,
+      "net": -4328.83
+    },
+    {
+      "answer_rate_per_attempt": 0.4,
+      "benefit": 1628.51,
+      "cost": 5143.09,
+      "intervention_success_rate": 0.25,
+      "loss_per_incident": 300.0,
+      "net": -3514.58
+    },
+    {
+      "answer_rate_per_attempt": 0.4,
+      "benefit": 662.26,
+      "cost": 5143.09,
+      "intervention_success_rate": 0.5,
+      "loss_per_incident": 61.0,
+      "net": -4480.83
+    },
+    {
+      "answer_rate_per_attempt": 0.4,
+      "benefit": 1628.51,
+      "cost": 5143.09,
+      "intervention_success_rate": 0.5,
+      "loss_per_incident": 150.0,
+      "net": -3514.58
+    },
+    {
+      "answer_rate_per_attempt": 0.4,
+      "benefit": 3257.03,
+      "cost": 5143.09,
+      "intervention_success_rate": 0.5,
+      "loss_per_incident": 300.0,
+      "net": -1886.06
+    },
+    {
+      "answer_rate_per_attempt": 0.6,
+      "benefit": 0.0,
+      "cost": 5390.2,
+      "intervention_success_rate": 0.0,
+      "loss_per_incident": 61.0,
+      "net": -5390.2
+    },
+    {
+      "answer_rate_per_attempt": 0.6,
+      "benefit": 0.0,
+      "cost": 5390.2,
+      "intervention_success_rate": 0.0,
+      "loss_per_incident": 150.0,
+      "net": -5390.2
+    },
+    {
+      "answer_rate_per_attempt": 0.6,
+      "benefit": 0.0,
+      "cost": 5390.2,
+      "intervention_success_rate": 0.0,
+      "loss_per_incident": 300.0,
+      "net": -5390.2
+    },
+    {
+      "answer_rate_per_attempt": 0.6,
+      "benefit": 158.13,
+      "cost": 5390.2,
+      "intervention_success_rate": 0.1,
+      "loss_per_incident": 61.0,
+      "net": -5232.07
+    },
+    {
+      "answer_rate_per_attempt": 0.6,
+      "benefit": 388.85,
+      "cost": 5390.2,
+      "intervention_success_rate": 0.1,
+      "loss_per_incident": 150.0,
+      "net": -5001.35
+    },
+    {
+      "answer_rate_per_attempt": 0.6,
+      "benefit": 777.7,
+      "cost": 5390.2,
+      "intervention_success_rate": 0.1,
+      "loss_per_incident": 300.0,
+      "net": -4612.5
+    },
+    {
+      "answer_rate_per_attempt": 0.6,
+      "benefit": 395.33,
+      "cost": 5390.2,
+      "intervention_success_rate": 0.25,
+      "loss_per_incident": 61.0,
+      "net": -4994.87
+    },
+    {
+      "answer_rate_per_attempt": 0.6,
+      "benefit": 972.12,
+      "cost": 5390.2,
+      "intervention_success_rate": 0.25,
+      "loss_per_incident": 150.0,
+      "net": -4418.08
+    },
+    {
+      "answer_rate_per_attempt": 0.6,
+      "benefit": 1944.25,
+      "cost": 5390.2,
+      "intervention_success_rate": 0.25,
+      "loss_per_incident": 300.0,
+      "net": -3445.95
+    },
+    {
+      "answer_rate_per_attempt": 0.6,
+      "benefit": 790.66,
+      "cost": 5390.2,
+      "intervention_success_rate": 0.5,
+      "loss_per_incident": 61.0,
+      "net": -4599.54
+    },
+    {
+      "answer_rate_per_attempt": 0.6,
+      "benefit": 1944.25,
+      "cost": 5390.2,
+      "intervention_success_rate": 0.5,
+      "loss_per_incident": 150.0,
+      "net": -3445.95
+    },
+    {
+      "answer_rate_per_attempt": 0.6,
+      "benefit": 3888.49,
+      "cost": 5390.2,
+      "intervention_success_rate": 0.5,
+      "loss_per_incident": 300.0,
+      "net": -1501.71
+    },
+    {
+      "answer_rate_per_attempt": 0.8,
+      "benefit": 0.0,
+      "cost": 5343.14,
+      "intervention_success_rate": 0.0,
+      "loss_per_incident": 61.0,
+      "net": -5343.14
+    },
+    {
+      "answer_rate_per_attempt": 0.8,
+      "benefit": 0.0,
+      "cost": 5343.14,
+      "intervention_success_rate": 0.0,
+      "loss_per_incident": 150.0,
+      "net": -5343.14
+    },
+    {
+      "answer_rate_per_attempt": 0.8,
+      "benefit": 0.0,
+      "cost": 5343.14,
+      "intervention_success_rate": 0.0,
+      "loss_per_incident": 300.0,
+      "net": -5343.14
+    },
+    {
+      "answer_rate_per_attempt": 0.8,
+      "benefit": 167.59,
+      "cost": 5343.14,
+      "intervention_success_rate": 0.1,
+      "loss_per_incident": 61.0,
+      "net": -5175.55
+    },
+    {
+      "answer_rate_per_attempt": 0.8,
+      "benefit": 412.11,
+      "cost": 5343.14,
+      "intervention_success_rate": 0.1,
+      "loss_per_incident": 150.0,
+      "net": -4931.03
+    },
+    {
+      "answer_rate_per_attempt": 0.8,
+      "benefit": 824.23,
+      "cost": 5343.14,
+      "intervention_success_rate": 0.1,
+      "loss_per_incident": 300.0,
+      "net": -4518.91
+    },
+    {
+      "answer_rate_per_attempt": 0.8,
+      "benefit": 418.98,
+      "cost": 5343.14,
+      "intervention_success_rate": 0.25,
+      "loss_per_incident": 61.0,
+      "net": -4924.16
+    },
+    {
+      "answer_rate_per_attempt": 0.8,
+      "benefit": 1030.28,
+      "cost": 5343.14,
+      "intervention_success_rate": 0.25,
+      "loss_per_incident": 150.0,
+      "net": -4312.86
+    },
+    {
+      "answer_rate_per_attempt": 0.8,
+      "benefit": 2060.57,
+      "cost": 5343.14,
+      "intervention_success_rate": 0.25,
+      "loss_per_incident": 300.0,
+      "net": -3282.57
+    },
+    {
+      "answer_rate_per_attempt": 0.8,
+      "benefit": 837.96,
+      "cost": 5343.14,
+      "intervention_success_rate": 0.5,
+      "loss_per_incident": 61.0,
+      "net": -4505.18
+    },
+    {
+      "answer_rate_per_attempt": 0.8,
+      "benefit": 2060.57,
+      "cost": 5343.14,
+      "intervention_success_rate": 0.5,
+      "loss_per_incident": 150.0,
+      "net": -3282.57
+    },
+    {
+      "answer_rate_per_attempt": 0.8,
+      "benefit": 4121.14,
+      "cost": 5343.14,
+      "intervention_success_rate": 0.5,
+      "loss_per_incident": 300.0,
+      "net": -1222.0
+    }
+  ],
+  "status": "ASSUMPTIONS ONLY. No invoices, no field data, no measured loss prevention."
+}

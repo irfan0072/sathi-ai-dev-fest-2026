@@ -22,9 +22,9 @@ router = APIRouter(prefix="/api/v1/callcenter", tags=["call-center"])
 Staff = Annotated[AuthenticatedPrincipal, Depends(require_roles("supervisor", "super_admin"))]
 Admin = Annotated[AuthenticatedPrincipal, Depends(require_roles("super_admin"))]
 
-SUPERVISOR_SCOPES = ("pending", "mine", "my_history")
+SUPERVISOR_SCOPES = ("pending", "mine", "my_history", "followup")
 ADMIN_SCOPES = ("pending", "mine", "manual", "retrying", "ignored", "resolved", "all",
-                "my_history")
+                "my_history", "followup")
 
 
 def _err(err: CallCenterError) -> JSONResponse:
@@ -37,7 +37,9 @@ def _visible(task: dict[str, Any], principal: AuthenticatedPrincipal) -> bool:
     if principal.role == "super_admin":
         return True
     return (task["status"] == "needs_manual" and task["assigned_to"] is None) or (
-        task["assigned_to"] == principal.subject) or task["resolved_by"] == principal.subject
+        task["assigned_to"] == principal.subject) or task["resolved_by"] == principal.subject or (
+        task["followup_status"] in ("required", "attempted", "uncertain", "unreachable")
+        and task["followup_assigned_to"] in (None, principal.subject))
 
 
 @router.get("/queue")
@@ -53,7 +55,9 @@ def queue(principal: Staff, scope: str = "pending", status: str | None = None,
         status, assignee = None, None
     center = get_callcenter()
     out = center.queue(scope, principal.subject, status=status, assignee=assignee,
-                       before_id=before_id, limit=limit)
+                       before_id=before_id, limit=limit,
+                       followup_actor=principal.subject if principal.role != "super_admin"
+                       else None)
     with center._conn() as conn, conn.cursor() as cur:
         cur.execute(
             "SELECT count(*) FILTER (WHERE status = 'needs_manual' AND assigned_to IS NULL), "
@@ -130,6 +134,43 @@ def escalate(task_id: int, principal: Admin) -> Any:
 def distribute(principal: Admin) -> Any:
     try:
         return get_callcenter().auto_distribute(principal.subject)
+    except CallCenterError as err:
+        return _err(err)
+
+
+class FollowupRequest(BaseModel):
+    """Deliberately has no phone-number field: an agent-supplied or alternate number is never
+    accepted, and unknown fields are rejected."""
+
+    model_config = {"extra": "forbid"}
+    outcome: Literal["attempted", "reached_independently", "uncertain", "unreachable"]
+    channel: Literal["registered_number", "in_person"]
+    note: str | None = Field(default=None, max_length=1000)
+
+
+@router.post("/tasks/{task_id}/followup/claim")
+def followup_claim(task_id: int, principal: Annotated[
+        AuthenticatedPrincipal, Depends(require_roles("supervisor"))]) -> Any:
+    try:
+        return get_callcenter().claim_followup(task_id, principal.subject)
+    except CallCenterError as err:
+        return _err(err)
+
+
+@router.post("/tasks/{task_id}/followup/assign")
+def followup_assign(task_id: int, body: AssignRequest, principal: Admin) -> Any:
+    try:
+        return get_callcenter().assign_followup(task_id, body.staff_id, principal.subject)
+    except CallCenterError as err:
+        return _err(err)
+
+
+@router.post("/tasks/{task_id}/followup")
+def followup_record(task_id: int, body: FollowupRequest, principal: Staff) -> Any:
+    try:
+        return get_callcenter().record_followup(
+            task_id, principal.subject, principal.role == "super_admin", body.outcome,
+            body.channel, body.note)
     except CallCenterError as err:
         return _err(err)
 

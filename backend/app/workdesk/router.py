@@ -293,6 +293,14 @@ def submit_audit_report(case_id: int, body: AuditReportRequest, principal: Staff
                 return _err(409, "CASE_CLOSED", "This case already has a final decision.")
             if not _can_act(principal, row[2]):
                 return _err(403, "NOT_YOURS", "Take this case before writing its report.")
+            if body.decision == "approved":
+                from app.callcenter.service import CallCenterService
+
+                blocked = CallCenterService.clearance_block(cur, case_id)
+                if blocked:
+                    return _err(409, "INDEPENDENT_CONTACT_REQUIRED",
+                                "An independent customer contact is required before this case "
+                                f"can be cleared (follow-up status: {blocked}).")
             cur.execute(
                 "INSERT INTO audit_reports (case_id, author, decision, risk_level, "
                 "customer_contacted, findings, action_taken, recommendation) "

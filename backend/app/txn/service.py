@@ -5,8 +5,8 @@
    cash they received.
 3. Same amount -> the transaction is "verified".
    Different amount (after one retry), "I did not do this" (# alone) or the secret help
-   signal (amount typed with a leading 0) -> "suspicious", with a plain-language AI
-   recommendation and a case for a human supervisor. Nothing is ever labelled fraud.
+   signal (amount typed with a leading 0) -> "suspicious" by fixed rules, with a plain-language
+   rule-based recommendation and a case for a human supervisor. Nothing is ever labelled fraud.
 4. No answer -> "no_answer"; a supervisor can call again.
 
 Agents and customers only ever see neutral states ("checked" / "waiting"), so nobody near the
@@ -310,6 +310,12 @@ class TxnCheckService:
                 (agent_id, REASON_BY_OUTCOME[outcome], json.dumps(evidence)),
             )
             case_id = cur.fetchone()[0]
+            # The call may have come from the handset the agent holds, so this answer alone
+            # cannot clear the case: it needs an independent follow-up (see CallCenterService).
+            cur.execute("UPDATE call_tasks SET followup_status = 'required', "
+                        "priority = CASE WHEN priority = 'urgent' THEN 'urgent' ELSE 'high' END,"
+                        " updated_at = now() WHERE check_id = %s "
+                        "AND followup_status = 'not_required';", (check_id,))
             if note:
                 cur.execute(
                     "INSERT INTO case_notes (case_id, author, note_type, body) "
@@ -431,7 +437,8 @@ class TxnCheckService:
 
 def recommendation(outcome: str, amount: Decimal, stated: Decimal | None,
                    context: dict[str, Any]) -> dict[str, Any]:
-    """Plain-language AI recommendation. It never says 'fraud'; a person decides."""
+    """Plain-language, rule-based recommendation (not a model output). It never says 'fraud'; a
+    person decides."""
     reasons: list[dict[str, Any]] = []
     if outcome == "match":
         label, headline = "verified", "Customer confirmed the same amount"

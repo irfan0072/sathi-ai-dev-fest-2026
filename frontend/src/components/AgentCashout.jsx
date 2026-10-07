@@ -91,7 +91,7 @@ export default function AgentCashout({ session }) {
               {busy && <span className="loading loading-spinner loading-sm" />}Record cash-out
             </button>
             {error && <div role="alert" className="alert alert-error alert-soft text-sm">{error}</div>}
-            <p className="muted">The fee is taken from the customer&apos;s account automatically. A receipt SMS goes to the customer.</p>
+            <p className="muted">The fee is taken from the customer&apos;s account automatically. An SMS notice (without the amount) goes to the customer.</p>
           </div>
         </form>
 

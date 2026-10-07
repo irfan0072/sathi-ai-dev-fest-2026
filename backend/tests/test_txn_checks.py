@@ -68,7 +68,10 @@ def test_cashout_debits_ledger_and_calls_customer(durable_service):
     assert "3000" not in json.dumps(calls)  # the call never says the amount
     assert _check(out["txn_id"])["status"] == "calling"
     sms = client.get("/api/v1/notifications", headers=CUSTOMER).json()["items"]
-    assert sms[0]["template"] == "cashout_receipt"
+    assert sms[0]["template"] == "cashout_notice"
+    # The SMS must not show the ledger amount before the customer states the cash received.
+    body = sms[0]["body"]
+    assert "3000" not in body and "৩,০০০" not in body and "৩০০০" not in body
 
 
 def test_matching_amount_is_verified(durable_service):

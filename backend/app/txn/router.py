@@ -74,8 +74,8 @@ def record_cashout(
     from app.notify.router import get_notification_service
 
     try:
-        get_notification_service().notify(body.user_id, "cashout_receipt",
-                                           amount=txn["amount"], fee=txn["fee"])
+        # No amount in this SMS: the customer states the cash received before seeing the ledger.
+        get_notification_service().notify(body.user_id, "cashout_notice")
     except Exception:
         pass
     _call_customer(txn["check_id"], principal.subject)

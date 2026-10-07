@@ -63,7 +63,7 @@ export const checkNeeded = {
 export const eventName = {
   cashout_recorded: 'Agent recorded a cash-out',
   txn_check_verified: 'Customer confirmed the amount',
-  txn_check_suspicious: 'AI marked a cash-out as suspicious',
+  txn_check_suspicious: 'A cash-out check was marked suspicious (fixed rule: different amount, denial or help signal)',
   mandate_requested: 'Agent asked for a cash-out',
   mandate_verified: 'Customer confirmed the amount',
   mandate_code_issued: 'Agent got the one-time code',

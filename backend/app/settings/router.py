@@ -91,6 +91,10 @@ def readiness(principal: Analyst) -> Any:
 @router.get("/probe")
 def probe(principal: Analyst, only: str | None = None) -> Any:
     """Free, read-only connection checks with the effective credentials."""
+    from app.deployment import blocked_response, is_public_demo
+
+    if is_public_demo():
+        return blocked_response()
     from app.ops.readiness import PROBES, run_all, run_one
 
     env = get_credentials().effective_env()
@@ -135,6 +139,10 @@ def clear_credential(name: str, principal: Analyst) -> Any:
 @router.post("/providers/{provider}/test")
 def test_provider(provider: str, principal: Analyst) -> Any:
     """Free, read-only connection test using the effective credentials."""
+    from app.deployment import blocked_response, is_public_demo
+
+    if is_public_demo():
+        return blocked_response()
     env = get_credentials().effective_env()
     values = get_settings().values()
     checks = {

@@ -22,6 +22,7 @@ const UpliftPage = page(() => import('./components/UpliftPage'));
 const CommandCenter = page(() => import('./components/CommandCenter'));
 const SettingsPage = page(() => import('./components/SettingsPage'));
 const AdminDashboard = page(() => import('./components/ops/AdminDashboard'));
+const WorkflowEvidence = page(() => import('./components/ops/WorkflowEvidence'));
 const CallCenter = page(() => import('./components/ops/CallCenter'));
 const CaseWorkbench = page(() => import('./components/ops/CaseWorkbench'));
 const scam = () => import('./components/ScamProtection');
@@ -144,6 +145,7 @@ export default function App() {
     if (id === 'agents') return <AgentRiskBoard />;
     if (id === 'metrics') return <MetricsPage />;
     if (id === 'settings') return <SettingsPage />;
+    if (id === 'evidence') return <WorkflowEvidence />;
     if (id === 'admin') return <AdminDashboard onOpen={selectTab} />;
     if (id === 'desk') return <SupervisorDesk session={session} onOpen={selectTab} />;
     if (id === 'callcenter') return <CallCenter session={session} />;
@@ -184,8 +186,9 @@ export default function App() {
           role="region"
           aria-label="Demo warning"
         >
-          Live system on synthetic customers (no real upay accounts). The AI only recommends;
-          a person makes every decision.
+          Hackathon concept for upay, not endorsed by upay. Live system on synthetic customers
+          (no real upay accounts). Fixed rules detect; the AI ranks cases for review; a person
+          makes every decision.
         </div>
         <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-5 sm:px-6 sm:py-6 lg:py-8">
           <div

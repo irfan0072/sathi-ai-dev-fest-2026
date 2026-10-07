@@ -24,7 +24,7 @@ export function AgentEvidence({ data }) {
           </div>
           <div className="text-sm">
             <p>
-              Unusual activity score: {(data.risk * 100).toFixed(0)}%. A high score means “take a look”, not
+              Review score (a ranking for a person to look at, not a fraud probability): {(data.risk * 100).toFixed(0)}%. A high score means “take a look”, not
               “this agent is a fraud”.
             </p>
             <p className="muted mt-1">
@@ -98,7 +98,7 @@ export default function AgentRiskBoard() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h2 className="page-title">Agent risk (AI)</h2>
+        <h2 className="page-title">Agent review ranking (AI)</h2>
         <p className="page-lead mt-1">
           Every agent with activity in the last 30 days, scored live by the trained anomaly model: fee charged compared
           with similar agents, allowance-day spikes, and cash gaps customers reported on their confirmation calls.

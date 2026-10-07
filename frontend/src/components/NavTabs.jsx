@@ -21,10 +21,11 @@ export const tabs = [
   { id: 'command', label: 'Fraud dashboard', icon: 'radar', group: 'Analytics', title: 'Fraud dashboard', roles: ['analyst', 'super_admin'] },
   { id: 'transactions', label: 'Confirmations', icon: 'receipt', group: 'Analytics', title: 'Confirmations', roles: ['analyst', 'super_admin'] },
   { id: 'cases', label: 'Cases to review', icon: 'cases', group: 'Analytics', title: 'Cases to review', roles: ['analyst'] },
-  { id: 'agents', label: 'Agent risk (AI)', icon: 'radar', group: 'Analytics', title: 'Agent risk (AI)', roles: ['analyst', 'super_admin'] },
+  { id: 'agents', label: 'Agent review ranking', icon: 'radar', group: 'Analytics', title: 'Agent review ranking (AI ranks, people decide)', roles: ['analyst', 'super_admin'] },
   { id: 'liquidity', label: 'Cash planning', icon: 'store', group: 'Analytics', title: 'How much cash agents will need', roles: ['agent', 'analyst', 'super_admin'] },
   { id: 'outreach', label: 'Customers who need help', icon: 'users', group: 'Analytics', title: 'Customers who may need help', roles: ['analyst', 'super_admin'] },
   { id: 'campaign', label: 'Invite planner', icon: 'users', group: 'Analytics', title: 'Who to invite to Sathi', roles: ['analyst', 'super_admin'] },
+  { id: 'evidence', label: 'Workflow evidence', icon: 'receipt', group: 'Analytics', title: 'Workflow evidence (synthetic, not field impact)', roles: ['supervisor', 'analyst', 'super_admin'] },
   { id: 'metrics', label: 'AI test results', icon: 'chart', group: 'Analytics', title: 'How well the AI works', roles: ['analyst', 'super_admin'] },
   // Agent and customer
   { id: 'cashout', label: 'Cash-out', icon: 'flow', group: 'Daily work', title: 'Cash-out', roles: ['agent'] },
@@ -92,7 +93,7 @@ export default function NavTabs({ activeTab, onSelectTab, session = null }) {
       <div className="m-3 mt-2 flex items-center justify-between gap-2 rounded-box border border-base-300 bg-base-200/60 p-3 text-[11px] leading-relaxed text-base-content/80">
         <span className="flex-1">
           {session?.display_name ? <><strong>{session.display_name}</strong><br /></> : null}
-          Synthetic data. Not connected to real upay accounts.
+          Synthetic data. Hackathon concept: not connected to real upay accounts and not endorsed by upay.
         </span>
         <ThemeToggle />
       </div>

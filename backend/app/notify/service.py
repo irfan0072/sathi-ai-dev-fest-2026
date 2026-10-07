@@ -4,6 +4,7 @@ Two messages only, both sent AFTER the fact so they never reveal a requested amo
 before the customer states it independently:
 
 - `cashout_receipt`: after redemption, the ledger amount and fee, plus "not you?" advice.
+- `cashout_notice`: after a post-cash-out check starts; deliberately without the amount.
 - `verification_call_missed`: the verification call was not answered.
 
 Sending is best-effort: a failed SMS is recorded and never blocks or reverses money flow.
@@ -26,6 +27,12 @@ TEMPLATES = {
     "cashout_receipt": (
         "সাথী: আপনার একাউন্ট থেকে ৳{amount} উত্তোলন হয়েছে (ফি ৳{fee})। "
         "আপনি না করে থাকলে এখনই সাথী হেল্পলাইনে জানান। পিন কাউকে বলবেন না।"
+    ),
+    # After a cash-out the customer must state the cash they received on their own, so this
+    # notice carries NO amount. The ledger amount is not shown before they answer.
+    "cashout_notice": (
+        "সাথী: আপনার একাউন্ট থেকে একটি ক্যাশ-আউট হয়েছে। আমরা ফোন করে হাতে পাওয়া টাকার পরিমাণ "
+        "জানতে চাইব। আপনি না করে থাকলে এখনই সাথী হেল্পলাইনে জানান। পিন কাউকে বলবেন না।"
     ),
     "verification_call_missed": (
         "সাথী: একজন এজেন্ট আপনার একাউন্ট থেকে টাকা তোলার অনুরোধ করেছেন। আমরা আপনাকে কল "

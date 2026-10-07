@@ -165,3 +165,11 @@ def health() -> JSONResponse:
         status_code=200 if diagnostics["status"] == "ok" else 503,
         content=diagnostics,
     )
+
+
+@app.get("/api/v1/deployment")
+def deployment_info() -> dict[str, Any]:
+    """Public, non-sensitive: what this deployment may do (drives the console's mode label)."""
+    from app.deployment import describe
+
+    return describe()

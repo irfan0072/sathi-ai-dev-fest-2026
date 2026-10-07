@@ -33,7 +33,7 @@ describe('Fraud operations UI', () => {
   });
 
   it('sms inbox explains when receipts arrive', () => {
-    expect(renderToString(<SmsInbox />)).toContain('receipt SMS after every cash-out');
+    expect(renderToString(<SmsInbox />)).toContain('SMS notice after every cash-out');
   });
 
   it('navigation lists the command center', async () => {

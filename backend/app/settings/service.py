@@ -182,6 +182,10 @@ class SettingsService:
         return runtime_env(self._conn)
 
     def editable(self) -> bool:
+        from app.deployment import is_public_demo
+
+        if is_public_demo():
+            return False  # published staff PINs must never reach settings or credentials
         return self.env.get("SATHI_SETTINGS_EDITABLE", "true").strip().lower() == "true"
 
     def _overrides(self) -> dict[str, dict[str, Any]]:
@@ -212,6 +216,10 @@ class SettingsService:
 
     def _resolve(self, setting: Setting, overrides: dict[str, dict[str, Any]]
                  ) -> tuple[Any, str]:
+        from app.deployment import PUBLIC_DEMO_PINNED, is_public_demo
+
+        if is_public_demo() and setting.key in PUBLIC_DEMO_PINNED:
+            return PUBLIC_DEMO_PINNED[setting.key], "deployment_mode"
         if setting.key in overrides:
             try:
                 return _coerce(setting, overrides[setting.key]["value"]), "override"

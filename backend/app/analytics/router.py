@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from typing import Annotated, Any
 
-from app.analytics.service import AnalyticsService
+from app.analytics.service import AnalyticsService, ClearanceBlockedError
 from app.auth.dependencies import require_roles
 from app.auth.models import AuthenticatedPrincipal
 from app.evaluation.artifacts import ArtifactError
@@ -162,6 +162,10 @@ def decide_case(
         )
     except KeyError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+    except ClearanceBlockedError as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail={"error": {
+            "code": "INDEPENDENT_CONTACT_REQUIRED", "message": str(exc),
+            "followup_status": exc.followup_status}})
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc))
 

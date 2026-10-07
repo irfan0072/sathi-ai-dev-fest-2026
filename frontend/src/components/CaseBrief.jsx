@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { api } from '../api';
 import Icon from './Icon';
 
-const providerLabel = { gemini: 'Written by Gemini AI', openai: 'Written by GPT-4o AI', template: 'Standard summary' };
+const providerLabel = { gemini: 'Written by Gemini AI', openai: 'Written by GPT-4o AI', template: 'Deterministic summary' };
 
 export function BriefView({ result }) {
   const facts = Object.fromEntries((result.facts || []).map((f) => [f.id, f]));
@@ -12,7 +12,9 @@ export function BriefView({ result }) {
       <div className="flex flex-wrap items-center gap-2">
         <span className="badge badge-secondary badge-sm">{providerLabel[result.provider] || result.provider}</span>
         {result.fallbacks?.length > 0 && <span className="muted">· first choice was not available</span>}
+        {result.mode_label && <span className="muted" data-testid="brief-mode">· {result.mode_label}</span>}
       </div>
+      {result.guard_limits && <p className="muted">{result.guard_limits}</p>}
       <h4 className="font-semibold">{brief.headline}</h4>
       <div>
         <div className="muted mb-0.5 uppercase tracking-wide">What happened</div>
@@ -61,7 +63,7 @@ export default function CaseBrief({ caseId, canGenerate = true }) {
   if (!canGenerate) {
     return (
       <p className="muted rounded-box border border-base-300 bg-base-200/40 px-3 py-2 text-xs">
-        AI case summaries are restricted to operators with decision authority.
+        Case summaries are restricted to operators with decision authority.
       </p>
     );
   }
@@ -69,7 +71,7 @@ export default function CaseBrief({ caseId, canGenerate = true }) {
     <div className="flex flex-col gap-2">
       <button className="btn btn-secondary btn-sm btn-soft self-start" disabled={busy} onClick={generate}>
         {busy ? <span className="loading loading-spinner loading-xs" /> : <Icon name="info" className="size-4" />}
-        {result ? 'Write the summary again' : 'Summarize this case with AI'}
+        {result ? 'Write the summary again' : 'Write a case summary'}
       </button>
       {error && <div role="alert" className="alert alert-error alert-soft text-sm">{error}</div>}
       {result && <BriefView result={result} />}

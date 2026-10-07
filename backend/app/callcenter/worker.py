@@ -113,16 +113,23 @@ class Worker:
             except Exception as exc:  # keep the loop alive
                 log.warning("ring timeout failed for %s: %s", call_id, exc)
 
+        from app.voice.service import PLACEMENT_FAILURES, VoiceError
+
         for check_id in center.claim_due_retries():
             try:
                 voice.start_check_call(check_id, SCHEDULER_ACTOR, automatic=True)
                 out["retries"] += 1
+            except VoiceError as exc:
+                # A failed placement is already counted by start_check_call (bounded retry,
+                # then the manual queue). A closed check or a live call needs nothing more.
+                log.warning("retry call failed for check %s: %s", check_id, exc.code)
             except Exception as exc:
-                # Could not place the call (no phone number, provider down): count it as a
-                # missed attempt so the retry budget still runs out.
-                log.warning("retry call failed for check %s: %s", check_id, exc)
-                center.on_no_answer(check_id)
+                # Anything unexpected (provider library, database blip): count it as a failed
+                # attempt so the retry budget runs out and a person takes over.
+                log.warning("retry call crashed for check %s: %s", check_id, exc)
+                center.on_placement_failed(check_id, PLACEMENT_FAILURES[0], str(exc)[:200])
 
+        self._purge_transcripts(center)
         from app.settings.router import get_settings
 
         values = get_settings().values()
@@ -135,6 +142,17 @@ class Worker:
             self._last_sim = time.monotonic()
         self._rescore_receivers(mandates)
         return out
+
+    def _purge_transcripts(self, center: Any) -> None:
+        """Hourly: erase transcript text past the retention period (parsed outcomes stay)."""
+        now = time.monotonic()
+        if now - getattr(self, "_last_purge", -3600.0) < 3600:
+            return
+        self._last_purge = now
+        try:
+            center.purge_transcripts()
+        except Exception as exc:
+            log.warning("transcript purge failed: %s", exc)
 
     def _simulate_p2p(self, mandates: Any) -> int:
         """Normal family transfers most ticks; a scam burst or shop orders now and then."""

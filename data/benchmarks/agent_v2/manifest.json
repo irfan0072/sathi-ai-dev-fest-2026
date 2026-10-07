@@ -1,0 +1,14 @@
+{
+  "benchmark_version": "agent-benchmark-v2.0",
+  "detectors": {
+    "replication_1_detector.joblib": "3e53654986340365bee097d7177361095d5137876105c866d305e779c3f2d0de",
+    "replication_2_detector.joblib": "bd7aaf61e3d7172f837bf1b1aa17a72df881b647bffedb39f02319963cdf76d7",
+    "replication_3_detector.joblib": "bcd803fd9ff096107f4889e4a454fec419799f835544dd62903085774d344f12"
+  },
+  "files": {
+    "dev_results.json": "614f4ac99dd80e94e0ff8a7a01b8b7bc0d7c5207ab948f83be3309a44a601263",
+    "final_results.json": "74c760011f72d0fdae34bc15122c02e976d81a7d9922d831583698fe9aceb461",
+    "protocol.json": "41ab82f3facb30b2289752276d4d70f08370c9afe485f046ec1962f5ec786c73"
+  },
+  "generated_at": "2026-10-07T03:56:44.027946+00:00"
+}

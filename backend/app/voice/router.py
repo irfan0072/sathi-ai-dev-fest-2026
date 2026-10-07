@@ -83,7 +83,7 @@ class SimulatedAnswer(BaseModel):
     digits: str = Field(default="", max_length=12, description="Keys pressed before #")
     speech: str | None = Field(default=None, max_length=200,
                                description="Spoken answer (speech recognition transcript)")
-    confidence: float | None = Field(default=None, ge=0, le=1)
+    confidence: float | None = Field(default=None, ge=0, le=1, allow_inf_nan=False)
     no_input: bool = Field(default=False, description="The customer stayed silent")
 
 
@@ -107,6 +107,15 @@ def voice_config(
         "step_up_enforced": settings["risk.step_up_enforced"],
         "language": twiml.LANGUAGE,
         "sms_provider": settings["sms.provider"],
+        # Honest capability label: Sathi has no custom ASR model. The provider transcribes the
+        # audio and a word parser reads the amount afterwards.
+        "speech_input": {
+            "asr_model": "none: the call provider supplies the transcript",
+            "amount_reading": "word parser after transcription; keypad is the safe path",
+            "validated_dialects": [],
+            "validation_status": "unvalidated: no consented audio, no speaker-disjoint test set",
+            "missing_confidence_policy": "unclear: ask for keypad, never invent a confidence",
+        },
     }
 
 
@@ -232,11 +241,9 @@ async def provider_answer(call_id: str, request: Request) -> Any:
 async def provider_gather(call_id: str, request: Request) -> Any:
     try:
         service, params = await _provider_request(request, call_id)
-        confidence = params.get("Confidence")
-        try:
-            confidence_value = float(confidence) if confidence not in (None, "") else None
-        except ValueError:
-            confidence_value = None
+        # Raw provider value: the interpreter validates it (finite, 0..1) before anything is
+        # stored, and a missing or invalid confidence never becomes an invented number.
+        confidence_value = params.get("Confidence")
         # Twilio sends FinishedOnKey="#" when the customer pressed hash, and an empty value
         # when the gather timed out in silence. Silence must never count as "I did not do it".
         no_input = ("FinishedOnKey" in params and params.get("FinishedOnKey") != "#"
@@ -283,6 +290,8 @@ async def bd_ivr_event(call_id: str, request: Request) -> Any:
         event = json.loads(body.decode() or "{}")
     except (VoiceError, VoiceProviderError, ValueError):
         return Response(status_code=403)
+    if not isinstance(event, dict):
+        return Response(status_code=400)
 
     gather = {"max_digits": 8, "finish_on_key": "#", "timeout_seconds": 12}
     kind = event.get("event")

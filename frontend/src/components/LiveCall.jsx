@@ -24,7 +24,7 @@ export function RiskCard({ risk }) {
         <span className={`badge badge-sm ${bandTone[risk.band] || 'badge-ghost'}`}>{riskLevel[risk.band] || risk.band}</span>
       </div>
       <div className="flex items-center gap-2">
-        <progress className="progress w-full" value={pct} max="100" aria-label="Risk score" />
+        <progress className="progress w-full" value={pct} max="100" aria-label="Review score (not a fraud probability)" />
         <span className="font-mono text-xs">{pct}</span>
       </div>
       <p className="text-xs">{stepUpText[risk.step_up] || risk.step_up}</p>
@@ -265,7 +265,7 @@ export function SmsInbox() {
   return (
     <div className="flex flex-col gap-2">
       <h4 className="flex items-center gap-2 text-sm font-semibold"><Icon name="phone" className="size-4" />Messages</h4>
-      {!items?.length ? <p className="muted">No messages yet. You get a receipt SMS after every cash-out.</p> : (
+      {!items?.length ? <p className="muted">No messages yet. You get an SMS notice after every cash-out; it never shows the amount.</p> : (
         <ul className="flex max-h-56 flex-col gap-2 overflow-y-auto">
           {items.map((m) => (
             <li key={m.notification_id} className="chat chat-start">

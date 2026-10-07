@@ -26,6 +26,32 @@ from app.auth.models import AuthenticatedPrincipal
 bearer_scheme = HTTPBearer(auto_error=False)
 
 
+STAFF_ROLES = ("supervisor", "analyst", "super_admin")
+
+
+def _reject_deactivated_staff(claims: dict) -> None:
+    """A deactivated staff member's already-issued token stops working immediately.
+
+    Only staff roles are checked (one primary-key lookup). A subject that is not in the staff
+    table (the configured demo principals) and an unreachable database do not block the
+    request here; every data endpoint needs the database anyway.
+    """
+    if claims.get("role") not in STAFF_ROLES:
+        return
+    try:
+        from app.staff.service import get_staff_service
+
+        active = get_staff_service().is_active(str(claims.get("sub", "")))
+    except Exception:
+        return
+    if active is False:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={"error": {"code": "ACCOUNT_DISABLED",
+                              "message": "This staff account has been deactivated."}},
+        )
+
+
 def get_current_principal(
     credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer_scheme)],
     x_actor: str | None = Header(default=None, alias="X-Actor"),
@@ -92,6 +118,7 @@ def get_current_principal(
             },
         ) from exc
 
+    _reject_deactivated_staff(claims)
     return AuthenticatedPrincipal(
         subject=claims["sub"],
         role=claims["role"],

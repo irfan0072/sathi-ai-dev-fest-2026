@@ -452,6 +452,10 @@ def staff_list(principal: Admin, role: str | None = None) -> Any:
 
 @router.post("/staff", status_code=201)
 def staff_create(body: StaffCreate, principal: Admin) -> Any:
+    from app.deployment import blocked_response, is_public_demo
+
+    if is_public_demo():
+        return blocked_response()
     from app.staff.service import StaffError, get_staff_service
 
     try:
@@ -466,6 +470,10 @@ def staff_create(body: StaffCreate, principal: Admin) -> Any:
 
 @router.patch("/staff/{staff_id}")
 def staff_update(staff_id: str, body: StaffUpdate, principal: Admin) -> Any:
+    from app.deployment import blocked_response, is_public_demo
+
+    if is_public_demo():
+        return blocked_response()
     from app.staff.service import StaffError, get_staff_service
 
     try:
@@ -509,6 +517,10 @@ def accounts_list(principal: Admin) -> Any:
 
 @router.post("/accounts", status_code=201)
 def accounts_create(body: AccountCreate, principal: Admin) -> Any:
+    from app.deployment import blocked_response, is_public_demo
+
+    if is_public_demo():
+        return blocked_response()
     from app.accounts.service import AccountError, get_account_service
 
     try:
@@ -524,6 +536,10 @@ def accounts_create(body: AccountCreate, principal: Admin) -> Any:
 
 @router.patch("/accounts/{account_id}")
 def accounts_update(account_id: int, body: AccountUpdate, principal: Admin) -> Any:
+    from app.deployment import blocked_response, is_public_demo
+
+    if is_public_demo():
+        return blocked_response()
     from app.accounts.service import AccountError, get_account_service
 
     try:
@@ -540,6 +556,10 @@ def accounts_update(account_id: int, body: AccountUpdate, principal: Admin) -> A
 
 @router.post("/accounts/{account_id}/add-money")
 def accounts_add_money(account_id: int, body: AddMoney, principal: Admin) -> Any:
+    from app.deployment import blocked_response, is_public_demo
+
+    if is_public_demo():
+        return blocked_response()
     from app.accounts.service import AccountError, get_account_service
 
     try:

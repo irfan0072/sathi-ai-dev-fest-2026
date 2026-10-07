@@ -6,7 +6,9 @@ Design rules for every script:
   states the amount themselves, so nobody standing nearby learns anything.
 - Never ask for a PIN, OTP or password, and say so.
 - Same closing sentence for every outcome (confirmed, refused, mismatch, secret help), so a
-  bystander cannot tell what the customer answered.
+  bystander cannot tell what the customer answered. The retry sentence does not say the
+  amount "did not match" either. This is only part of the picture: call length, an extra
+  retry prompt, SMS and screens can still differ, so the claim is limited to the wording.
 - Silence is not an answer: the question is repeated once, then the call ends politely and
   is retried later. Key 9 reaches a person; key 8 switches language.
 
@@ -43,8 +45,8 @@ SCRIPTS: dict[str, dict[str, str]] = {
             "আপনি অনুরোধ না করে থাকলে শুধু হ্যাশ চাপুন। "
             "কখনো কাউকে আপনার পিন বলবেন না।"
         ),
-        "retry": "দুঃখিত, পরিমাণটি মেলেনি। আরেকবার, হাতে কত টাকা পেয়েছেন লিখে হ্যাশ চাপুন।",
-        "mandate_retry": "পরিমাণ মেলেনি। আবার টাকার পরিমাণ লিখে হ্যাশ চাপুন।",
+        "retry": "আরেকবার চেষ্টা করি। হাতে কত টাকা পেয়েছেন, কীপ্যাডে লিখে হ্যাশ চাপুন।",
+        "mandate_retry": "আরেকবার চেষ্টা করি। টাকার পরিমাণ লিখে হ্যাশ চাপুন।",
         "unclear": "দুঃখিত, আপনার উত্তর ঠিক বুঝতে পারিনি। টাকার পরিমাণটি কীপ্যাডে লিখে হ্যাশ চাপুন।",
         "no_input": "আমি কোনো উত্তর পাইনি। কোনো তাড়া নেই। হাতে কত টাকা পেয়েছেন, লিখে হ্যাশ চাপুন।",
         "goodbye_no_input": "ঠিক আছে, আমরা একটু পরে আবার ফোন করব। ধন্যবাদ।",
@@ -66,8 +68,8 @@ SCRIPTS: dict[str, dict[str, str]] = {
             "কত টাকা তুলতে চান, টাইপ করে হ্যাশ চাপুন। রিকোয়েস্ট না করে থাকলে শুধু হ্যাশ চাপুন। "
             "কাউকে কখনো পিন বলবেন না।"
         ),
-        "retry": "সরি, অ্যামাউন্টটা মেলেনি। আরেকবার টাইপ করে হ্যাশ চাপুন।",
-        "mandate_retry": "অ্যামাউন্ট মেলেনি। আবার টাইপ করে হ্যাশ চাপুন।",
+        "retry": "আরেকবার ট্রাই করি। হাতে কত টাকা পেয়েছেন, টাইপ করে হ্যাশ চাপুন।",
+        "mandate_retry": "আরেকবার ট্রাই করি। অ্যামাউন্টটা টাইপ করে হ্যাশ চাপুন।",
         "unclear": "সরি, ঠিক বুঝতে পারিনি। অ্যামাউন্টটা কীপ্যাডে টাইপ করে হ্যাশ চাপুন।",
         "no_input": "কোনো উত্তর পাইনি, সমস্যা নেই। হাতে কত টাকা পেয়েছেন, টাইপ করে হ্যাশ চাপুন।",
         "goodbye_no_input": "ঠিক আছে, একটু পরে আবার কল করব। থ্যাংক ইউ।",
@@ -89,9 +91,8 @@ SCRIPTS: dict[str, dict[str, str]] = {
             "Type the amount you want to withdraw and press hash. "
             "If you did not ask for this, just press hash. Never tell anyone your PIN."
         ),
-        "retry": "Sorry, that amount did not match. Please type the cash you received again "
-                 "and press hash.",
-        "mandate_retry": "The amount did not match. Please type it again and press hash.",
+        "retry": "Let us try once more. Please type the cash you received and press hash.",
+        "mandate_retry": "Let us try once more. Please type the amount and press hash.",
         "unclear": "Sorry, I did not understand. Please type the amount on the keypad and "
                    "press hash.",
         "no_input": "I did not hear an answer. Take your time. Type the cash you received and "

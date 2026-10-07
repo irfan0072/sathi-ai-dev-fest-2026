@@ -1,0 +1,323 @@
+path,bytes,text_lines,sha256,inspection
+.dockerignore,558,30,ae2cac4c3bb5c5d569f6e4bc233ebabf572d96127b7b5bec51a14149c7bef3a9,text inventory and static scan
+.env.example,1934,57,9afb253ebe29130cf8b02dc25c79dd1e9e2a49d05a2edc0784d603568bfbaf7e,text inventory and static scan
+.github/workflows/ci.yml,1702,65,a29e648fdde7abe62bfbadbbd863abe8b103ad228c5fecd7ef96023dccbe8703,text inventory and static scan
+.gitignore,1152,88,e96665db930ad9520b2096150985f0340ebc027ca02ad922031f54360e55c3ee,text inventory and static scan
+Makefile,3814,103,b6226ef35adba197f631905522c58123de420edcb4204c9cad33d79974129324,text inventory and static scan
+README.md,33357,529,5e18f9259f5b811c746287b7d9348fbc15b6a2b023a986e32ecbf9bfdb86a342,text inventory and static scan
+backend/.dockerignore,126,15,43e2d1180d7e981dbbe6345e8763b31d463b4d45e00b9a3904751f57b45de0ce,text inventory and static scan
+backend/Dockerfile,1196,28,1357a9283f7a96de1229469c37e5d1fb0dfbe31a3c8e7345e1d52c36dd794726,text inventory and static scan
+backend/app/__init__.py,1,1,01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b,text inventory and static scan
+backend/app/accounts/__init__.py,53,1,4cbba9c4f0cd61c65966feb4e3eb93c24dcc6805a5cf1224f63bcf8a16d6a099,text inventory and static scan
+backend/app/accounts/service.py,11280,244,0ffcb4f78ed5aa2a22f3d55a313ed79012f5133aa99dcfcc54f2a6b8bf1f3328,text inventory and static scan
+backend/app/admin/__init__.py,21,1,3220afdc93a8dd5a029a0d6e1a90766006401449d55b55b4a13ba3ebcea011a5,text inventory and static scan
+backend/app/admin/router.py,28033,575,a2fc94d5ef03855cdc69a338c5ae49471a7c738e886be3d4f463a03420defb76,text inventory and static scan
+backend/app/analytics/router.py,8709,220,9130fa8d2c88ace51259c1a1e2891a4ea1ddda62f539f5137ce0975a054e754e,text inventory and static scan
+backend/app/analytics/service.py,12236,305,07e1d5ae4ce5c47f866cfb150a12779abe713add66bb8f53eac13cfcd8a5ac5a,text inventory and static scan
+backend/app/assistant/__init__.py,52,1,bafc367b21067ac1368d13340b9b5d1b6f0e7844b0655ef4c168c3f711f948d0,text inventory and static scan
+backend/app/assistant/engine.py,29819,441,0c5d676d84e69a997c733799a48db541f1bebb01bd03f041dceaec43893f5f80,text inventory and static scan
+backend/app/assistant/guard.py,5475,113,0f7d241bbd09a273c506269a8ff1f4e023cca3170140d9fbb5f750eb2444d95e,text inventory and static scan
+backend/app/assistant/router.py,2759,81,e5a7dfaccd1cd5e479ba95cf50f7ce627ce0e5c348161d622df4e9220bdc4108,text inventory and static scan
+backend/app/auth/__init__.py,864,36,df735425d7a71e64980cc4d618db7ce8af2c497843c385b5690d36ea760f6eb2,text inventory and static scan
+backend/app/auth/dependencies.py,4170,125,48f0c9da89a3ee0f332559c57e3dc2f01e63fc04f252fb48508994c80de8ef2d,text inventory and static scan
+backend/app/auth/jwt.py,5032,144,ce0fef94e124f25cf38e69a4a31a070354929d70a5997ec1bd7213090e54d934,text inventory and static scan
+backend/app/auth/models.py,1806,49,c1171ad51fd703b66ffa1ffe4544ce539632b1d82f2ca7b0a4ce64f6be131898,text inventory and static scan
+backend/app/auth/router.py,6988,206,3d94175a293844f4e5991dc4db1517b8d1ce4ff1d8429ed65b2031ca967f4e99,text inventory and static scan
+backend/app/bootstrap.py,4742,133,bb564fd9717f6be708dcc572f3e74a748e6109437ccc0abceacc29d4d6332ad0,text inventory and static scan
+backend/app/callcenter/__init__.py,26,1,7c19a01eb7f50fcf1ffd15481583bb22bd61927f88aeebb904fcb919b69a19b9,text inventory and static scan
+backend/app/callcenter/interpret.py,6855,136,42780509dd3f639547b68ee4c199b7690927b6723deaa1f4233174db89f744f3,text inventory and static scan
+backend/app/callcenter/router.py,5928,153,fd535f1a595e751b3f38bdfb9bed14fc02dc0e863037fc00d7664e7024a433de,text inventory and static scan
+backend/app/callcenter/service.py,33516,623,43b04e9df1ac90a3e0b3fb8216754b3624d5a6caddd5c33de4c1fea08fe677be,text inventory and static scan
+backend/app/callcenter/worker.py,13004,300,096f377d787aeeac48151992685ab05a83da181424efa5404fcfbea0fa5e96f2,text inventory and static scan
+backend/app/copilot/__init__.py,1,1,01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b,text inventory and static scan
+backend/app/copilot/investigator.py,15407,295,ea16c4f16b6fb667509c1c2849d34156c4c3163d74b04bed8d7bd8407c13e05d,text inventory and static scan
+backend/app/copilot/receipts.py,4942,132,35477aa65a3369ac8bdbd507f211ea15313e52dedb0378917343b55535542cce,text inventory and static scan
+backend/app/copilot/router.py,7339,163,78fb3243d23f8dfc602bd3e6ef5de2070b2bc9696310e088b19d58360b2460e5,text inventory and static scan
+backend/app/data/__init__.py,989,47,de242a9cfe96db61fa5f5d9a0d366d9c9a16b998e8c40782390a3f2e11f2c1b4,text inventory and static scan
+backend/app/data/cli.py,10652,287,c3e6b8d3e6f341b2df09eb7a26032e3a9d7c53cc7bae3e1df602a7fb1b1031bc,text inventory and static scan
+backend/app/data/config.py,32072,758,5da747111f4b069f34aa7937e54201db7d41412d24c33b52ec45e73578081448,text inventory and static scan
+backend/app/data/database.py,37819,1007,d0cc045dc76096ccbeaf8895d5ef25ebdf154eda3494393d092da11cfd178a31,text inventory and static scan
+backend/app/data/demo_seed.py,9688,238,38aa591e55750bf6bc84644646fc97aaf00e3c0dd8cb41c360f577f8b76d2885,text inventory and static scan
+backend/app/data/generator.py,38342,899,00985e548432c4611ad740b027cf45b895ea7e0015633a135ac3aa71012a71ce,text inventory and static scan
+backend/app/data/splits.py,26664,677,fd805dd04ba6b7d6ee60c6bfc4915c6708fb1b96de61dc898bca5494d83660d1,text inventory and static scan
+backend/app/evaluation/__init__.py,792,32,f60f0f572cf436e2ca64f38ef74f7a1798ce9edae3ca8ff7c0c9415ae3f59564,text inventory and static scan
+backend/app/evaluation/artifacts.py,42526,922,d727f6d6a755800a97bf74b4dc5d2a365274f04257d318084a13fbfa1c62459f,text inventory and static scan
+backend/app/evaluation/suite.py,82020,1974,00c150ec836e248155c17a1bb6bab49b5d4bf0e87e44c6d9d6023a258b56c395,text inventory and static scan
+backend/app/features/__init__.py,361,15,43cbff7442e1180bec81aceb03409c0d886efcbb2f1cb228557ee86c92107c8c,text inventory and static scan
+backend/app/features/guard.py,5258,155,0e64befae52f61f184df43e1b7c3b90c39785254b9c6b5622edc403de28d5a24,text inventory and static scan
+backend/app/intelligence/__init__.py,89,1,00da4017c98ebf150c1204b8cc2bfbe7ea3819e4f853e49ad229b6060e47b230,text inventory and static scan
+backend/app/intelligence/artifacts.py,1883,47,c0a87ac650f89078498257c0dbd8d7e4aacc6fc97fc8df6656a16fb1d32bd199,text inventory and static scan
+backend/app/intelligence/liquidity.py,10648,217,bf01e4440732c8136fe96e2e7df0d4911277a7511200670e57530bf318c697d8,text inventory and static scan
+backend/app/intelligence/router.py,5494,136,bde39bd975cc3fec2707ec142df93273dfe564c87010885a0443c87e2bdb6407,text inventory and static scan
+backend/app/intelligence/uplift.py,11913,261,4528c6c1648607769b14f17442fe8f5679499872b684b16319836227ea8341aa,text inventory and static scan
+backend/app/lang/__init__.py,42,1,3c2d667819ff0bbc0bee9a29bdf1ebce2f3c1fb297b095f6d0c393e5ec32a033,text inventory and static scan
+backend/app/lang/detect.py,5294,110,dd19a5d7c47a9e9d772851af6891c15a156222d31b5bca39ac4646f6b415dbee,text inventory and static scan
+backend/app/live/intelligence.py,27744,564,e2171f2dd5de413f4ba90e9593c41446729571efd7b621f435e2e5f37e2d2b23,text inventory and static scan
+backend/app/live/rebase.py,2789,57,714618b9f37436be51d18c65e0906081cfae95714f4f846fc682e027cf0ff8f2,text inventory and static scan
+backend/app/main.py,6608,167,e6fd1cd3ea0bf5b3c351c6eea9cb5b6da68328be0dacddf7887ce7d3c008760f,text inventory and static scan
+backend/app/mandates/__init__.py,1763,69,8e2326ddfa36c4bc99da9353847951ea6f546172be74826909a2603f22f7d230,text inventory and static scan
+backend/app/mandates/models.py,5606,178,91a285c682dde439caef6b6b87b0a26d75d3d44e6914ce0d30da1dec863c6c6c,text inventory and static scan
+backend/app/mandates/router.py,19313,535,e1d927527a893f7b28c4331724d0f534712e47041961f22bb25cda5a80c26765,text inventory and static scan
+backend/app/mandates/service.py,70894,1630,7d14465c825ef0bbc720b459a3e26ebd1cb2ff61c9122fcb0f38ae918c86aaa1,text inventory and static scan
+backend/app/ml/__init__.py,528,15,1710c6070399500fa88b351b20d580305697f9c0af3fe7a5ec0490cbb6f3ea40,text inventory and static scan
+backend/app/ml/agent_model.py,189,5,84b8550644f38be8e49e60ed4a809585dda1206e5ccee87bb24fb8727b1432f6,text inventory and static scan
+backend/app/ml/assisted_model.py,183,5,da533f228f266816a0cb8a4ddc6875ebcc8ded594d52ef6b013a823fac2da252,text inventory and static scan
+backend/app/ml/baselines.py,271,13,b34de93c315465ae528b512973fea77f7086a1581117295f5a33d8788cb7741f,text inventory and static scan
+backend/app/ml/features.py,179,5,4f66dc8eeaf130d7cf42a5fd3e54eedfdf51278233709aa8b6d7378d60313d54,text inventory and static scan
+backend/app/models/__init__.py,1,1,01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b,text inventory and static scan
+backend/app/models/agent_model.py,25372,606,9abafdfd93502c293eb420a8f559df171e972901e0409128dd8df2436632fa36,text inventory and static scan
+backend/app/models/assisted_model.py,22593,544,880d8d8693ac5817689a7103441bd7cc7e2daefe2e8674369a69c149b25855fe,text inventory and static scan
+backend/app/models/baselines.py,11543,278,ab071210f9c8a4949042251ea19f06c12fee2ec944c878a4fe8cdeca34d7d56b,text inventory and static scan
+backend/app/models/features.py,23523,554,8f64be283b1041d02ae127321b4d7df1d10e0b28e12b67e72be21d8e6b1209ad,text inventory and static scan
+backend/app/notify/__init__.py,68,1,fa8f89210245430446b67d2a667a153f0bf6714715a1f97412f3bd30396a5bc8,text inventory and static scan
+backend/app/notify/router.py,2127,57,3459337354f9f1127e566fa1011ad7bbf26d92cc26fde5acb39ae56612a35b52,text inventory and static scan
+backend/app/notify/service.py,6908,155,f21298f8ef7cc76b51a240e7242b220489dae87d4a03683f51e4b8db55e6340f,text inventory and static scan
+backend/app/ops/__init__.py,77,1,5d7415d8dc524cb39a02f425959c699a530db3ffdce4efa42fe674cdf26a84a4,text inventory and static scan
+backend/app/ops/readiness.py,2871,75,a413361c92cbd35f0a22d82fafad488ef2351f2eacda9b41efd03e0524498eb3,text inventory and static scan
+backend/app/ops/router.py,16334,360,d53bd32f92aa23156eb21c9d6e57a047ae0b5b1a0b502d9dd3fc71daaa75e84c,text inventory and static scan
+backend/app/policy/__init__.py,1,1,01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b,text inventory and static scan
+backend/app/policy/risk.py,14349,359,61c74e7931b2880559e22b9458a0d1aae44b64eed70b673021e521250edafdc0,text inventory and static scan
+backend/app/scam/__init__.py,78,1,12c1008441988e9f8bb4c9cefabfa862d4d64696c827a856209128c8cee2d4af,text inventory and static scan
+backend/app/scam/advisor.py,7885,144,73abea6ba11ae104e6f60a3fca3105ea2bc14f8268ed762a59ddd62923cf8bd4,text inventory and static scan
+backend/app/scam/community.py,15950,297,3418c4d0f1c8ca7ea1e5929279e8e32e2849ee67544d3b2b670faca3f6e03e31,text inventory and static scan
+backend/app/scam/identifiers.py,3259,80,44bb2f4638692ee73a80969bd26b2a8a233029662625df2a01e5a71daf0a4e2a,text inventory and static scan
+backend/app/scam/router.py,7587,190,98f4474ebada72848aa0dae3f4dfbd7eea0658ecab622c600de526e6828ebb82,text inventory and static scan
+backend/app/scam/seed.py,6486,143,d6a5796e007b045df3ee631db2a57b879f8471fae369da46f26683381c55fc54,text inventory and static scan
+backend/app/scam/service.py,24168,428,f63418bed2d7c51e6c7f5718aec8a2cc722da8bafc2fa05158bfab72197cdbe1,text inventory and static scan
+backend/app/settings/__init__.py,78,1,c5a37d76ebfcde03179b9f9f93b601862e54400d237a155eae2132610ae1fae3,text inventory and static scan
+backend/app/settings/credentials.py,12796,288,ba2323d22e28e3461e4d95c3bd5b54e87549af5a7a2b240c56d133b24496158a,text inventory and static scan
+backend/app/settings/probes.py,11064,225,64f4c5672f4e4fc00fe1f8286a92b6fce1a02f6b56ee69b4d1e792d0522ffb13,text inventory and static scan
+backend/app/settings/router.py,8179,208,382d2c40dd75c1198a34caa2144393ced55e1eb24309b947bc98799c8e339df5,text inventory and static scan
+backend/app/settings/service.py,22954,468,c87d92d83c72d15da1c8869467f43237832bf05e1190b7e5c7ac8298bd84d911,text inventory and static scan
+backend/app/staff/__init__.py,21,1,531664dde1160679888b54cd9cc150d719956da5b93d34775a733ab90913839c,text inventory and static scan
+backend/app/staff/service.py,11206,239,86977cf99a9f81d512c41b92bfeb268a0d36dedbf605cab09f02ac469a33bb98,text inventory and static scan
+backend/app/txn/__init__.py,67,1,6c41469b17adfb5dd0338fca59914f426873cb799089a1c2c1c21cde2da398d5,text inventory and static scan
+backend/app/txn/router.py,5711,147,dcca22e8b5331fc3efa1cfb42abd30ae9e83432ab051bfb757648f72692da447,text inventory and static scan
+backend/app/txn/service.py,23932,482,9a4585a6973d88c15174ad7a4981e09a663d293ae5c5fdfe95095c2ce2c0c820,text inventory and static scan
+backend/app/verification/__init__.py,281,15,c6be5ac0901ec602dd2a84f1b786a444e8ba2175ae15fbe81dd881c9af4e509e,text inventory and static scan
+backend/app/verification/keypad.py,5588,140,3fd3617123d25faaae8d6d52fcc68bda29ce8a5bdbbd73c541ee9563684037a6,text inventory and static scan
+backend/app/voice/__init__.py,65,1,d9b5fe5f6e7649fb26ceb1540bc31d60dd15c733b9e78fe20f743a08b7ddd0f9,text inventory and static scan
+backend/app/voice/providers.py,11561,266,f0e97d158ac3ddefd3e9801c1400973eef7e533d07e7675697bb06af5c4c4264,text inventory and static scan
+backend/app/voice/router.py,13585,310,0fdc1adc44218dc63404dbc67eae66a47dfefca63d8f52ff2b8592e4d92a4bf0,text inventory and static scan
+backend/app/voice/scripts.py,9306,115,0fcc4a02d57c7ac20a75679b6868e60d92a39806cdbb7b618099dfdf39b72a42,text inventory and static scan
+backend/app/voice/service.py,26778,585,2e0076ece6ae5b9a4ac3b4b4a09d43fc52431bb289383e88ac6060e3db1840ec,text inventory and static scan
+backend/app/voice/twiml.py,2153,51,b090073901ef945fae8fa9dc586ee8e331961005a8713ab60faee08476680c98,text inventory and static scan
+backend/app/workdesk/__init__.py,24,1,2ed63c8ee43d99e2bf9e792c90d5b56c3e6b83e9f34667ece4f42794a4fd0fee,text inventory and static scan
+backend/app/workdesk/router.py,21559,425,30968e4112fb5e3b0e567c9de5616cbcc17ccc035908f217c4bef06615da73e0,text inventory and static scan
+backend/migrations/001_initial.sql,3378,70,4e0ccc710dad031360db4fca83556e84f09938a528a3a6e92453f61e4c3b1b97,text inventory and static scan
+backend/migrations/002_durable_mandates.sql,2552,54,30cb2e43b02b41f0b381ee23f4d8589ba468172fc24617707a73d49debe1c02d,text inventory and static scan
+backend/migrations/003_live_channels.sql,2088,46,84d2c82ce23a6244ceb61ea07e1bcda084f767b3de02acc0a024387fde496a82,text inventory and static scan
+backend/migrations/004_fraud_ops.sql,1607,36,cae00802f4ecec9eb7e338678a7d868de5d36ce2529653d0d1d8caad77be99ed,text inventory and static scan
+backend/migrations/005_app_settings.sql,272,7,469b86d8ce622116611462be18955704f6cd8908da6e984ac7c70fbd47b5c68c,text inventory and static scan
+backend/migrations/006_provider_credentials.sql,463,10,7688c434d9dc2f7c70e631e4d0f2746eb03c269512e540d704d7a419ce319474,text inventory and static scan
+backend/migrations/007_transaction_checks.sql,1729,32,9f28939479ceb58f66862821f8a4561051cee858ecfaf31e74e846a5b20c7ac6,text inventory and static scan
+backend/migrations/008_operations_center.sql,5659,115,b57a8c337f0d5ec73c7b5d1352f898dc943f99272691e5bb017943bfbb2fe8e5,text inventory and static scan
+backend/migrations/009_scale_indexes.sql,382,5,94a0d8cacfdce341db55e2a013d9af2eea78f78758eb4b76608c2b034351d8e9,text inventory and static scan
+backend/migrations/010_language_assistant.sql,2071,39,e0e698782ddeb12bfbef93a4e3c611dcfb3f1d5739f8058024fa757064b64968,text inventory and static scan
+backend/migrations/011_p2p_scam_protection.sql,4003,80,2620bc45c18bf2a63259a42cdf9bb1e0db78152a834628e915f392f2a3de1702,text inventory and static scan
+backend/migrations/012_phone_identities.sql,2360,53,14e25772832c9a3031bdb3848852379c4ad8d5780a19ae529a5426470c7091d8,text inventory and static scan
+backend/migrations/013_registered_accounts.sql,971,21,7d389634be424c579984d728ee84957b1115e172058b28ade9cd255da8a29da0,text inventory and static scan
+backend/migrations/014_live_snapshots.sql,363,7,2a9131a49ba2580f5dd8bd5cfc67dd17575da099b512ea0f8689a9a8b1f26e42,text inventory and static scan
+backend/pyproject.toml,997,49,d534210a0d47e6da29a55650e3f95793cbcae6804877c64c6ac4facb2c8eb71c,text inventory and static scan
+backend/requirements-dev.lock,1012,53,fe20742b98799bc00b4fa40cd3f91a05fcb04974c8afffa709fb4e12512580ee,text inventory and static scan
+backend/requirements.txt,233,13,daa51f8b1fa377d82bd289efc7cafca191a1173c5ee238fc13b835b1e78ea28e,text inventory and static scan
+backend/sathi_backend.egg-info/PKG-INFO,440,13,01b0824d6d0b55b99c86caef7f1e1d6c088d06afccdc93d0f324e07720dfe039,text inventory and static scan
+backend/sathi_backend.egg-info/SOURCES.txt,417,16,624db57367d29afa1c874f2ccb9a1568fecacb57a715716d42bd4a502eadae8a,text inventory and static scan
+backend/sathi_backend.egg-info/dependency_links.txt,1,1,01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b,text inventory and static scan
+backend/sathi_backend.egg-info/requires.txt,162,9,d5aa269b0dab8c8da8f7961cc302c1f86121b2cd3ec3358076c2164a0b14bad9,text inventory and static scan
+backend/sathi_backend.egg-info/top_level.txt,4,1,8a8f60ecb09b7e64c6d5214a8043865e608507db8c3f61f995eae6d078875901,text inventory and static scan
+backend/tests/.gitkeep,1,1,01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b,text inventory and static scan
+backend/tests/artifact_fixture.py,3322,102,3eeb64da54f95353fa1a4668856ce9e46adec059b4bfd6333909e31db4f465e6,text inventory and static scan
+backend/tests/conftest.py,9925,251,710fcf367bfef2abd535a4ccd37d6b01d49064167dfcfb7094a871469a647bd3,text inventory and static scan
+backend/tests/test_accounts.py,4797,107,fdd3a4a42a4b3437ed72da3a0e51f1f561bd711cb5129c7d678de483e97337dc,text inventory and static scan
+backend/tests/test_agent_anomaly.py,18325,486,12a8af3a24f04e0aaa49f32a7ba019bd0cf7d0062f94774ad7768112c6cf74e4,text inventory and static scan
+backend/tests/test_analytics.py,12183,309,753a4fe867634623713ba08990ed7e3500f3b2037d0ca100db7bada19a673cef,text inventory and static scan
+backend/tests/test_artifact_api.py,2382,62,403dbe39b14fd38794e6be30a8299f8babf1d3e5e456b245f5c9452d0a03f890,text inventory and static scan
+backend/tests/test_assistant.py,8294,183,c3a6af2d233d3f77739fb93f45d2bf29ee20d0dbe731b913758349c5a1040c9b,text inventory and static scan
+backend/tests/test_assisted_model.py,25713,639,bee7bde7f98ba9ef62a3a71205cc2e61f21ddbd91ee0c6d15653167598a778fe,text inventory and static scan
+backend/tests/test_auth.py,15420,410,39848414ea79b2e8415d4b57306caad58ed935d7afb62a54f5fc2c035ad0ed05,text inventory and static scan
+backend/tests/test_baselines.py,11211,276,87169e38651968e427a18bf2b41642c6b95353fefbff2180bf497a7efc1eea32,text inventory and static scan
+backend/tests/test_bootstrap.py,4055,91,4eb941e1b651910fb81b359bd7bfcd89b0495268e3f85e53e128aa224e02a6bd,text inventory and static scan
+backend/tests/test_call_experience.py,5668,126,8e2f7814ae27ca4182b51dfb4e9eca179f116ecd3f532dce26afa8e0fb1e7f32,text inventory and static scan
+backend/tests/test_callcenter.py,13173,268,d866133c573359bf5b2e61124b9ecd210cf0c4b7e9f1510ba862f28d93f3e93d,text inventory and static scan
+backend/tests/test_check_structure.py,1186,36,d1d4b73117c7e4af7651c9af85a037a52cc56f8effd4d3ac14756262d4dc7015,text inventory and static scan
+backend/tests/test_credentials.py,14303,278,845b8f00bf1514116984e77bab700d34ba356fd15df3c2f16922c1a5a2957769,text inventory and static scan
+backend/tests/test_database.py,23027,625,e89d223f9c136378c95d06eded609ed2a1b3947d0fa8b12f82982ce33f2abe4d,text inventory and static scan
+backend/tests/test_demo_seed.py,8110,206,4c88d381d7eb34a9b43d096e5fc164cfd0dffae6b52ca7e8e853742c9a1df0e4,text inventory and static scan
+backend/tests/test_durable_security_concurrency.py,23682,566,e6738755d07ad62bf670e88ce4546bb7b7879dba354790932c5df7ee0f14b4a0,text inventory and static scan
+backend/tests/test_evaluation.py,45521,1170,befdce13a917ad9cdc1a826da0ec006cf196ea87a4b37f02b0b154adb1025e4d,text inventory and static scan
+backend/tests/test_feature_guard.py,4090,112,9b4895306c3d43949f9be30a8734247546f6fecfe4a2f6a3c76fb70db1989176,text inventory and static scan
+backend/tests/test_fraud_ops.py,10671,217,55eac6127ba91600dd0a870bb28bde091b27b78ea9149f30e23286c57fe506ee,text inventory and static scan
+backend/tests/test_generator.py,27692,638,c9a47891e0ecc0069e7cde6d1038e489a2b6f1cabde72e0410fb6f3d1ac8a35a,text inventory and static scan
+backend/tests/test_health.py,1374,38,6af7f193a5edb1e485cd969350173cf4b9a248fb042c991321cd818c86817d26,text inventory and static scan
+backend/tests/test_intelligence.py,4585,95,587a556d576ed3187cbdcd5a1ff9823e96e2393dbe599237286b77c095a02b57,text inventory and static scan
+backend/tests/test_keypad.py,2942,94,ebfe294c7b22fac19336bf225860f6340066ef3b0e261fe4f418851e6bdf9906,text inventory and static scan
+backend/tests/test_live_channels.py,20248,425,b292e74157ba4695d9ffeeb29ee9a5667bef02fc4286ce4fe02455a4c9fce6d3,text inventory and static scan
+backend/tests/test_live_intelligence.py,8641,173,58fd17deaec31afacfb7e422e48ee4dec43a28a9d82b01403358ef51620cf38b,text inventory and static scan
+backend/tests/test_live_providers.py,14235,320,7e967b449cae979f1ca59eebd2418f1e24ddc223d6a84289224cc8a0d163f229,text inventory and static scan
+backend/tests/test_mandates.py,35862,866,e529a4f5e60ad5a55bd491c4729a93f10e4dc0fc389e5ea5cac06bfac347766e,text inventory and static scan
+backend/tests/test_roles.py,11026,221,a18fa91891470d198a63302cb67b0902adf4168c768608c9c4ade8207fcc48b2,text inventory and static scan
+backend/tests/test_scam_protection.py,12508,249,0c3f135d361be284079fde922576a770b843fa4cd74a863ee1145f83f67a12fc,text inventory and static scan
+backend/tests/test_settings.py,11905,237,467c50afd955d958b55a1e9faf74e744c4ae61927a671dc84cec2a8944eab035,text inventory and static scan
+backend/tests/test_splits.py,29193,742,a4bdfd5606c7380b6029e081adf8040f9498ce239fd71f2391ac0fc0f7ed7ddd,text inventory and static scan
+backend/tests/test_txn_checks.py,9198,185,f785d9897a47d6263a0e808e224cf37453500f5f62b93b2e235d095c587949c5,text inventory and static scan
+compose.yaml,4238,100,7e1fe8e99853b219222928ef593ce263d184cc1a51f4b4a81541e7bccf2a64c1,text inventory and static scan
+data/artifacts/deployment/agent.joblib,893601,,69d55bd6aed54968b17b79086a11e19776e0e557892342e16023d22a8b920e65,artifact integrity verification and metric inspection
+data/artifacts/deployment/assisted.joblib,224789,,11492d0eb5004f8325ebdf39ce8453ba9649dbab81d1f42a2d916fadcf769699,artifact integrity verification and metric inspection
+data/artifacts/deployment/manifest.json,10500,448,0fb391b6816e1440c76f578c59a64372236e3b80a976cab41f863df2674b5f19,artifact integrity verification and metric inspection
+data/artifacts/deployment/metrics_provenance.json,55182,1658,1014cb8efa894ff67cf888a80eefd19964701b9acae316334aa24cca203fcc69,artifact integrity verification and metric inspection
+data/artifacts/deployment/results.json,50755,1626,205847b966792308c969166a9d534ae3d737718b7c86480831a855a27fd475bc,artifact integrity verification and metric inspection
+data/artifacts/deployment/synthetic_inference_snapshot.json,55007,1624,f93884ac92da4d068ca61eba7bd4e546b8b1f2fd5df5828d5d1c0ddadc53077d,artifact integrity verification and metric inspection
+data/artifacts/evaluation-manifest.json,12233,490,8d1152fdd343d2f50cb7df32fbb8a8f6d83f9dd1acedc14efc2a23a517923244,artifact integrity verification and metric inspection
+data/artifacts/intelligence/liquidity.json,216314,1,17c9af2ee630319a2351b97de23d61ce9c597cfc4e3893b1936f55704c3b2f32,artifact integrity verification and metric inspection
+data/artifacts/intelligence/manifest.json,518,12,90967519eb7dd7ff254c9bcede6d62157b2384f88a0868039cdf08730b6af5de,artifact integrity verification and metric inspection
+data/artifacts/intelligence/uplift.json,811067,1,0a621ddcf447fe437917305a31a17e7cf5b5b2004bf16247257b4a8b80a06f9c,artifact integrity verification and metric inspection
+data/assumptions.md,15120,167,42630143b3f32cb694b61d51fc86bb3898a30b7efd19a3f201b831ab5260dbe0,text inventory and static scan
+data/config.yaml,7030,199,5398946cdb75b6c0bd22ea63d57b1829edca3aeca4a9acc733915d080fbb3f7f,text inventory and static scan
+data/generated/evaluation/agent.joblib,893601,,69d55bd6aed54968b17b79086a11e19776e0e557892342e16023d22a8b920e65,generated JSON parsed and structure inventoried; no row-by-row manual audit
+data/generated/evaluation/assisted.joblib,224789,,11492d0eb5004f8325ebdf39ce8453ba9649dbab81d1f42a2d916fadcf769699,generated JSON parsed and structure inventoried; no row-by-row manual audit
+data/generated/evaluation/deployment/agent.joblib,893601,,69d55bd6aed54968b17b79086a11e19776e0e557892342e16023d22a8b920e65,generated JSON parsed and structure inventoried; no row-by-row manual audit
+data/generated/evaluation/deployment/assisted.joblib,224789,,11492d0eb5004f8325ebdf39ce8453ba9649dbab81d1f42a2d916fadcf769699,generated JSON parsed and structure inventoried; no row-by-row manual audit
+data/generated/evaluation/deployment/manifest.json,10500,448,0fb391b6816e1440c76f578c59a64372236e3b80a976cab41f863df2674b5f19,generated JSON parsed and structure inventoried; no row-by-row manual audit
+data/generated/evaluation/deployment/metrics_provenance.json,55182,1658,1014cb8efa894ff67cf888a80eefd19964701b9acae316334aa24cca203fcc69,generated JSON parsed and structure inventoried; no row-by-row manual audit
+data/generated/evaluation/deployment/results.json,50755,1626,205847b966792308c969166a9d534ae3d737718b7c86480831a855a27fd475bc,generated JSON parsed and structure inventoried; no row-by-row manual audit
+data/generated/evaluation/deployment/synthetic_inference_snapshot.json,55007,1624,f93884ac92da4d068ca61eba7bd4e546b8b1f2fd5df5828d5d1c0ddadc53077d,generated JSON parsed and structure inventoried; no row-by-row manual audit
+data/generated/evaluation/generated-report.md,12573,220,19bcaedca41f8ced6059373fba1e2ec3d71e8c97a44418d8c9ed0ec9b48afec0,generated JSON parsed and structure inventoried; no row-by-row manual audit
+data/generated/evaluation/manifest.json,12232,490,1b63d1be7cef30bf480408e4e45d29f782cc13a947d293b8bde25918273e69bf,generated JSON parsed and structure inventoried; no row-by-row manual audit
+data/generated/evaluation/results.json,50755,1626,205847b966792308c969166a9d534ae3d737718b7c86480831a855a27fd475bc,generated JSON parsed and structure inventoried; no row-by-row manual audit
+data/generated/final-20261003/evaluation/agent.joblib,893446,,9fd78380c2b800eef3fbcfeb11bcfd95d26bec05a166b6b66f5ed8fba2164d38,generated JSON parsed and structure inventoried; no row-by-row manual audit
+data/generated/final-20261003/evaluation/assisted.joblib,224634,,563090aaab45a451d50c45618caa3981a7496d177c1c9e483783c76805900a4d,generated JSON parsed and structure inventoried; no row-by-row manual audit
+data/generated/final-20261003/evaluation/deployment/agent.joblib,893446,,9fd78380c2b800eef3fbcfeb11bcfd95d26bec05a166b6b66f5ed8fba2164d38,generated JSON parsed and structure inventoried; no row-by-row manual audit
+data/generated/final-20261003/evaluation/deployment/assisted.joblib,224634,,563090aaab45a451d50c45618caa3981a7496d177c1c9e483783c76805900a4d,generated JSON parsed and structure inventoried; no row-by-row manual audit
+data/generated/final-20261003/evaluation/deployment/manifest.json,10500,448,be52ec468ca72c05e753ec35f26c5ca6cc3e37a2c45a7eaf2e226fd5cb27073c,generated JSON parsed and structure inventoried; no row-by-row manual audit
+data/generated/final-20261003/evaluation/deployment/metrics_provenance.json,55182,1658,53ff2529f624a01b13127c8d753fc37ed8bf8d77195258df656b79bc808356cf,generated JSON parsed and structure inventoried; no row-by-row manual audit
+data/generated/final-20261003/evaluation/deployment/results.json,50755,1626,0c1fc4506b9c567d011f5266f8157c2cba925f381e93543f9aa5a8f2b1e45319,generated JSON parsed and structure inventoried; no row-by-row manual audit
+data/generated/final-20261003/evaluation/deployment/synthetic_inference_snapshot.json,55007,1624,f93884ac92da4d068ca61eba7bd4e546b8b1f2fd5df5828d5d1c0ddadc53077d,generated JSON parsed and structure inventoried; no row-by-row manual audit
+data/generated/final-20261003/evaluation/generated-report.md,12573,220,19bcaedca41f8ced6059373fba1e2ec3d71e8c97a44418d8c9ed0ec9b48afec0,generated JSON parsed and structure inventoried; no row-by-row manual audit
+data/generated/final-20261003/evaluation/manifest.json,12233,490,8d1152fdd343d2f50cb7df32fbb8a8f6d83f9dd1acedc14efc2a23a517923244,generated JSON parsed and structure inventoried; no row-by-row manual audit
+data/generated/final-20261003/evaluation/results.json,50755,1626,0c1fc4506b9c567d011f5266f8157c2cba925f381e93543f9aa5a8f2b1e45319,generated JSON parsed and structure inventoried; no row-by-row manual audit
+data/generated/final-20261003/splits/manifest.json,7824,361,2fa43db585c7bc6d405408869eb6da03bc798a609fee64b9a11fa70bc6347775,generated JSON parsed and structure inventoried; no row-by-row manual audit
+data/generated/final-20261003/splits/test.json,12471031,1,24fea682a2c7489621c44f3e3dc64a36ea3748c52f9c047a12f94ea23d8e22c1,generated JSON parsed and structure inventoried; no row-by-row manual audit
+data/generated/final-20261003/splits/test.observations.json,4875510,1,caa46c5e23431c9030f52432b38b2cdb3e7b9b070321b360f5c78381a193ef30,generated JSON parsed and structure inventoried; no row-by-row manual audit
+data/generated/final-20261003/splits/test_shifted.json,13076702,1,89d0afad8a6c68b7753f84908b19aa473db45932e1fa83c368aa843b6b2718e8,generated JSON parsed and structure inventoried; no row-by-row manual audit
+data/generated/final-20261003/splits/test_shifted.meta.json,2013,90,ad54ce97ab063d7db9ecf2c46ca0734a3244512d5a2dcad6f5b627173d82f588,generated JSON parsed and structure inventoried; no row-by-row manual audit
+data/generated/final-20261003/splits/test_shifted.observations.json,5225721,1,8ddb773be53e2bae9637771746bcc8f1f11472e559689e6814ed663e02f43a96,generated JSON parsed and structure inventoried; no row-by-row manual audit
+data/generated/final-20261003/splits/train.json,36697596,1,2633c33ed358b59dcc77e571d67207cd393b3f18df39c9648a8485a568ac1be8,generated JSON parsed and structure inventoried; no row-by-row manual audit
+data/generated/final-20261003/splits/train.observations.json,14414431,1,0b2d1d2cc644ee701160a44789eda3add7f7bc0eeb874889300518a42c84054a,generated JSON parsed and structure inventoried; no row-by-row manual audit
+data/generated/final-20261003/splits/validation.json,12517870,1,65fd655239011ac1a8a47a94e16d001fd60b9b31d79780bb0ad2b2bd2971ddc2,generated JSON parsed and structure inventoried; no row-by-row manual audit
+data/generated/final-20261003/splits/validation.observations.json,4899445,1,4bb6e6f9d92642827c8aa1aab602e3276ab478c12f8d0ac91fa2d5807e21c97b,generated JSON parsed and structure inventoried; no row-by-row manual audit
+data/generated/splits/manifest.json,7824,361,f4b4a26cb65b15cf6b7d6c478ae6b52c154af95e6b5248ad6bf26a9208905936,generated JSON parsed and structure inventoried; no row-by-row manual audit
+data/generated/splits/test.json,12471031,1,24fea682a2c7489621c44f3e3dc64a36ea3748c52f9c047a12f94ea23d8e22c1,generated JSON parsed and structure inventoried; no row-by-row manual audit
+data/generated/splits/test.observations.json,4875510,1,caa46c5e23431c9030f52432b38b2cdb3e7b9b070321b360f5c78381a193ef30,generated JSON parsed and structure inventoried; no row-by-row manual audit
+data/generated/splits/test_shifted.json,13076702,1,89d0afad8a6c68b7753f84908b19aa473db45932e1fa83c368aa843b6b2718e8,generated JSON parsed and structure inventoried; no row-by-row manual audit
+data/generated/splits/test_shifted.meta.json,2013,90,ad54ce97ab063d7db9ecf2c46ca0734a3244512d5a2dcad6f5b627173d82f588,generated JSON parsed and structure inventoried; no row-by-row manual audit
+data/generated/splits/test_shifted.observations.json,5225721,1,8ddb773be53e2bae9637771746bcc8f1f11472e559689e6814ed663e02f43a96,generated JSON parsed and structure inventoried; no row-by-row manual audit
+data/generated/splits/train.json,36697596,1,2633c33ed358b59dcc77e571d67207cd393b3f18df39c9648a8485a568ac1be8,generated JSON parsed and structure inventoried; no row-by-row manual audit
+data/generated/splits/train.observations.json,14414431,1,0b2d1d2cc644ee701160a44789eda3add7f7bc0eeb874889300518a42c84054a,generated JSON parsed and structure inventoried; no row-by-row manual audit
+data/generated/splits/validation.json,12517870,1,65fd655239011ac1a8a47a94e16d001fd60b9b31d79780bb0ad2b2bd2971ddc2,generated JSON parsed and structure inventoried; no row-by-row manual audit
+data/generated/splits/validation.observations.json,4899445,1,4bb6e6f9d92642827c8aa1aab602e3276ab478c12f8d0ac91fa2d5807e21c97b,generated JSON parsed and structure inventoried; no row-by-row manual audit
+data/generated/train.json,61059958,1,4e65f10c1379a22933c8d792755de15c721c4b3845633a14ee6859614fa58e62,generated JSON parsed and structure inventoried; no row-by-row manual audit
+data/generated/train.observations.json,24046785,1,607597079804e0de9e13ac67edd27921cb8fe01ba01e6ed1d6770d24f9312d0c,generated JSON parsed and structure inventoried; no row-by-row manual audit
+docs/api-contracts.md,5564,48,d8ed673be4ab358bfb41ec6e77a5176abcdbaebc26c86507a4c92d509ec66b9a,text inventory and static scan
+docs/architecture.md,3873,72,d1a5d0e6ed19c24de83f0f53cbf6d3707f75493d94343a05346fd271690cf134,text inventory and static scan
+docs/deploy-guide.md,2731,60,bc68c0d050108c7e4c40f943d2399f43857b1cfa7b26b8cf016facb25c1407f0,text inventory and static scan
+docs/evaluation-results.md,12596,221,6dfed7874e2523aed15ac25171d93c7701c6353bf030fa7ccbb4082072031b61,text inventory and static scan
+docs/live-mode.md,24423,401,7def8aba6055b2cd7f332e720d8d59634ecb0e5298e1be070dbf19546f71186b,text inventory and static scan
+docs/logic-chain.md,2569,24,cf18d23dc723da3093facc5e7c37a7aad910104beded368140e638bd04cc4797,text inventory and static scan
+docs/operations-center.md,15758,271,f1a7ce769ed69cb082aabe11373b65e38a7d1a797d95f0e42394ab44a3de52a8,text inventory and static scan
+docs/report/Sathi_Final_Report.docx,1304811,,c4ccf3c3b3ffdf772a4e2143d19d334aaf9b0343029a6d99b0b74c2191a780bb,document XML text extracted
+docs/report/Sathi_Final_Report.pdf,2027741,,57f4dd83f0a0f89decb061c82e40e5a5e8ead75b8f55928032caa255b7436b52,all pages text extracted and rendered overview inspected
+docs/responsible-ai.md,3140,41,a720075fa1e9c29a0aabdbe5d39a646d3a53d5b93411afbc92483a377e9bca09,text inventory and static scan
+docs/schema.sql,3378,70,4e0ccc710dad031360db4fca83556e84f09938a528a3a6e92453f61e4c3b1b97,text inventory and static scan
+docs/screenshots/agent-cashout.jpg,71053,,c3b08fd1db66036939aae4ceacdac11f84796fdff8653f75cab2a6eecea5ade5,archived screenshot contact-sheet inspection
+docs/screenshots/agent-risk.jpg,102764,,a63bf245fc9b27c14fa58734fe9f434302dd2544c1c74c42f60a39b1ad55ed49,archived screenshot contact-sheet inspection
+docs/screenshots/ai-test-results.jpg,105893,,e31b2b969ac344274f720ed1c8e17cf32be42953ccc5a1877f14f80550a96f13,archived screenshot contact-sheet inspection
+docs/screenshots/architecture.jpg,103846,,4fb95009a6438c974736b2442c709933808eefc0736e9553f9c7fd64694786a0,archived screenshot contact-sheet inspection
+docs/screenshots/call-management.jpg,110110,,529ff370e4c160118a097db417466d29daa95a8ce6593ec43dedce6cd52dc844,archived screenshot contact-sheet inspection
+docs/screenshots/cases.jpg,93778,,775e35a9798cf07a245e9d2e934813f331472d27d36e083a34ca57dea4e13053,archived screenshot contact-sheet inspection
+docs/screenshots/cash-planning.jpg,91458,,61dbb8064d421bb0875f108cc74d6801b2a5edf56f9dec3e10016ef432fcaab7,archived screenshot contact-sheet inspection
+docs/screenshots/control-center.jpg,85590,,a73dc29ef3cad0db16f928c2c84180586db2eae0ff3072c122f447801a0912f7,archived screenshot contact-sheet inspection
+docs/screenshots/customer-call.jpg,109610,,9fc9a876a6b949c198ca1b9f11af96480c6581764c3ff40078687324551fddaa,archived screenshot contact-sheet inspection
+docs/screenshots/invite-planner.jpg,104845,,b9a2d77fb54e469be83c53780ba62082d8e7c31bd246e2a6064397c06e0148b6,archived screenshot contact-sheet inspection
+docs/screenshots/send-money-warning.jpg,106810,,ba5f115662be87f87469c6ba9dcd3f2dde2ac5844f4758afbeb9708635aaa9c9,archived screenshot contact-sheet inspection
+docs/screenshots/test-accounts.jpg,62425,,4019e8aa86bb26e445acde005102526c6291d2ca5c115caea23c87371f087cf5,archived screenshot contact-sheet inspection
+frontend/.dockerignore,74,8,680b02e35008f43ce13b84356b8cc639c20529abb66ba3854dfc8ade6a697e58,text inventory and static scan
+frontend/Dockerfile,1184,45,4ad6ea99d63188dea551bb71131fb1a30742398c74a953cd78a55e33342778f4,text inventory and static scan
+frontend/eslint.config.js,973,43,b369a88c465ed1ab99441aba3cab38ef56f149f363fae2a651f3377bf75ba8a9,text inventory and static scan
+frontend/index.html,1465,30,68837665ffac0bfe704fe4fe9fa5b56ad5cc1ee30ab93cbc8e1da064708cfbf2,text inventory and static scan
+frontend/package-lock.json,171873,5049,0cac5825b9e5b9f1145aed67c10af9371feed9d71fb399067862f49d3cdfe7e2,text inventory and static scan
+frontend/package.json,728,33,9b98a62b2d957de7331253cac9218da80542b2fcf06e3c4d1d6c440ef9d452d7,text inventory and static scan
+frontend/src/.gitkeep,1,1,01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b,text inventory and static scan
+frontend/src/App.jsx,10564,233,7184684ac565345b119ebe9d77bf79b01d4e2ac264cc1f6d9a480f348e7df157,text inventory and static scan
+frontend/src/App.test.jsx,13263,300,2da0bd497661f4c964c86418c4e637f722867fb83c8e426027a8ba5842eb3b7a,text inventory and static scan
+frontend/src/api.js,16415,294,52dd1c18b16b364da3ad9a4648af9c12b36ab19e6f9ebdc334765b9aceceab04,text inventory and static scan
+frontend/src/api.test.js,4792,78,ce905db53cb90c5bc4a66b9e1f85b4205ae5d6a8056658c74cce5939cd8f7a86,text inventory and static scan
+frontend/src/components/AgentCashout.jsx,6892,146,e310205f7ba8b4627ee46d209ef8e63f425b37af99f459a4c3c74723499351b7,text inventory and static scan
+frontend/src/components/AgentRiskBoard.jsx,7114,152,8597dd7ca2352ffb9836608d7c088418a636a807a0d7ed65cf02fe7c0abe1158,text inventory and static scan
+frontend/src/components/ArchitecturePage.jsx,8175,183,4451702e0ba0fa974dae69c81d1f38c671b25ba7334d31cbff011c947262525a,text inventory and static scan
+frontend/src/components/AssistantChat.jsx,5644,112,10a1e0083510e7e2853aa89a59b3ea42cf63c94342878c664b7518575b2a5466,text inventory and static scan
+frontend/src/components/CaseBrief.jsx,3507,78,5ea4733475338ce9da54854360162d5e2b2a9d02b1b3758e022ee6f26159b4af,text inventory and static scan
+frontend/src/components/Charts.jsx,11915,234,d7a48bd4ed3cede80aa03edfbf85ea501923a21c418caab4cf2b6d3698c5d32c,text inventory and static scan
+frontend/src/components/CommandCenter.jsx,13862,320,145911ab38303afe2e1ac4cf715e35f8575b5e0d51642e7ae5dbf16c44968e6c,text inventory and static scan
+frontend/src/components/CredentialsPanel.jsx,9887,159,c2a379f33c2d4089fb53bbb88b2a3c334c6d471e17c95a4cc7f4ca0121972b52,text inventory and static scan
+frontend/src/components/CustomerAccount.jsx,3992,93,ecbff5380eab00a2a5ec0e449862b49ae91e34a5ad7d936b00bcc429226aabc2,text inventory and static scan
+frontend/src/components/DemoLogin.jsx,6111,152,ab18fa19bb8dd878462c45e4bfb6a55a4ab7efdeaafc69301a499fb3c13e2bf7,text inventory and static scan
+frontend/src/components/ErrorBoundary.jsx,1305,33,71f133532f09bd48fe924d916cd2446289fe7ed19739403844237722353bda01,text inventory and static scan
+frontend/src/components/Header.jsx,5168,128,063cab23ab1f8b7ac5aaf9d55012cfc039309c0c79214bdc22f9c81fedc94501,text inventory and static scan
+frontend/src/components/Icon.jsx,5335,34,797d7c54b82eee42ca431e6a4315bcbdd679e1c1ba11b28130c53462e8b7515b,text inventory and static scan
+frontend/src/components/LiquidityPage.jsx,14775,305,fcd054661919e15ff86fd0cf8e8ca3a21abe74e0b6468a195dc5c4ac50831541,text inventory and static scan
+frontend/src/components/LiveCall.jsx,11223,280,51787f481ce416355fe138a40b78972a013f97d9162c3aec5bb4e3daa7257c65,text inventory and static scan
+frontend/src/components/LoginScreen.jsx,6754,160,19de0cedebc526a6967f9ea31847335a2b6f6a360a3681fcee7bd9f9ebc3eea2,text inventory and static scan
+frontend/src/components/MetricsPage.jsx,27141,684,9849fb6d440e41782649578c936ce99db84075a17cf53d379e3144ae61a0c0c4,text inventory and static scan
+frontend/src/components/NavTabs.jsx,6878,101,ba51548dadb971cdb599835730bc9924fa0ae1b0723b7f929073f654c44e4bcd,text inventory and static scan
+frontend/src/components/OutreachList.jsx,9908,208,fd70658db5bfeca276d985d6a7db54041576dfff9c9ffb8316457eb4db4b5d9d,text inventory and static scan
+frontend/src/components/PageGuide.jsx,2135,49,a19d309095d9d84eb1ee5439db5e510b1e271303c88bd889de4e59f5fc6ba2dd,text inventory and static scan
+frontend/src/components/ReviewQueue.jsx,11634,237,f0b30f21470bdfb83fcd79ead59d314a35dd24d39304d26e5bad42b0267a4e81,text inventory and static scan
+frontend/src/components/ScamProtection.jsx,25714,409,c7e15d64c742d3df3c2b2a8bfaf626582f320adb544fdb6c86665174ee419819,text inventory and static scan
+frontend/src/components/SettingsPage.jsx,15639,292,aa3b38f0db018775c635eface355c83ab93a4832362070f08bf9bd472571bd36,text inventory and static scan
+frontend/src/components/ThemeToggle.jsx,2142,76,235fe18a238aabf2962231e930cdf2fbf177cec259ce50c2e23b043c749d5067,text inventory and static scan
+frontend/src/components/TransactionsPage.jsx,9973,187,82644be235e0bee8e64cc439732cfe33c5601d2f6a9c7e4ee8e4ba8f4f7c70b6,text inventory and static scan
+frontend/src/components/UpliftPage.jsx,14803,272,bd08d35d2a288fd05ce09e9cd6cb5c339284565abaeed47cd07161e7a62e7d3a,text inventory and static scan
+frontend/src/components/evidenceFixture.js,2748,18,bfefa7b615ee6ee8c0f13648e616276b1169798891d510c052420c71d800fc0a,text inventory and static scan
+frontend/src/components/ops/AdminDashboard.jsx,11972,212,2a17f337de582c81394ef318e83ebcddc806174625e19622046b2d1acf46e038,text inventory and static scan
+frontend/src/components/ops/CallCenter.jsx,17442,327,b5ab087397b870bcb69d0b0a0971af62f6a003b7ab22e3d15ea8c81ee9a82f30,text inventory and static scan
+frontend/src/components/ops/CaseWorkbench.jsx,19734,344,2d9bc38058bda50f72c2991107f25a3b9bcf72cdf889829217b157de66156d52,text inventory and static scan
+frontend/src/components/ops/Directories.jsx,25308,425,eb6af82947ed0348e5ee096d701d43c57b87e50164564d27467d359441f27df4,text inventory and static scan
+frontend/src/components/ops/TestAccounts.jsx,6784,106,ef7fb8cc5890a6d646b8eec6c5976181717f1b417b88f3f3e765f5f9c7981775,text inventory and static scan
+frontend/src/components/ops/kit.jsx,10309,258,d39c308b7b0835f873137b11a34d5c538fd68e7200e61cc79923ecbe235e594d,text inventory and static scan
+frontend/src/copy.js,6619,150,97ba6e376d23ac6c2e9f08781871855bacda5e671da013b85deb1b05a3275868,text inventory and static scan
+frontend/src/ids.js,1799,51,1821f024730f31cb9c6ad79c8e54621595abde1fd44beda7ebcf5198e1f27c9d,text inventory and static scan
+frontend/src/ids.test.js,961,23,c8dc1994905d6ea168cc4bcd141c7ab5d15f02e3f5b5677ae1ba39b5b9ff85b3,text inventory and static scan
+frontend/src/live.test.jsx,3955,81,11de19dcdb50fa636327cbbfea8f8f19345ac0b2432a65aa7c174b106226a4d2,text inventory and static scan
+frontend/src/main.jsx,299,13,8099c0ccb0c68e94fb8dffe40fdbdcc6c78bd6294f475ce1d5ce43ce07f19d84,text inventory and static scan
+frontend/src/ops.test.jsx,2134,49,d4d76a80d4fcbaeb0d8247cfc5d700d2f41abf6ba368f32b497f7fcc13f30c96,text inventory and static scan
+frontend/src/session.test.js,1852,39,963fef4c2f3b4a877beb84db03d47abfe07585da9af469a30b2af6e1a33c66e2,text inventory and static scan
+frontend/src/settings.test.jsx,3590,67,e990550f48d6f6fb792802fa8f01eea676c2f6907322befc5a0cbdc7d66d2aa1,text inventory and static scan
+frontend/src/style.css,6118,227,914e178deebe6529f44cf348f9eb95feccf9a75cc01fa21ca6698f25dd509875,text inventory and static scan
+frontend/src/useTheme.js,2040,71,2bca15a80518aa600d4abd326ce23a4ea7dd0dfa2be17ea79b3da1b1844a44ce,text inventory and static scan
+frontend/vite.config.js,577,26,140b7a68b58e81b67917fa428db7ac2293e416c6de1e66b5f02a51ab612c622f,text inventory and static scan
+render.yaml,3209,105,b854b752fe03ec4f28b1b7051cf7ab8eadadf26f446a18bcd3c7345152c15aac,text inventory and static scan
+scripts/bd_ivr_standin.py,6926,208,08b32a83a9fcbf40cd61c49aa781ab3f2992fa59256c79871d0a5d460f7c1ada,text inventory and static scan
+scripts/check_structure.py,4657,137,66935a765e4e8feaaeca0e5ec8dc8a94111f09ea52e1879d8f1cfb46b50cb3e4,text inventory and static scan
+scripts/evaluate.py,6084,165,0214679b841184eeb3b1575f8019d3011ee1dc249b08ec76865401a7ff4b3551,text inventory and static scan
+scripts/init_env.py,4089,122,7a232c26a150fc8b223e06e0f34c8bad78a5be28aa1b203cee3f80091a615db1,text inventory and static scan
+scripts/mock_server.py,14068,428,8b4eed4b41084760f9c46874cedb7054f6c1ff09a9ffc4f319650558102f639c,text inventory and static scan
+scripts/preflight.py,3792,119,8b28347d986aead21ac64661792526a844630e69b348d44ecefd627cea4e6ca1,text inventory and static scan
+scripts/scale_seed.py,7674,155,51a325e1232913aa1cdb13fb0caf7e897589ca827347530d3f3b150d8c7f826f,text inventory and static scan
+scripts/smoke_roles.sh,1467,29,ce90c3b43b7db953932a10c0c1df771c0777a177f67c927a4b00c327f6829fae,text inventory and static scan
+scripts/smoke_skeleton.py,4629,133,0b2802e409ddb64c4b18b0be790f6ee6d5e622430376300bd2400b28722ae33c,text inventory and static scan
+scripts/train_intelligence.py,3002,75,7d1835227efd45fa5a4cdb6236959395891bbf30e986ff88a552f7ddc42ef5f7,text inventory and static scan
+tasks/T023b-initial-lint.log,16787,371,c7348567445f8bb28d38edbefde6730e656b0b5e2d15108432732e310d2a918b,text inventory and static scan
+tasks/T023b-second-lint.log,6277,175,87df253b01d247815591158b831961e9c89561b6a80b614ee72edff09176c356,text inventory and static scan
+tasks/T023b-second-tests.log,81508,1814,04fce12e9d06ee6de1c09c96d3ef5959d466e6b6828843058be9161cc4efe4c0,text inventory and static scan
+tasks/T024-initial-lint.log,82522,1815,eb89d6f874d71d9bc830013716dda104bab0d35f4048924a9e7cd8d77e3b8775,text inventory and static scan
+tasks/T024-initial-tests.log,12850,253,64205312676bf7f3607a5a2e2da5577cf2a322466d06f9cb4f3f14f8a02a3389,text inventory and static scan
+tasks/T024-second-lint.log,11672,344,f42b264db14fbfabcc50a86a583d9c1371fe6cafcc47365f202ba819cfad2e29,text inventory and static scan
+tasks/T024-second-tests.log,8261,147,d8ee547e1254cd0dbe9843d0939afa642d4ce018f59c60a3bca506d22a4f4607,text inventory and static scan
+tasks/T025-agy.log,19,1,c29031c66b0ecb71b7999cf5fa567c12f2abeb1c7f25157e0c105f1bc0cecfa3,text inventory and static scan
+tasks/T026-build.log,17456,214,80d14480f765b01d1fc9249a2da714c12581edc5e5188f55223a35e7f81685e8,text inventory and static scan
+tasks/T026-checks.log,4890,76,03eef1e70404542a77aacadc819b5920f515236c8cf8ee8092f82b7308530cec,text inventory and static scan
+tasks/T026-checks2.log,4381,83,7b067459f1b1a1d8f757cbacb05abf3b2efd88d04d2e01abebc21eb9ab97c26e,text inventory and static scan
+tasks/T027-video-final.log,6706,73,9fe43eb67feaeca2bb6576ab27c8f6a9dc48bf6482e407a198180635c29c6338,text inventory and static scan
+tasks/T027-video-verified.log,6573,72,2ba3d9a2edc3e072711731e9d1e03c6bb43d7c1073df78963699b7e6f4e8136d,text inventory and static scan
+tasks/T027-video.log,6839,74,4a2e8d4c11b05abfee25894459606f5bc728ab32c882e2a5db32b2f00c6e9892,text inventory and static scan

@@ -5,6 +5,13 @@
 > per the frozen configuration in `data/config.yaml`
 > (Train Seed 42, Val Seed 4242, Test Seed 2026).
 > Zero protected demographic features or ground truth labels were included in models.
+>
+> **Scale note (7 October 2026).** The agent section below rests on a 60-agent held-out cohort with
+> only 2 skimmers and 4 honest high-volume agents; precision@15 ranks 15 agents and is a different
+> policy from threshold recall. This document is the frozen canonical run and is unchanged. A larger,
+> independently seeded synthetic benchmark (3 replications x 3,000 agents, predeclared protocol,
+> development and final cohorts, subtle and unchanged-fee scenarios) is in
+> [`evaluation-agent-v2.md`](evaluation-agent-v2.md). Both are synthetic.
 
 ## 1. Assisted-User Classifier vs Rule Baseline
 

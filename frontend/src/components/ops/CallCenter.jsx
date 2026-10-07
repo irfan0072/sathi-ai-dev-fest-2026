@@ -5,6 +5,7 @@ import Icon from '../Icon';
 import {
   Alert, AssignMenu, Badge, Empty, Kpi, LiveDot, PageHead, Panel, Pager, Tabs, bdt, manualReason,
   num, pct, priorityTone, taskLabel, taskTone, timeAgo, usePoll, useSupervisors, when, checkText, checkTone,
+  followupLabel, followupTone,
 } from './kit';
 
 const RESULTS = [
@@ -80,6 +81,73 @@ function OutcomeForm({ task, onDone }) {
         <p className="muted">Saving opens a case automatically with your note attached.</p>
       )}
     </form>
+  );
+}
+
+const FOLLOWUP_OPEN = ['required', 'attempted', 'uncertain', 'unreachable'];
+
+// Independent contact. Reaching the registered handset again does not show the customer is free
+// to speak (the agent may hold that phone), so only an in-person contact can be "reached
+// independently". Uncertain and unreachable keep the case open. No phone number is entered here.
+export function FollowupPanel({ task, session, onDone }) {
+  const [outcome, setOutcome] = useState('attempted');
+  const [channel, setChannel] = useState('registered_number');
+  const [note, setNote] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  if (!FOLLOWUP_OPEN.includes(task.followup_status) && task.followup_status !== 'reached_independently') return null;
+  const mine = task.followup_assigned_to === session.subject;
+  const isAdmin = session.role === 'super_admin';
+  const run = async (fn) => {
+    setBusy(true); setError('');
+    try { await fn(); onDone(); } catch (err) { setError(err.message); } finally { setBusy(false); }
+  };
+  const independentOk = channel === 'in_person';
+  return (
+    <div className="flex flex-col gap-2 rounded-box border border-warning/40 bg-warning/10 p-3 text-sm" data-testid="followup-panel">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="font-semibold">Independent follow-up</span>
+        <Badge tone={followupTone[task.followup_status]}>{followupLabel[task.followup_status]}</Badge>
+        <span className="muted">{task.followup_attempts} attempt(s){task.followup_assigned_to ? ` · ${task.followup_assigned_to}` : ' · not taken yet'}</span>
+      </div>
+      <p className="muted">
+        Calling the registered number again does not prove the customer is free to speak: the agent may hold that phone.
+        The case cannot be cleared until an in-person contact reaches the customer. Uncertain stays open.
+      </p>
+      <Alert>{error}</Alert>
+      {task.followup_status === 'reached_independently' ? null : (
+        <>
+          {!task.followup_assigned_to && session.role === 'supervisor' && (
+            <button className="btn btn-primary btn-sm self-start focus-ring" disabled={busy} onClick={() => run(() => api.claimFollowup(task.task_id))}>Take this follow-up</button>
+          )}
+          {(mine || (isAdmin && task.followup_assigned_to)) && (
+            <div className="flex flex-col gap-2">
+              <div className="flex flex-wrap gap-2">
+                <label className="flex items-center gap-1">
+                  <span className="muted">How</span>
+                  <select className="select select-bordered select-sm focus-ring" value={channel} onChange={(e) => { setChannel(e.target.value); if (e.target.value === 'registered_number' && outcome === 'reached_independently') setOutcome('attempted'); }}>
+                    <option value="registered_number">Registered number (may be the agent's phone)</option>
+                    <option value="in_person">In person (supervised visit)</option>
+                  </select>
+                </label>
+                <label className="flex items-center gap-1">
+                  <span className="muted">Result</span>
+                  <select className="select select-bordered select-sm focus-ring" value={outcome} onChange={(e) => setOutcome(e.target.value)}>
+                    <option value="attempted">Attempted</option>
+                    <option value="uncertain">Uncertain: could not confirm they were alone</option>
+                    <option value="unreachable">Could not reach</option>
+                    {independentOk && <option value="reached_independently">Reached independently</option>}
+                  </select>
+                </label>
+              </div>
+              <textarea className="textarea textarea-bordered focus-ring" rows={2} maxLength={1000} value={note} onChange={(e) => setNote(e.target.value)} placeholder="Note for the record (no phone numbers or PINs)." />
+              <button className="btn btn-sm btn-primary self-start focus-ring" disabled={busy}
+                onClick={() => run(() => api.recordFollowup(task.task_id, { outcome, channel, note: note || null }))}>Save follow-up</button>
+            </div>
+          )}
+        </>
+      )}
+    </div>
   );
 }
 
@@ -162,6 +230,8 @@ function TaskDetail({ taskId, session, supervisors, onChanged, onClose }) {
         </div>
       )}
 
+      <FollowupPanel task={task} session={session} onDone={() => { load(); onChanged(); }} />
+
       <div className="flex flex-wrap gap-2">
         {session.role === 'supervisor' && task.status === 'needs_manual' && !task.assigned_to && (
           <button className="btn btn-primary btn-sm focus-ring" disabled={busy} onClick={() => act(() => api.claimCall(task.task_id))}>Take this call</button>
@@ -208,7 +278,14 @@ function TaskRow({ t, selected, onSelect, session, onClaim }) {
       <td className="font-mono text-xs">{phone(t.user_id)}</td>
       <td className="tabular-nums">{bdt(t.amount)}</td>
       <td className="text-xs">{manualReason[t.manual_reason] || t.last_outcome || '—'}</td>
-      <td><Badge tone={taskTone[t.status]}>{taskLabel[t.status]}</Badge></td>
+      <td>
+        {FOLLOWUP_OPEN.includes(t.followup_status) ? (
+          <span className="flex flex-col items-start gap-0.5">
+            <Badge tone={followupTone[t.followup_status]}>{followupLabel[t.followup_status]}</Badge>
+            <span className="muted text-xs">call: {taskLabel[t.status]}</span>
+          </span>
+        ) : <Badge tone={taskTone[t.status]}>{taskLabel[t.status]}</Badge>}
+      </td>
       <td className="text-xs">{t.status === 'retry_scheduled' ? `next ${timeAgo(t.next_attempt_at)}` : t.assignee_name || t.assigned_to || '—'}</td>
       <td className="text-xs">{t.auto_attempts}/{t.manual_attempts}</td>
       <td className="muted text-xs">{timeAgo(t.updated_at)}</td>
@@ -226,9 +303,9 @@ function TaskRow({ t, selected, onSelect, session, onClaim }) {
 export default function CallCenter({ session }) {
   const isAdmin = session.role === 'super_admin';
   const scopes = isAdmin
-    ? [{ id: 'manual', label: 'Needs a person' }, { id: 'pending', label: 'Unassigned' }, { id: 'retrying', label: 'Retrying' },
+    ? [{ id: 'manual', label: 'Needs a person' }, { id: 'pending', label: 'Unassigned' }, { id: 'followup', label: 'Independent follow-up' }, { id: 'retrying', label: 'Retrying' },
       { id: 'ignored', label: 'Ignored' }, { id: 'resolved', label: 'Resolved' }, { id: 'all', label: 'All' }]
-    : [{ id: 'pending', label: 'Pending' }, { id: 'mine', label: 'My calls' }, { id: 'my_history', label: 'Done by me' }];
+    : [{ id: 'pending', label: 'Pending' }, { id: 'mine', label: 'My calls' }, { id: 'followup', label: 'Independent follow-up' }, { id: 'my_history', label: 'Done by me' }];
   const [scope, setScope] = useState(scopes[0].id);
   const [selected, setSelected] = useState(null);
   const [extra, setExtra] = useState([]);

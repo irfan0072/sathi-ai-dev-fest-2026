@@ -5,7 +5,14 @@ Primary track: **Track 07 Open Innovation**, extended across **Track 01 Trust & 
 Team: **Runtime Terrors**
 
 > Sathi is a working prototype on **synthetic data**. It is not connected to real upay accounts.
-> The AI only recommends; a person makes every decision.
+> Fixed rules decide verified or suspicious; the AI ranks cases for review; a person makes every
+> decision. A hackathon concept for upay, not endorsed by upay.
+
+**Final-round addendum (7 October 2026).** What was added after the judges' feedback, and what is
+still pending, is in [`docs/final-sprint-status.md`](docs/final-sprint-status.md); every judge request is
+mapped to evidence and a literal status in [`docs/judge-feedback-traceability.md`](docs/judge-feedback-traceability.md).
+Synthetic evidence is labelled as such; a real pilot, an upay integration, an independent security
+review and custom Bangla ASR are **pending (external)**, not done.
 
 **Live demo: <https://sathi-console.onrender.com/>** · pick a role on the sign-in screen (the synthetic demo PIN is filled in). The free hosting sleeps when idle, so the first load can take up to a minute.
 
@@ -65,7 +72,7 @@ Sathi adds a safety layer around every assisted cash-out:
 
 - Protect assisted customers without asking them to learn anything new: they only answer a phone call.
 - Give upay supervisors a real-time operations center with call queues, cases and audit trails.
-- Show that useful, explainable AI can run on live data at national scale (tested with 5 million customers) while staying fair and human-controlled.
+- Show that useful, explainable AI can run on live data while staying fair and human-controlled. Performance was exercised with a 5-million-row synthetic customer table; the models were *not* evaluated on it, and the live AI pages score an activity-selected pool, not all 5 million customers.
 
 ---
 
@@ -303,8 +310,8 @@ make test lint build-console
 make smoke-skeleton
 ```
 
-- **Backend:** 563 pytest tests (8 skipped by design) covering data determinism and leakage, models, authentication and roles, mandates and concurrency, replay and lockout, confirmation calls and retries, Twilio and BD IVR webhooks, call center, scam protection and the LLM warning guard, test accounts, migrations and bootstrap.
-- **Frontend:** 60 Vitest tests covering role navigation, pages, escaping of untrusted text and ID-to-phone display.
+- **Backend:** 762 pytest tests pass and 8 are skipped (all 8 are live-provider tests that need `SATHI_LIVE_TESTS=1` and real credentials; verified on a disposable PostgreSQL 18.4, not the declared PostgreSQL 16 CI target) covering data determinism and leakage, models, authentication and roles, mandates and concurrency, replay and lockout, confirmation calls and retries, Twilio and BD IVR webhooks, call center, scam protection and the LLM warning guard, test accounts, migrations and bootstrap.
+- **Frontend:** 67 Vitest tests covering role navigation, pages, escaping of untrusted text, ID-to-phone display, the follow-up panel and the evidence page. These are server-render tests, not end-to-end proof; `scripts/browser_smoke.py` (Playwright, not a project dependency) drives the real UI at desktop and 390 px width, including agent cash-out -> customer answer -> supervisor follow-up queue.
 - **Isolation:** tests use disposable schemas inside `sathi_phase1_test` and never touch the demo database.
 - **CI:** GitHub Actions (`.github/workflows/ci.yml`) runs lint, tests and the console build on every push and pull request against PostgreSQL 16.
 
@@ -346,6 +353,10 @@ make smoke-skeleton
 - **Idealised impact (simulation, not field evidence):** with 50% adoption, about **৳7,401 of ৳14,802** eligible skimming loss is prevented, assuming perfect compliance.
 
 Full tables, denominators, ablations and noise tests: [`docs/evaluation-results.md`](docs/evaluation-results.md). Re-run with `make reproduce`.
+
+**Extended agent benchmark v2 (final-round addendum, synthetic).** `python scripts/agent_benchmark_v2.py --phase dev` then `--phase final` (one shot) re-run the same generator, features and detectors on 3 independent replications of 3,000 agents, with the protocol written before any data is generated, development and final cohorts separated, and hashes archived under `data/benchmarks/agent_v2/`. Results, exact denominators, threshold versus review-budget policies and caveats: [`docs/evaluation-agent-v2.md`](docs/evaluation-agent-v2.md). The canonical benchmark above is unchanged.
+
+**Repeatable workflow demonstration (synthetic).** `SATHI_TEST_DATABASE_URL=... python scripts/demo_scenario.py` runs cash-out, confirmation call, honest match, mismatch, secret help, silence, uncertain speech, provider failure, supervisor queue, independent follow-up, human decision, audit and wrong-role paths through the real routes and a disposable schema, and writes [`docs/evidence/workflow-evidence.json`](docs/evidence/workflow-evidence.json). The console's **Workflow evidence** page shows the same counts, with numerators and denominators, for whatever database it runs on. `python scripts/economics.py` regenerates [`docs/economics-sensitivity.md`](docs/economics-sensitivity.md).
 
 > The agent detector numbers come from small denominators (2 skimmers, 4 honest high-volume agents). Synthetic results do not prove real-world accuracy.
 
@@ -397,14 +408,17 @@ More detail: [`docs/architecture.md`](docs/architecture.md), [`docs/operations-c
 - **Humans decide.** No model approves, denies or blocks a transaction. AI outputs are labelled as recommendations with reasons.
 - **Explainable.** SHAP reasons for customer scores, signal-level reasons for agent risk, plain-language advice on every page.
 - **Fair by design.** No demographic features in any model; a fairness audit checks gaps across age, gender, region and urban/rural.
-- **Grounded LLM.** Case briefs must cite evidence facts or they are rejected. Send-money warnings receive only structured facts (no report text, no phone numbers), and any wording that accuses ("scam", "fraud", "প্রতারক", and similar) is rejected in favour of a fixed template.
+- **Grounded case briefs.** A cited fact ID only proves the reference exists, so every text field of a brief is also checked for secrets, phone numbers, accusations, invented amounts and contradicted claims (English, Bangla, Banglish); an external model sees only a minimised fact allowlist; anything that fails falls back to a deterministic brief, and the response says which mode produced it. These are pattern checks, not semantic proof, and a public deployment never calls an external model. Send-money warnings receive only structured facts (no report text, no phone numbers), and any wording that accuses ("scam", "fraud", "প্রতারক", and similar) is rejected in favour of a fixed template.
 - **No harm from silence.** Silence or a missed call is never treated as "I did not do this".
 - **Neutral screens.** Agents and customers never see a check result, so a duress signal cannot be noticed by someone standing nearby.
 - **Honest numbers.** Financial figures are labelled as assumptions; simulated impact is labelled as idealised.
 
 **Security**
 
-- Short-lived signed JWTs with role and scope checks on every endpoint; `X-Actor` headers cannot authenticate.
+- Short-lived signed JWTs with role and scope checks on every endpoint; `X-Actor` headers cannot authenticate; a deactivated staff account's token stops working on the next request.
+- `SATHI_DEPLOYMENT_MODE=public_demo` (set in `render.yaml`) makes a public synthetic deployment read-only for management, pins providers to simulated and the case-brief AI to deterministic. This is not a penetration test.
+- The audit trail is durable and append-only (database triggers reject UPDATE/DELETE/TRUNCATE); a database owner can still remove them and there is no hash chain, so it is not "immutable".
+- Call transcripts: no audio is stored; transcript text is redacted, capped at 200 characters and purged after 30 days.
 - PINs hashed with salted PBKDF2-SHA256 and compared in constant time; unknown accounts still pay the hash cost.
 - Provider credentials encrypted at rest; the API returns only masked hints.
 - Twilio and BD IVR webhooks verified by signature plus a per-call token.
@@ -423,7 +437,11 @@ Full policy: [`docs/responsible-ai.md`](docs/responsible-ai.md).
 
 - All data is synthetic; real-world accuracy and fraud reduction are not proven.
 - Amount confirmation cannot prove physical cash delivery, identity of the person answering, or the absence of coercion.
-- Agent detector results rest on small samples; subtle skimming is not detected.
+- Agent detector results on the canonical cohort rest on 2 skimmers. The extended synthetic benchmark ([`docs/evaluation-agent-v2.md`](docs/evaluation-agent-v2.md)) has larger denominators but is still synthetic, and subtle skimming is still not flagged at the fixed threshold.
+- Speech input is a provider transcript plus a word parser, not a custom or fine-tuned Bangla ASR model, and is not validated for regional or noisy speech ([`docs/bangla-asr-evaluation-spec.md`](docs/bangla-asr-evaluation-spec.md)).
+- The confirmation call happens after the cash-out. Sathi detects and supports resolution; it does not hold or recover money. Prevention needs a separately supported intervention.
+- Calling the registered number cannot prove independence when an agent holds the handset. A suspicious check therefore needs an independent follow-up before a case can be cleared; the queue and status exist, the supervised in-person follow-up is pending.
+- Economics are assumptions with the negative cases shown ([`docs/economics-sensitivity.md`](docs/economics-sensitivity.md)); there are no invoices and no field data.
 - Live Twilio calls are implemented and tested with signed webhooks, but depend on a public HTTPS deployment and provider setup.
 - The Bangladesh IVR adapter needs a vendor-specific mapping.
 - Campaign outcomes for the uplift model are simulated from a documented experiment model.
@@ -433,7 +451,8 @@ Full policy: [`docs/responsible-ai.md`](docs/responsible-ai.md).
 
 - Pilot with a small group of real assisted customers and agents, with consent.
 - Integrate with upay's cash-out events and registered customer numbers.
-- Partner with a local IVR provider for low-cost Bangla calls; add Bangla speech recognition.
+- Partner with a local IVR provider for low-cost Bangla calls; evaluate Bangla speech recognition on consented audio with the specified protocol.
+- A one-page partner and pilot request with go/no-go gates is in [`docs/pilot-partner-request.md`](docs/pilot-partner-request.md) (planned, not started).
 - Collect supervisor decisions as labels to retrain and recalibrate models.
 - Expand fairness audits to real demographic slices under privacy review.
 - Run a real randomised outreach campaign to validate uplift targeting.

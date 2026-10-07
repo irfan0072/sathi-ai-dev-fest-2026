@@ -76,7 +76,7 @@ function Detail({ id, onOpenCases, onChanged }) {
       {rec && (
         <div className={`rounded-box border p-4 ${rec.label === 'suspicious' ? 'border-error/40 bg-error/5' : 'border-success/40 bg-success/5'}`}>
           <div className="mb-1 flex items-center gap-2">
-            <span className={`badge badge-sm ${rec.label === 'suspicious' ? 'badge-error' : 'badge-success'}`}>AI recommendation</span>
+            <span className={`badge badge-sm ${rec.label === 'suspicious' ? 'badge-error' : 'badge-success'}`}>Rule-based recommendation</span>
             <span className="font-semibold">{rec.label === 'suspicious' ? 'Suspicious — please review' : 'Looks fine'}</span>
           </div>
           <p className="text-sm font-medium">{rec.headline}</p>

@@ -1,0 +1,608 @@
+{
+  "economics_baseline": {
+    "benefit": {
+      "dispute_handling_avoided": 0.0,
+      "incidents": 27.7,
+      "incidents_detected": 25.92,
+      "incidents_reached_by_call": 25.92,
+      "loss_returned_by_a_separate_intervention": 0.0,
+      "total": 0.0
+    },
+    "cost": {
+      "call_attempts": 1248.0,
+      "case_review_and_independent_followup": 2790.2,
+      "hosting": 100.0,
+      "manual_review_unclear": 936.0,
+      "manual_review_unreachable": 0.0,
+      "sms": 316.0,
+      "total": 5390.2
+    },
+    "delivery": {
+      "answered_within_budget": 0.936,
+      "expected_attempts": 1.56,
+      "failed_attempts": 0.624,
+      "unanswered_after_budget": 0.064
+    },
+    "net": -5390.2
+  },
+  "environment": {
+    "postgresql": "18.4 (Homebrew)",
+    "schema": "disposable (dropped after the run)"
+  },
+  "label": "SYNTHETIC local scenario through the real backend; not field evidence",
+  "steps": [
+    {
+      "as": "agent",
+      "at": "2026-10-07T04:00:40.019996+00:00",
+      "http": 201,
+      "scenario": "S1 honest customer, correct amount",
+      "step": "agent records a cash-out of 3000"
+    },
+    {
+      "as": "customer:U_DEMO_01",
+      "at": "2026-10-07T04:00:40.022478+00:00",
+      "http": 200,
+      "scenario": "S1 honest customer, correct amount",
+      "step": "customer handset shows the incoming call"
+    },
+    {
+      "as": "customer:U_DEMO_01",
+      "at": "2026-10-07T04:00:40.031313+00:00",
+      "http": 200,
+      "scenario": "S1 honest customer, correct amount",
+      "step": "customer states the cash they received (3000)"
+    },
+    {
+      "as": "agent",
+      "at": "2026-10-07T04:00:40.033305+00:00",
+      "http": 200,
+      "scenario": "S1 honest customer, correct amount",
+      "step": "agent sees only a neutral state"
+    },
+    {
+      "as": "agent",
+      "at": "2026-10-07T04:00:40.038515+00:00",
+      "http": 201,
+      "scenario": "S2 customer states less cash than the ledger",
+      "step": "agent records a cash-out of 5000"
+    },
+    {
+      "as": "customer:U_DEMO_02",
+      "at": "2026-10-07T04:00:40.043265+00:00",
+      "http": 200,
+      "scenario": "S2 customer states less cash than the ledger",
+      "step": "customer types 3000 (first try)"
+    },
+    {
+      "as": "customer:U_DEMO_02",
+      "at": "2026-10-07T04:00:40.050152+00:00",
+      "http": 200,
+      "scenario": "S2 customer states less cash than the ledger",
+      "step": "customer types 3000 again (second try)"
+    },
+    {
+      "as": "supervisor",
+      "at": "2026-10-07T04:00:40.060646+00:00",
+      "http": 200,
+      "scenario": "S2 customer states less cash than the ledger",
+      "step": "supervisor sees the follow-up in the queue"
+    },
+    {
+      "as": "supervisor",
+      "at": "2026-10-07T04:00:40.063230+00:00",
+      "http": 200,
+      "scenario": "S2 customer states less cash than the ledger",
+      "step": "supervisor claims the follow-up"
+    },
+    {
+      "as": "supervisor",
+      "at": "2026-10-07T04:00:40.067364+00:00",
+      "http": 200,
+      "scenario": "S2 customer states less cash than the ledger",
+      "step": "supervisor opens the evidence brief"
+    },
+    {
+      "as": "admin",
+      "at": "2026-10-07T04:00:40.070127+00:00",
+      "error_code": "INDEPENDENT_CONTACT_REQUIRED",
+      "http": 409,
+      "scenario": "S2 customer states less cash than the ledger",
+      "step": "case cannot be cleared yet (no independent contact)"
+    },
+    {
+      "as": "supervisor",
+      "at": "2026-10-07T04:00:40.071484+00:00",
+      "error_code": "SAME_HANDSET_NOT_INDEPENDENT",
+      "http": 422,
+      "scenario": "S2 customer states less cash than the ledger",
+      "step": "supervisor marks the registered handset 'independently reached' (refused: same handset proves nothing)"
+    },
+    {
+      "as": "supervisor",
+      "at": "2026-10-07T04:00:40.072912+00:00",
+      "error_code": "VALIDATION_ERROR",
+      "http": 422,
+      "scenario": "S2 customer states less cash than the ledger",
+      "step": "supervisor tries to add an alternate phone number (refused)"
+    },
+    {
+      "as": "supervisor",
+      "at": "2026-10-07T04:00:40.076117+00:00",
+      "http": 200,
+      "scenario": "S2 customer states less cash than the ledger",
+      "step": "supervisor records an attempt on the registered handset"
+    },
+    {
+      "as": "admin",
+      "at": "2026-10-07T04:00:40.077952+00:00",
+      "error_code": "INDEPENDENT_CONTACT_REQUIRED",
+      "http": 409,
+      "scenario": "S2 customer states less cash than the ledger",
+      "step": "case still cannot be cleared"
+    },
+    {
+      "as": "supervisor",
+      "at": "2026-10-07T04:00:40.080802+00:00",
+      "http": 200,
+      "scenario": "S2 customer states less cash than the ledger",
+      "step": "in-person independent contact confirms the shortfall [PENDING in a real deployment: simulated here]"
+    },
+    {
+      "as": "supervisor",
+      "at": "2026-10-07T04:00:40.089200+00:00",
+      "http": 200,
+      "scenario": "S2 customer states less cash than the ledger",
+      "step": "supervisor takes the case"
+    },
+    {
+      "as": "supervisor",
+      "at": "2026-10-07T04:00:40.092161+00:00",
+      "http": 200,
+      "scenario": "S2 customer states less cash than the ledger",
+      "step": "human decision: confirmed problem"
+    },
+    {
+      "as": "system",
+      "at": "2026-10-07T04:00:40.092346+00:00",
+      "data": {
+        "actions": [
+          "followup_claimed",
+          "case_brief_generated",
+          "followup_recorded",
+          "followup_recorded",
+          "case_claimed",
+          "CASE_DECISION_DENIED"
+        ]
+      },
+      "scenario": "S2 customer states less cash than the ledger",
+      "step": "audit trail for this task and case"
+    },
+    {
+      "as": "agent",
+      "at": "2026-10-07T04:00:40.098073+00:00",
+      "http": 201,
+      "scenario": "S3 customer uses the secret help signal",
+      "step": "agent records a cash-out of 2000"
+    },
+    {
+      "as": "customer:U_DEMO_03",
+      "at": "2026-10-07T04:00:40.103935+00:00",
+      "http": 200,
+      "scenario": "S3 customer uses the secret help signal",
+      "step": "customer types 02000 (leading zero = help)"
+    },
+    {
+      "as": "system",
+      "at": "2026-10-07T04:00:40.104131+00:00",
+      "data": {
+        "spoken": [
+          "\u09a7\u09a8\u09cd\u09af\u09ac\u09be\u09a6\u0964 \u0986\u09aa\u09a8\u09be\u09b0 \u0989\u09a4\u09cd\u09a4\u09b0 \u09b0\u09c7\u0995\u09b0\u09cd\u09a1 \u0995\u09b0\u09be \u09b9\u09af\u09bc\u09c7\u099b\u09c7\u0964 \u0986\u09b2\u09cd\u09b2\u09be\u09b9 \u09b9\u09be\u09ab\u09c7\u099c\u0964"
+        ]
+      },
+      "scenario": "S3 customer uses the secret help signal",
+      "step": "the handset only hears the neutral closing sentence"
+    },
+    {
+      "as": "admin",
+      "at": "2026-10-07T04:00:40.107521+00:00",
+      "http": 200,
+      "scenario": "S3 customer uses the secret help signal",
+      "step": "urgent case is visible to staff"
+    },
+    {
+      "as": "agent",
+      "at": "2026-10-07T04:00:40.109154+00:00",
+      "http": 200,
+      "scenario": "S3 customer uses the secret help signal",
+      "step": "agent view stays neutral"
+    },
+    {
+      "as": "supervisor",
+      "at": "2026-10-07T04:00:40.111306+00:00",
+      "http": 200,
+      "scenario": "S3 customer uses the secret help signal",
+      "step": "supervisor claims the independent follow-up"
+    },
+    {
+      "as": "supervisor",
+      "at": "2026-10-07T04:00:40.113972+00:00",
+      "http": 200,
+      "scenario": "S3 customer uses the secret help signal",
+      "step": "contact attempt: no independent contact possible, outcome uncertain"
+    },
+    {
+      "as": "admin",
+      "at": "2026-10-07T04:00:40.115813+00:00",
+      "error_code": "INDEPENDENT_CONTACT_REQUIRED",
+      "http": 409,
+      "scenario": "S3 customer uses the secret help signal",
+      "step": "uncertain contact: case cannot be cleared"
+    },
+    {
+      "as": "admin",
+      "at": "2026-10-07T04:00:40.117889+00:00",
+      "http": 200,
+      "scenario": "S3 customer uses the secret help signal",
+      "step": "case stays open and is escalated to the fraud team"
+    },
+    {
+      "as": "agent",
+      "at": "2026-10-07T04:00:40.123080+00:00",
+      "http": 201,
+      "scenario": "S4 customer is silent, then answers on the retry",
+      "step": "agent records a cash-out of 1500"
+    },
+    {
+      "as": "customer:U_DEMO_04",
+      "at": "2026-10-07T04:00:40.125807+00:00",
+      "http": 200,
+      "scenario": "S4 customer is silent, then answers on the retry",
+      "step": "customer picks up, says nothing (1st silence)"
+    },
+    {
+      "as": "customer:U_DEMO_04",
+      "at": "2026-10-07T04:00:40.131527+00:00",
+      "http": 200,
+      "scenario": "S4 customer is silent, then answers on the retry",
+      "step": "customer says nothing again (2nd silence)"
+    },
+    {
+      "as": "system",
+      "at": "2026-10-07T04:00:40.131733+00:00",
+      "data": {
+        "auto_attempts": 1,
+        "case_id": null,
+        "check": "no_answer",
+        "followup": "not_required",
+        "manual_reason": null,
+        "outcome": null,
+        "placement_failures": 0,
+        "task": "retry_scheduled",
+        "task_id": 10
+      },
+      "scenario": "S4 customer is silent, then answers on the retry",
+      "step": "silence is never a denial: a retry is scheduled"
+    },
+    {
+      "as": "customer:U_DEMO_04",
+      "at": "2026-10-07T04:00:40.147014+00:00",
+      "http": 200,
+      "scenario": "S4 customer is silent, then answers on the retry",
+      "step": "retry call: customer types 1500"
+    },
+    {
+      "as": "agent",
+      "at": "2026-10-07T04:00:40.153115+00:00",
+      "http": 201,
+      "scenario": "S5 uncertain speech goes to a person",
+      "step": "agent records a cash-out of 2500"
+    },
+    {
+      "as": "customer:U_DEMO_05",
+      "at": "2026-10-07T04:00:40.157886+00:00",
+      "http": 200,
+      "scenario": "S5 uncertain speech goes to a person",
+      "step": "customer says 'approximately two thousand five hundred'"
+    },
+    {
+      "as": "customer:U_DEMO_05",
+      "at": "2026-10-07T04:00:40.163814+00:00",
+      "http": 200,
+      "scenario": "S5 uncertain speech goes to a person",
+      "step": "customer mumbles (low confidence)"
+    },
+    {
+      "as": "supervisor",
+      "at": "2026-10-07T04:00:40.165969+00:00",
+      "http": 200,
+      "scenario": "S5 uncertain speech goes to a person",
+      "step": "supervisor sees the call in the pending queue"
+    },
+    {
+      "as": "supervisor",
+      "at": "2026-10-07T04:00:40.168016+00:00",
+      "http": 200,
+      "scenario": "S5 uncertain speech goes to a person",
+      "step": "supervisor claims it"
+    },
+    {
+      "as": "supervisor",
+      "at": "2026-10-07T04:00:40.171322+00:00",
+      "http": 200,
+      "scenario": "S5 uncertain speech goes to a person",
+      "step": "supervisor logs the call: customer confirmed 2500"
+    },
+    {
+      "as": "agent",
+      "at": "2026-10-07T04:00:40.178729+00:00",
+      "http": 201,
+      "scenario": "S6 call provider is down at the first attempt",
+      "step": "agent records a cash-out of 1000"
+    },
+    {
+      "as": "system",
+      "at": "2026-10-07T04:00:40.179135+00:00",
+      "data": {
+        "auto_attempts": 1,
+        "case_id": null,
+        "check": "pending",
+        "followup": "not_required",
+        "manual_reason": null,
+        "outcome": null,
+        "placement_failures": 1,
+        "task": "retry_scheduled",
+        "task_id": 18
+      },
+      "scenario": "S6 call provider is down at the first attempt",
+      "step": "the committed cash-out is not stranded: a bounded retry is scheduled"
+    },
+    {
+      "as": "customer:U_DEMO_06",
+      "at": "2026-10-07T04:00:40.192627+00:00",
+      "http": 200,
+      "scenario": "S6 call provider is down at the first attempt",
+      "step": "provider recovered; customer types 1000"
+    },
+    {
+      "as": "agent",
+      "at": "2026-10-07T04:00:40.199376+00:00",
+      "http": 201,
+      "scenario": "S6b provider stays down until attempts run out",
+      "step": "agent records a cash-out of 800"
+    },
+    {
+      "as": "system",
+      "at": "2026-10-07T04:00:40.221526+00:00",
+      "data": {
+        "auto_attempts": 3,
+        "case_id": null,
+        "check": "manual_review",
+        "followup": "not_required",
+        "manual_reason": "provider_failure",
+        "outcome": null,
+        "placement_failures": 3,
+        "task": "needs_manual",
+        "task_id": 22
+      },
+      "scenario": "S6b provider stays down until attempts run out",
+      "step": "after the last attempt a person takes over (no money was reversed)"
+    },
+    {
+      "as": "agent",
+      "at": "2026-10-07T04:00:40.223070+00:00",
+      "error_code": "FORBIDDEN_ROLE",
+      "http": 403,
+      "scenario": "S7 wrong-role and ownership paths",
+      "step": "agent cannot read the supervisor queue"
+    },
+    {
+      "as": "customer:U_DEMO_01",
+      "at": "2026-10-07T04:00:40.224325+00:00",
+      "error_code": "FORBIDDEN_ROLE",
+      "http": 403,
+      "scenario": "S7 wrong-role and ownership paths",
+      "step": "customer cannot list transaction checks"
+    },
+    {
+      "as": "agent",
+      "at": "2026-10-07T04:00:40.225628+00:00",
+      "error_code": "FORBIDDEN_SCOPE",
+      "http": 403,
+      "scenario": "S7 wrong-role and ownership paths",
+      "step": "agent cannot cash out for another agent's customer"
+    },
+    {
+      "as": "anonymous",
+      "at": "2026-10-07T04:00:40.227827+00:00",
+      "error_code": "UNAUTHENTICATED",
+      "http": 401,
+      "scenario": "S7 wrong-role and ownership paths",
+      "step": "anonymous caller is refused"
+    },
+    {
+      "as": "agent",
+      "at": "2026-10-07T04:00:40.228940+00:00",
+      "error_code": "FORBIDDEN_ROLE",
+      "http": 403,
+      "scenario": "S7 wrong-role and ownership paths",
+      "step": "agent cannot record an independent follow-up"
+    },
+    {
+      "as": "customer:U_DEMO_02",
+      "at": "2026-10-07T04:00:40.230501+00:00",
+      "error_code": "FORBIDDEN_OWNERSHIP",
+      "http": 403,
+      "scenario": "S7 wrong-role and ownership paths",
+      "step": "customer cannot answer someone else's call"
+    },
+    {
+      "as": "admin",
+      "at": "2026-10-07T04:00:40.235795+00:00",
+      "http": 200,
+      "scenario": "Evidence",
+      "step": "workflow evidence from this database"
+    },
+    {
+      "as": "admin",
+      "at": "2026-10-07T04:00:40.239674+00:00",
+      "http": 200,
+      "scenario": "Evidence",
+      "step": "assumption-based economics"
+    }
+  ],
+  "workflow_evidence": {
+    "audit_trail": {
+      "events": 40,
+      "first_at": "2026-10-07T10:00:40.008511+06:00",
+      "last_at": "2026-10-07T10:00:40.213374+06:00",
+      "most_common": {
+        "CASE_DECISION_ESCALATED": 1,
+        "call_task_claimed": 1,
+        "call_task_needs_manual": 2,
+        "call_task_placement_retry": 3,
+        "case_brief_generated": 1,
+        "cashout_recorded": 7,
+        "followup_claimed": 2,
+        "followup_recorded": 3,
+        "txn_check_suspicious": 2,
+        "txn_check_verified": 4,
+        "voice_call_failed": 4,
+        "voice_call_placed": 7
+      }
+    },
+    "calls": {
+      "answered": {
+        "denominator": 11,
+        "numerator": 6,
+        "rate": 0.5455
+      },
+      "attempted": 11,
+      "checks_called": 7,
+      "completed_of_answered": {
+        "denominator": 6,
+        "numerator": 5,
+        "rate": 0.8333
+      },
+      "completed_with_a_clear_outcome": {
+        "denominator": 11,
+        "numerator": 5,
+        "rate": 0.4545
+      },
+      "definition": "attempted = call rows for post-cash-out checks; answered = the customer reached an answer step; completed = a clear outcome (match, mismatch, denial or help signal)",
+      "failed_to_place": {
+        "denominator": 11,
+        "numerator": 4,
+        "rate": 0.3636
+      },
+      "no_answer": {
+        "denominator": 11,
+        "numerator": 1,
+        "rate": 0.0909
+      },
+      "providers_seen": [
+        "simulated"
+      ],
+      "still_live": 0,
+      "unclear": {
+        "denominator": 11,
+        "numerator": 1,
+        "rate": 0.0909
+      }
+    },
+    "cases": {
+      "cleared_no_wrongdoing_found": 0,
+      "confirmed_problem": 1,
+      "decided_by_a_person": 1,
+      "escalated": 1,
+      "from_post_cash_out_checks": 2,
+      "meaning": "A closed case is a human decision recorded in the audit trail. It is not recovered money and not proof of fraud.",
+      "median_seconds_to_close": null,
+      "open": 0,
+      "review_actions_logged": 2,
+      "suspicious_checks": 2,
+      "suspicious_checks_with_case": {
+        "denominator": 2,
+        "numerator": 2,
+        "rate": 1.0
+      },
+      "total": 2
+    },
+    "checks": {
+      "by_status": {
+        "manual_review": 1,
+        "suspicious": 2,
+        "verified": 4
+      },
+      "from_agent_api": 7,
+      "from_traffic_simulator": 0,
+      "total": 7
+    },
+    "delivery_recovery": {
+      "handed_to_a_person_after_provider_failure": 1,
+      "placement_failures_total": 4,
+      "tasks": 7,
+      "tasks_with_a_placement_failure": {
+        "denominator": 7,
+        "numerator": 2,
+        "rate": 0.2857
+      }
+    },
+    "environment": {
+      "ai_provider_order": "gemini_first",
+      "label": "Local or pilot deployment",
+      "management_read_only": false,
+      "mode": "local",
+      "online_ai_allowed": true,
+      "real_providers_allowed": true,
+      "simulated_only": false,
+      "sms_provider": "simulated",
+      "voice_provider": "simulated"
+    },
+    "field_impact": null,
+    "field_impact_note": "No real pilot data. Nothing here measures recovered funds, prevented loss, fraud confirmed in the field or customer harm.",
+    "independent_followup": {
+      "by_status": {
+        "not_required": 5,
+        "reached_independently": 1,
+        "uncertain": 1
+      },
+      "note": "Registered-number contact never counts as independent; 'uncertain' and 'unreachable' keep a case from being cleared.",
+      "suspicious_checks_needing_followup": 2,
+      "unresolved": 1
+    },
+    "manual_handling": {
+      "manual_reasons": {
+        "provider_failure": 1,
+        "unclear_response": 1
+      },
+      "median_seconds_to_resolve_manual_task": 0.0,
+      "resolved_by_a_person": 1,
+      "task_status": {
+        "needs_manual": 1,
+        "resolved": 6
+      }
+    },
+    "privacy": {
+      "audio_stored": false,
+      "responses_total": 12,
+      "transcripts_held": 9
+    },
+    "retries": {
+      "checks_with_more_than_one_call": 3,
+      "checks_with_three_or_more_calls": 1,
+      "extra_calls_total": 4,
+      "max_calls_for_one_check": 3,
+      "of_checks_called": {
+        "denominator": 7,
+        "numerator": 3,
+        "rate": 0.4286
+      }
+    },
+    "source": "this database (synthetic or simulated unless real partner data was loaded)",
+    "window": {
+      "first_check_at": "2026-10-07T10:00:40.008654+06:00",
+      "generated_at": "2026-10-07T04:00:40.235173+00:00",
+      "last_check_at": "2026-10-07T10:00:40.193771+06:00"
+    }
+  }
+}

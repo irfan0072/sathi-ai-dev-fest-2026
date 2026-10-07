@@ -14,6 +14,13 @@ const health = {
 export default function Header({ title = '', session = null, onLogin = () => {}, onLogout = () => {} }) {
   const [healthStatus, setHealthStatus] = useState('unknown');
   const [currentUrl, setCurrentUrl] = useState(API_BASE_URL);
+  const [deployment, setDeployment] = useState(null);
+
+  useEffect(() => {
+    let mounted = true;
+    api.getDeployment().then((d) => mounted && setDeployment(d)).catch(() => {});
+    return () => { mounted = false; };
+  }, [currentUrl]);
 
   useEffect(() => {
     let mounted = true;
@@ -56,6 +63,11 @@ export default function Header({ title = '', session = null, onLogin = () => {},
       </div>
 
       <div className="flex items-center gap-2">
+        {deployment?.simulated_only && (
+          <span className="badge badge-warning badge-soft hidden py-3 text-xs font-medium md:inline-flex" title={deployment.label} data-testid="deployment-mode">
+            Public simulated demo
+          </span>
+        )}
         <div className="tooltip tooltip-bottom" data-tip={status.label}>
           <span
             className="badge badge-ghost gap-2 border-base-300 py-3 font-medium focus-ring"

@@ -30,7 +30,7 @@ export function OutreachGuide() {
         'This score is used only to offer help. It never blocks or limits an account.',
       ]}
       terms={[
-        { term: 'Chance', meaning: 'How likely the AI thinks this person needs help to pay. Above 50% counts as “likely”.' },
+        { term: 'Chance', meaning: 'A model score trained on synthetic data for how likely this person needs help to pay. It ranks who to look at first; it is not a measured probability. Above 50% counts as “likely”.' },
         { term: 'Relies on one agent', meaning: 'Share of their cash-outs done at the same agent. 100% means always the same agent.' },
         { term: 'Pushes the score up / down', meaning: 'How much a signal moved this person’s chance. Longer bar means a stronger effect.' },
       ]}
@@ -119,7 +119,7 @@ export default function OutreachList({ initialData = null }) {
       {data && (
         <div className="grid gap-3 sm:grid-cols-3">
           {[
-            ['Customers checked', (data.scored_customers ?? data.total)?.toLocaleString(), `active in the last ${data.window_days || 30} days`],
+            ['Customers checked', (data.scored_customers ?? data.total)?.toLocaleString(), `most recently active, in the last ${data.window_days || 30} days (a capped pool of at most 6,000, not the whole customer database)`],
             ['Likely need help', data.likely_assisted?.toLocaleString() ?? '—', `chance above ${Math.round((data.threshold ?? 0.5) * 100)}%`],
             ['Shown here', data.items.length.toLocaleString(), 'highest chance first'],
           ].map(([label, value, note]) => (

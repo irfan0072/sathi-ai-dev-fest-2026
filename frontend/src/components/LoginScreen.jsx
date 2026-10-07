@@ -85,6 +85,7 @@ export default function LoginScreen({ onSuccess }) {
               Track 07 · AI DEV FEST 2026 · DIU CPC × upay
             </span>
             <span className="badge badge-ghost border-base-300">Live system · synthetic customers</span>
+            <span className="badge badge-ghost border-base-300">Hackathon concept · not endorsed by upay</span>
           </footer>
         </aside>
 
@@ -136,7 +137,7 @@ export default function LoginScreen({ onSuccess }) {
             </div>
 
             <p className="muted mt-6 text-center">
-              Synthetic customers only; no real upay accounts are connected.
+              Synthetic customers only; no real upay accounts are connected. Hackathon concept for upay, not endorsed by upay.
             </p>
           </div>
         </main>

@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 
 @pytest.fixture
 def ready_checks(monkeypatch):
+    monkeypatch.delenv("SATHI_DEPLOYMENT_MODE", raising=False)
     monkeypatch.setattr(bootstrap, "verify_artifacts", lambda: None)
     monkeypatch.setattr(bootstrap, "database_ready", lambda config: True)
     monkeypatch.setenv("JWT_SECRET", "a" * 64)
@@ -18,7 +19,8 @@ def test_health_ready(ready_checks):
     assert response.status_code == 200
     assert response.json() == {
         "status": "ok", "database": "ready", "auth_signing": "configured",
-        "artifacts": "verified",
+        "artifacts": "verified", "integrations": "not_verified_by_health",
+        "deployment_mode": "local",
     }
 
 

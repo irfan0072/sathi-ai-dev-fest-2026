@@ -41,8 +41,38 @@ Attempts, verification events, cases, ledger records and audit logs are PostgreS
 
 ## Runtime readiness
 
-`GET /health` returns200 only when signing is configured, the curated bundle passes hashes/current-config validation, and the database probe finds migrations, configured demo principals and their ledger. Payload keys: `status`, `database` (`ready`/`unavailable`), `auth_signing`, `artifacts` (`verified`/`unavailable`). Unready state returns503/degraded without underlying exceptions or credentials. Existing business routes and schema are unchanged. Startup validates before database writes, applies001/002 idempotently and seeds only namespace777 without replenishing spent balances.
+`GET /health` returns200 only when signing is configured, the curated bundle passes hashes/current-config validation, and the database probe finds migrations, configured demo principals and their ledger. Payload keys: `status`, `database` (`ready`/`unavailable`; requires every migration file to be applied), `auth_signing`, `artifacts` (`verified`/`unavailable`), `integrations` (always `not_verified_by_health`: healthy does not mean a real call, SMS or MFS integration was verified) and `deployment_mode`. Unready state returns503/degraded without underlying exceptions or credentials. Existing business routes and schema are unchanged. Startup validates before database writes, applies001/002 idempotently and seeds only namespace777 without replenishing spent balances.
 
 ## Live channels and intelligence (3 October 2026)
 
 Migration 003 adds `voice_calls`, `mandate_risk` and `case_briefs` (additive only). `POST /mandates/request` also returns `risk` {score, band, step_up, engine_version}; the signal trace is analyst-only. Optional enforcement (`SATHI_STEP_UP_ENFORCED=true`) makes `/verify` return `403 STEP_UP_REQUIRED` unless step-up is `keypad_or_call`. Full route table, roles and security notes: [live-mode.md](live-mode.md#new-api-routes).
+
+
+## Final-round additions (7 October 2026; local and synthetic, contracts unconfirmed with any partner)
+
+All routes below are additive. None of them moves money.
+
+| Route | Roles | Purpose |
+|---|---|---|
+| `GET /api/v1/deployment` | public | `{mode, simulated_only, management_read_only, real_providers_allowed, online_ai_allowed, label}` |
+| `POST /api/v1/callcenter/tasks/{id}/followup/claim` | supervisor | Take the independent follow-up of a suspicious check (one holder, conditional update) |
+| `POST /api/v1/callcenter/tasks/{id}/followup/assign` | super_admin | Assign it to an active supervisor |
+| `POST /api/v1/callcenter/tasks/{id}/followup` | supervisor (holder), super_admin | `{outcome: attempted\|reached_independently\|uncertain\|unreachable, channel: registered_number\|in_person, note?}`. Unknown fields (a phone number) are rejected with 422. `reached_independently` with `registered_number` is refused (`SAME_HANDSET_NOT_INDEPENDENT`) |
+| `GET /api/v1/callcenter/queue?scope=followup` | supervisor, super_admin | Suspicious checks needing independent contact (a supervisor sees the unassigned list and their own) |
+| `POST /api/v1/cases/{id}/decision` (decision `approved`) | analyst, super_admin, supervisor | Returns `409 INDEPENDENT_CONTACT_REQUIRED` while the linked check's follow-up is `required`, `attempted`, `uncertain` or `unreachable` |
+| `POST /api/v1/cases/{id}/brief` | analyst, super_admin, supervisor | Adds `mode` (`deterministic` or `llm_guarded`), `mode_label`, `guard_limits`, `facts_shared_externally` |
+| `GET /api/v1/ops/workflow-evidence` | supervisor, analyst, super_admin | Observed workflow counts with numerators and denominators from this database. `field_impact` is always `null` |
+| `GET /api/v1/ops/economics` | supervisor, analyst, super_admin | Assumption-based cost and break-even model. No invoices, no measured loss prevention |
+| `GET /api/v1/voice/config` | agent, customer, analyst, super_admin | Adds `speech_input`: no custom ASR model, `validated_dialects: []`, the missing-confidence policy |
+
+**Provider-recorded cash-out events (contract unconfirmed).** An authenticated cash-out/KYC feed
+from an MFS operator is not implemented. If one is added, a provider-recorded cash-out must be
+recorded as an event only: it must never debit the ledger a second time, it must be idempotent on
+the provider's event id, and its signature must be verified before any state change. The existing
+agent API (`POST /api/v1/cashouts`) is the only entry today.
+
+**Call placement failure.** `POST /api/v1/cashouts` still returns 201 when the cash-out is
+committed but the call could not be placed. The task is retried with back-off up to
+`calls.max_auto_attempts`, then moves to the supervisor queue with reason `provider_failure`.
+If the provider may have accepted the call (timeout, 5xx), no second call is placed until the
+live call settles. A delivery error never reverses or debits the ledger.

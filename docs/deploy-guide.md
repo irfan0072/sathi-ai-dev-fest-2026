@@ -25,6 +25,26 @@
    configuration and model artifacts, applies migrations and seeds the small demo
    namespace. Restarts preserve balances and cases.
 
+## Deployment mode (public demo isolation)
+
+`render.yaml` sets `SATHI_DEPLOYMENT_MODE=public_demo` and `SATHI_SETTINGS_EDITABLE=false`. The
+demo staff PINs are published, so in this mode:
+
+- settings, provider credentials, staff and test-account management are read-only (HTTP 403,
+  `PUBLIC_DEMO_READ_ONLY`);
+- the voice and SMS providers are pinned to `simulated` and the case-brief AI to the deterministic
+  summary, whatever a saved override or an environment variable says;
+- provider probes and paid test calls/SMS are refused;
+- the synthetic demo sign-in, cash-out, confirmation, queue and case workflow still work.
+
+Use `local` (the default when the variable is unset) or `pilot` only on a private deployment with
+its own credentials. An unknown value is treated as `public_demo`. `GET /api/v1/deployment` reports
+the mode and the console shows "Public simulated demo". This separation is **not** a penetration
+test. Remaining gaps: published PINs still reach the analyst and supervisor workflow, tokens of
+agents and customers are not re-checked against account status, there is no durable login
+attempt limiter, the audit trail can be altered by a database owner, and no independent review has
+been done. A public instance must never hold real provider credentials.
+
 ## Load the synthetic population (fills the AI pages)
 
 The bootstrap seeds only the demo accounts. To load the 20,000-customer synthetic dataset,

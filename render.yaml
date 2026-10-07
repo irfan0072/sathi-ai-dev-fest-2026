@@ -62,8 +62,13 @@ services:
       # makes saved credentials unreadable until re-entered.
       - key: SATHI_SECRETS_KEY
         generateValue: true
+      # Public synthetic demo: published staff PINs, so management is read-only and every
+      # provider is pinned to its simulated option. Use "local" or "pilot" only on a private
+      # deployment with its own credentials. See docs/deploy-guide.md.
+      - key: SATHI_DEPLOYMENT_MODE
+        value: "public_demo"
       - key: SATHI_SETTINGS_EDITABLE
-        value: "true"
+        value: "false"
       - key: SATHI_SMS_PROVIDER
         value: "simulated"
       - key: ALPHA_SMS_API_KEY

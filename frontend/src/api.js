@@ -269,6 +269,11 @@ export const api = {
   assignCall: (id, staffId) => request(`/api/v1/callcenter/tasks/${encodeURIComponent(id)}/assign`, { method: 'POST', body: { staff_id: staffId } }),
   escalateCall: (id) => request(`/api/v1/callcenter/tasks/${encodeURIComponent(id)}/escalate`, { method: 'POST' }),
   distributeCalls: () => request('/api/v1/callcenter/distribute', { method: 'POST' }),
+  getDeployment: () => request('/api/v1/deployment', { authenticated: false }),
+  getWorkflowEvidence: () => request('/api/v1/ops/workflow-evidence'),
+  getEconomics: () => request('/api/v1/ops/economics'),
+  claimFollowup: (id) => request(`/api/v1/callcenter/tasks/${encodeURIComponent(id)}/followup/claim`, { method: 'POST' }),
+  recordFollowup: (id, body) => request(`/api/v1/callcenter/tasks/${encodeURIComponent(id)}/followup`, { method: 'POST', body }),
   recordCallOutcome: (id, body) => request(`/api/v1/callcenter/tasks/${encodeURIComponent(id)}/outcome`, { method: 'POST', body }),
   // ── Case work ──
   getDeskSummary: () => request('/api/v1/workdesk/summary'),
